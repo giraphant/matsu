@@ -28,16 +28,6 @@ interface MonitorSummary {
   tags?: string[];
 }
 
-interface ConstantCard {
-  id: string;
-  name: string;
-  value: number;
-  unit: string | null;
-  description: string | null;
-  color: string;
-  created_at: string;
-  updated_at: string;
-}
 
 interface ChartData {
   monitor_id: string;
@@ -98,9 +88,6 @@ function App() {
   const [showThresholdPopover, setShowThresholdPopover] = useState<string | null>(null);
   const [alertStates, setAlertStates] = useState<Map<string, {lastNotified: number, isActive: boolean}>>(new Map());
   const [monitorFormulas, setMonitorFormulas] = useState<Map<string, string>>(new Map());
-  const [constants, setConstants] = useState<ConstantCard[]>([]);
-  const [showConstantModal, setShowConstantModal] = useState(false);
-  const [editingConstant, setEditingConstant] = useState<ConstantCard | null>(null);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
   const [showMobileLayoutEditor, setShowMobileLayoutEditor] = useState(false);
@@ -160,10 +147,8 @@ function App() {
   useEffect(() => {
     if (isAuthenticated) {
       loadMonitors();
-      loadConstants();
       const interval = setInterval(() => {
         loadMonitors();
-        loadConstants();
       }, 30000);
       return () => clearInterval(interval);
     }
@@ -253,6 +238,8 @@ function App() {
       // Load mini chart data for each monitor (7 days)
       loadMiniChartData(data);
       setLoading(false);
+      // Mark initial load as complete after monitors are loaded
+      setIsInitialLoad(false);
     } catch (error) {
       console.error('Failed to load monitors:', error);
       setLoading(false);
@@ -280,17 +267,6 @@ function App() {
     setMiniChartData(newMiniData);
   };
 
-  const loadConstants = async () => {
-    try {
-      const response = await fetch('/api/constants');
-      const data = await response.json();
-      setConstants(data);
-      // Mark initial load as complete after constants are loaded
-      setIsInitialLoad(false);
-    } catch (error) {
-      console.error('Failed to load constants:', error);
-    }
-  };
 
   const loadChartData = async (monitorId: string, daysParam: number) => {
     try {
@@ -371,18 +347,14 @@ function App() {
     }
   };
 
-  const generateDefaultLayout = (monitors: MonitorSummary[], constants: ConstantCard[]) => {
-    const layouts = [];
-    let index = 0;
-
-    // Add monitors
-    for (const monitor of monitors) {
+  const generateDefaultLayout = (monitors: MonitorSummary[]) => {
+    return monitors.map((monitor, index) => {
       // Vary card sizes for visual interest
       let w = 1, h = 1;
       if (index % 7 === 0) { w = 2; h = 2; } // large
       else if (index % 5 === 0) { w = 2; h = 1; } // wide
 
-      layouts.push({
+      return {
         i: monitor.monitor_id,
         x: (index * 1) % 4,
         y: Math.floor(index / 4) * 1,
@@ -392,34 +364,14 @@ function App() {
         minH: 1,
         maxW: 4,
         maxH: 3
-      });
-      index++;
-    }
-
-    // Add constants
-    for (const constant of constants) {
-      layouts.push({
-        i: `const-${constant.id}`,
-        x: (index * 1) % 4,
-        y: Math.floor(index / 4) * 1,
-        w: 1,
-        h: 1,
-        minW: 1,
-        minH: 1,
-        maxW: 4,
-        maxH: 3
-      });
-      index++;
-    }
-
-    return layouts;
+      };
+    });
   };
 
-  const getMergedLayout = (monitors: MonitorSummary[], constants: ConstantCard[], savedLayout: any[]) => {
+  const getMergedLayout = (monitors: MonitorSummary[], savedLayout: any[]) => {
     // Create set of all current IDs
     const allCurrentIds = new Set<string>();
     monitors.forEach(m => allCurrentIds.add(m.monitor_id));
-    constants.forEach(c => allCurrentIds.add(`const-${c.id}`));
 
     // Start with saved layouts that still exist
     const allLayouts: any[] = savedLayout.filter(l => allCurrentIds.has(l.i));
@@ -451,27 +403,6 @@ function App() {
       }
     });
 
-    // Add new constants that aren't in saved layout
-    constants.forEach((constant) => {
-      const constId = `const-${constant.id}`;
-      if (!addedIds.has(constId)) {
-        const maxY = allLayouts.length > 0 ? Math.max(...allLayouts.map(l => l.y + l.h)) : 0;
-
-        allLayouts.push({
-          i: constId,
-          x: 0,
-          y: maxY,
-          w: 1,
-          h: 1,
-          minW: 1,
-          minH: 1,
-          maxW: 4,
-          maxH: 3
-        });
-        addedIds.add(constId);
-      }
-    });
-
     return allLayouts;
   };
 
@@ -496,30 +427,19 @@ function App() {
   };
 
   // Sort items by layout order on mobile
-  const getSortedItemsForMobile = (): Array<{ type: 'monitor', data: MonitorSummary } | { type: 'constant', data: ConstantCard }> => {
-    if (!isMobile) return [
-      ...visibleMonitors.map(m => ({ type: 'monitor' as const, data: m })),
-      ...constants.map(c => ({ type: 'constant' as const, data: c }))
-    ];
+  const getSortedItemsForMobile = (): Array<{ type: 'monitor', data: MonitorSummary }> => {
+    if (!isMobile) return visibleMonitors.map(m => ({ type: 'monitor' as const, data: m }));
 
     // Create a map of layout items by id
     const layoutMap = new Map(gridLayout.map(l => [l.i, l]));
 
-    // Combine monitors and constants with their layout info
-    const allItems = [
-      ...visibleMonitors.map(m => ({
-        type: 'monitor' as const,
-        id: m.monitor_id,
-        data: m,
-        layout: layoutMap.get(m.monitor_id) || { y: 999, x: 0 }
-      })),
-      ...constants.map(c => ({
-        type: 'constant' as const,
-        id: `const-${c.id}`,
-        data: c,
-        layout: layoutMap.get(`const-${c.id}`) || { y: 999, x: 0 }
-      }))
-    ];
+    // Combine monitors with their layout info
+    const allItems = visibleMonitors.map(m => ({
+      type: 'monitor' as const,
+      id: m.monitor_id,
+      data: m,
+      layout: layoutMap.get(m.monitor_id) || { y: 999, x: 0 }
+    }));
 
     // Sort by y position, then x
     allItems.sort((a, b) => {
@@ -889,17 +809,11 @@ function App() {
   // Memoize the computed layout to prevent unnecessary recalculations
   const computedLayout = useMemo(() => {
     const result = gridLayout.length > 0
-      ? getMergedLayout(visibleMonitors, constants, gridLayout)
-      : generateDefaultLayout(visibleMonitors, constants);
-
-    // Log constant card positions for debugging
-    const constantLayouts = result.filter(l => l.i.startsWith('const-'));
-    console.log('[Layout] Constant positions:', constantLayouts.map(l => ({ id: l.i, x: l.x, y: l.y })));
-    console.log('[Layout] gridLayout has constants:', gridLayout.filter(l => l.i.startsWith('const-')).length);
-    console.log('[Layout] constants state count:', constants.length);
+      ? getMergedLayout(visibleMonitors, gridLayout)
+      : generateDefaultLayout(visibleMonitors);
 
     return result;
-  }, [visibleMonitors, constants, gridLayout]);
+  }, [visibleMonitors, gridLayout]);
 
   const currentMonitor = monitors.find(m => m.monitor_id === selectedMonitor);
 
