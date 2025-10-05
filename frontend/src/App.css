@@ -2388,7 +2388,7 @@ header p {
 .funding-rate-alerts .enable-checkbox-label {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   cursor: pointer;
   user-select: none;
 }
