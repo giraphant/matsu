@@ -908,6 +908,11 @@ header p {
   stroke: var(--primary-foreground) !important;
 }
 
+.bento-item.alert .last-updated {
+  color: var(--primary-foreground);
+  opacity: 0.9;
+}
+
 /* React Grid Layout overrides */
 .react-grid-item {
   transition: all 200ms ease;
