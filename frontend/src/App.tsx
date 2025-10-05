@@ -5,6 +5,7 @@ import GridLayout from 'react-grid-layout';
 import ManageMonitorItem from './ManageMonitorItem';
 import ConstantCardModal from './ConstantCardModal';
 import DexRates from './DexRates';
+import Polymarket from './Polymarket';
 import MobileLayoutEditor from './MobileLayoutEditor';
 import './App.css';
 import 'react-grid-layout/css/styles.css';
@@ -81,7 +82,7 @@ function App() {
   const [selectedTag, setSelectedTag] = useState<string>('all');
   const [monitorNames, setMonitorNames] = useState<Map<string, string>>(new Map());
   const [isDarkMode, setIsDarkMode] = useState(false);
-  const [viewMode, setViewMode] = useState<'overview' | 'detail' | 'dex'>('overview');
+  const [viewMode, setViewMode] = useState<'overview' | 'detail' | 'dex' | 'polymarket'>('overview');
   const [gridLayout, setGridLayout] = useState<any[]>([]);
   const [miniChartData, setMiniChartData] = useState<Map<string, any[]>>(new Map());
   const [thresholds, setThresholds] = useState<Map<string, {upper?: number, lower?: number, level?: string}>>(new Map());
@@ -921,6 +922,13 @@ function App() {
                       <TrendingUp size={20} />
                       <span>DEX Rates</span>
                     </button>
+                    <button
+                      className={`mobile-menu-item ${viewMode === 'polymarket' ? 'active' : ''}`}
+                      onClick={() => { setViewMode('polymarket'); setShowMobileMenu(false); }}
+                    >
+                      <TrendingUp size={20} />
+                      <span>Polymarket</span>
+                    </button>
                     {viewMode === 'overview' && (
                       <button
                         className="mobile-menu-item"
@@ -969,6 +977,14 @@ function App() {
                 className={`btn-secondary ${viewMode === 'dex' ? 'active' : ''}`}
                 onClick={() => setViewMode('dex')}
                 title="DEX Rates"
+                style={{ padding: '8px 12px' }}
+              >
+                <TrendingUp size={18} />
+              </button>
+              <button
+                className={`btn-secondary ${viewMode === 'polymarket' ? 'active' : ''}`}
+                onClick={() => setViewMode('polymarket')}
+                title="Polymarket"
                 style={{ padding: '8px 12px' }}
               >
                 <TrendingUp size={18} />
@@ -1278,6 +1294,8 @@ function App() {
         })()
       ) : viewMode === 'dex' ? (
         <DexRates />
+      ) : viewMode === 'polymarket' ? (
+        <Polymarket />
       ) : (
         <div className="dashboard">
           {/* Sidebar */}
