@@ -1548,14 +1548,19 @@ header p {
 
   .bento-value {
     font-size: 32px;
+    margin-top: 8px;
+    margin-bottom: 8px;
   }
 
   .bento-mini-chart {
     height: 100px;
+    margin-bottom: 8px;
   }
 
   .bento-stats {
     grid-template-columns: repeat(3, 1fr);
+    padding-top: 12px;
+    margin-top: 8px;
   }
 
   /* Stats grid - single column on small screens */
