@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { Settings, Moon, Sun, LayoutGrid, LineChart as LineChartIcon, Bell, Plus, Pencil, Trash2, TrendingUp, Menu, X } from 'lucide-react';
+import { Settings, Moon, Sun, LayoutGrid, LineChart as LineChartIcon, Bell, TrendingUp, Menu, X } from 'lucide-react';
 import GridLayout from 'react-grid-layout';
 import ManageMonitorItem from './ManageMonitorItem';
-import ConstantCardModal from './ConstantCardModal';
 import DexRates from './DexRates';
 import MobileLayoutEditor from './MobileLayoutEditor';
 import './App.css';
@@ -530,53 +529,7 @@ function App() {
     }
   };
 
-  const saveConstant = async (constant: Partial<ConstantCard>) => {
-    try {
-      if (editingConstant) {
-        // Update existing constant
-        const response = await fetch(`/api/constants/${editingConstant.id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(constant)
-        });
-        if (response.ok) {
-          await loadConstants();
-          setShowConstantModal(false);
-          setEditingConstant(null);
-        }
-      } else {
-        // Create new constant
-        const response = await fetch('/api/constants', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(constant)
-        });
-        if (response.ok) {
-          await loadConstants();
-          setShowConstantModal(false);
-        }
-      }
-    } catch (error) {
-      console.error('Failed to save constant:', error);
-      alert('Failed to save constant card');
-    }
-  };
-
-  const deleteConstant = async (id: string) => {
-    if (!window.confirm('Are you sure you want to delete this constant card?')) return;
-
-    try {
-      const response = await fetch(`/api/constants/${id}`, {
-        method: 'DELETE'
-      });
-      if (response.ok) {
-        await loadConstants();
-      }
-    } catch (error) {
-      console.error('Failed to delete constant:', error);
-      alert('Failed to delete constant card');
-    }
-  };
+  // Constant management functions removed - constants are now regular monitors
 
   const updateThreshold = async (monitorId: string, upper?: number, lower?: number, level?: string) => {
     const newThresholds = new Map(thresholds);
@@ -1004,18 +957,39 @@ function App() {
             preventCollision={true}
           >
             {sortedItems.map((item) => {
-              if (item.type === 'monitor') {
-                const monitor = item.data;
-                const displayName = monitorNames.get(monitor.monitor_id) || monitor.monitor_name || monitor.monitor_id;
-                const tags = monitorTags.get(monitor.monitor_id) || [];
-                const layout = gridLayout.find(l => l.i === monitor.monitor_id) ||
-                              generateDefaultLayout([monitor], [])[0];
-                const showChart = layout.h >= 2;
-                const chartPoints = miniChartData.get(monitor.monitor_id) || [];
-                const isAlert = isValueOutOfRange(monitor.latest_value, monitor.monitor_id);
-                const threshold = thresholds.get(monitor.monitor_id);
+              const monitor = item.data;
+              const displayName = monitorNames.get(monitor.monitor_id) || monitor.monitor_name || monitor.monitor_id;
+              const tags = monitorTags.get(monitor.monitor_id) || [];
+              const layout = gridLayout.find(l => l.i === monitor.monitor_id) ||
+                            generateDefaultLayout([monitor])[0];
+              const showChart = layout.h >= 2;
+              const chartPoints = miniChartData.get(monitor.monitor_id) || [];
+              const isAlert = isValueOutOfRange(monitor.latest_value, monitor.monitor_id);
+              const threshold = thresholds.get(monitor.monitor_id);
 
+              // Render constant card
+              if (monitor.monitor_type === 'constant') {
                 return (
+                  <div key={monitor.monitor_id} className="bento-item" style={{ borderLeft: `4px solid ${monitor.color || '#3b82f6'}` }}>
+                    <div className="bento-header">
+                      <div className="bento-title-section">
+                        <h3>{displayName}</h3>
+                        {monitor.description && (
+                          <p style={{ fontSize: '12px', color: 'var(--muted-foreground)', margin: '4px 0 0 0' }}>
+                            {monitor.description}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="bento-value" style={{ fontSize: '48px', margin: '20px 0' }}>
+                      {formatValue(monitor.latest_value, monitor.unit)}
+                    </div>
+                  </div>
+                );
+              }
+
+              // Render normal monitor card
+              return (
                   <div key={monitor.monitor_id} className={`bento-item ${isAlert ? 'alert' : ''}`}>
                   <div className="bento-header">
                     <div className="bento-title-section">
@@ -1185,84 +1159,9 @@ function App() {
                   </div>
                   </div>
                 );
-              } else {
-                // item.type === 'constant'
-                const constant = item.data;
-                return (
-                  <div key={`const-${constant.id}`} className="bento-item" style={{ borderLeft: `4px solid ${constant.color}` }}>
-                <div className="bento-header">
-                  <div className="bento-title-section">
-                    <h3>{constant.name}</h3>
-                    {constant.description && (
-                      <p style={{ fontSize: '12px', color: 'var(--muted-foreground)', margin: '4px 0 0 0' }}>
-                        {constant.description}
-                      </p>
-                    )}
-                  </div>
-                  <div style={{ display: 'flex', gap: '4px', position: 'relative', zIndex: 100 }}>
-                    <button
-                      className="threshold-btn"
-                      onMouseDown={(e) => e.stopPropagation()}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setEditingConstant(constant);
-                        setShowConstantModal(true);
-                      }}
-                      title="Edit constant"
-                      style={{ pointerEvents: 'auto' }}
-                    >
-                      <Pencil size={14} />
-                    </button>
-                    <button
-                      className="threshold-btn"
-                      onMouseDown={(e) => e.stopPropagation()}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        deleteConstant(constant.id);
-                      }}
-                      title="Delete constant"
-                      style={{ color: 'var(--destructive)', pointerEvents: 'auto' }}
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
-                </div>
 
-                <div className="bento-value constant-value" style={{ color: constant.color }}>
-                  {constant.value.toLocaleString(undefined, {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2
-                  })}
-                  {constant.unit && <span className="unit-text">{constant.unit}</span>}
-                </div>
-
-                <div className="bento-stats" style={{ opacity: 0.5 }}>
-                  <div className="bento-stat">
-                    <span className="label">Type</span>
-                    <span className="value">Constant</span>
-                  </div>
-                  </div>
-                  </div>
-                );
-              }
             })}
           </GridLayout>
-
-          {/* Floating Action Button for Adding Constants */}
-          {!isMobile && (
-            <button
-              className="fab"
-              onClick={() => {
-                setEditingConstant(null);
-                setShowConstantModal(true);
-              }}
-              title="Add constant card"
-            >
-              <Plus size={20} />
-            </button>
-          )}
         </div>
           );
         })()
@@ -1623,17 +1522,6 @@ function App() {
           </div>
         </div>
       )}
-
-      {/* Constant Card Modal */}
-      <ConstantCardModal
-        show={showConstantModal}
-        onClose={() => {
-          setShowConstantModal(false);
-          setEditingConstant(null);
-        }}
-        onSave={saveConstant}
-        editingConstant={editingConstant}
-      />
 
       <MobileLayoutEditor
         show={showMobileLayoutEditor}
