@@ -188,9 +188,6 @@ function App() {
     if (!isAuthenticated || monitors.length === 0) return;
 
     const checkAlerts = () => {
-      const notificationPermission = ('Notification' in window) ? Notification.permission : 'denied';
-      console.log('[Alert Check] Running alert check, permission:', notificationPermission);
-
       monitors.forEach(monitor => {
         const config = thresholds.get(monitor.monitor_id);
         if (!config || (!config.upper && !config.lower)) return;
@@ -200,21 +197,16 @@ function App() {
         const level = config.level || 'medium';
         const alertConfig = ALERT_LEVELS[level as keyof typeof ALERT_LEVELS] || ALERT_LEVELS.medium;
 
-        console.log(`[Alert Check] ${monitor.monitor_id}: breached=${isBreached}, value=${monitor.latest_value}, threshold=${JSON.stringify(config)}`);
-
         if (isBreached && monitor.latest_value !== null) {
           // New alert or time to repeat
           const now = Date.now();
           const shouldNotify = !state?.isActive ||
             (now - state.lastNotified) >= alertConfig.interval * 1000;
 
-          console.log(`[Alert Check] ${monitor.monitor_id}: shouldNotify=${shouldNotify}, permission=${notificationPermission}`);
-
           if (shouldNotify) {
             if (('Notification' in window) && Notification.permission === 'granted') {
               showDesktopNotification(monitor, level, monitor.latest_value);
             } else if ('Notification' in window) {
-              console.log('[Alert Check] Notification permission not granted, requesting...');
               requestNotificationPermission();
             }
 
@@ -711,21 +703,15 @@ function App() {
     };
 
     const soundFile = soundFiles[level as keyof typeof soundFiles] || soundFiles.medium;
-    console.log(`[Alert Sound] Playing ${level} alert sound: ${soundFile}, volume: ${config.volume}`);
 
     const audio = new Audio(soundFile);
     audio.volume = config.volume;
-
-    audio.addEventListener('canplaythrough', () => {
-      console.log(`[Alert Sound] Audio loaded successfully: ${soundFile}`);
-    });
 
     audio.addEventListener('error', (e) => {
       console.error(`[Alert Sound] Failed to load audio: ${soundFile}`, e);
     });
 
     audio.play()
-      .then(() => console.log(`[Alert Sound] Playing sound: ${soundFile}`))
       .catch(e => console.error('[Alert Sound] Play failed:', e));
   };
 
