@@ -373,14 +373,18 @@ function App() {
     }
   };
 
-  const generateDefaultLayout = (monitors: MonitorSummary[]) => {
-    return monitors.map((monitor, index) => {
+  const generateDefaultLayout = (monitors: MonitorSummary[], constants: ConstantCard[]) => {
+    const layouts = [];
+    let index = 0;
+
+    // Add monitors
+    for (const monitor of monitors) {
       // Vary card sizes for visual interest
       let w = 1, h = 1;
       if (index % 7 === 0) { w = 2; h = 2; } // large
       else if (index % 5 === 0) { w = 2; h = 1; } // wide
 
-      return {
+      layouts.push({
         i: monitor.monitor_id,
         x: (index * 1) % 4,
         y: Math.floor(index / 4) * 1,
@@ -390,8 +394,27 @@ function App() {
         minH: 1,
         maxW: 4,
         maxH: 3
-      };
-    });
+      });
+      index++;
+    }
+
+    // Add constants
+    for (const constant of constants) {
+      layouts.push({
+        i: `const-${constant.id}`,
+        x: (index * 1) % 4,
+        y: Math.floor(index / 4) * 1,
+        w: 1,
+        h: 1,
+        minW: 1,
+        minH: 1,
+        maxW: 4,
+        maxH: 3
+      });
+      index++;
+    }
+
+    return layouts;
   };
 
   const getMergedLayout = (monitors: MonitorSummary[], constants: ConstantCard[], savedLayout: any[]) => {
@@ -1036,7 +1059,7 @@ function App() {
         <div className="bento-container">
           <GridLayout
             className="bento-grid"
-            layout={gridLayout.length > 0 ? getMergedLayout(visibleMonitors, constants, gridLayout) : generateDefaultLayout(visibleMonitors)}
+            layout={gridLayout.length > 0 ? getMergedLayout(visibleMonitors, constants, gridLayout) : generateDefaultLayout(visibleMonitors, constants)}
             cols={4}
             rowHeight={200}
             width={1600}
@@ -1052,7 +1075,7 @@ function App() {
                 const displayName = monitorNames.get(monitor.monitor_id) || monitor.monitor_name || monitor.monitor_id;
                 const tags = monitorTags.get(monitor.monitor_id) || [];
                 const layout = gridLayout.find(l => l.i === monitor.monitor_id) ||
-                              generateDefaultLayout([monitor])[0];
+                              generateDefaultLayout([monitor], [])[0];
                 const showChart = layout.h >= 2;
                 const chartPoints = miniChartData.get(monitor.monitor_id) || [];
                 const isAlert = isValueOutOfRange(monitor.latest_value, monitor.monitor_id);
