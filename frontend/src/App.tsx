@@ -529,7 +529,61 @@ function App() {
     }
   };
 
-  // Constant management functions removed - constants are now regular monitors
+  // Constant management functions
+  const updateConstant = async (monitorId: string, updates: Partial<MonitorSummary>) => {
+    try {
+      const response = await fetch(`/api/constant/${monitorId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates)
+      });
+      if (response.ok) {
+        await loadMonitors(); // Reload to get updated data
+      } else {
+        alert('Failed to update constant');
+      }
+    } catch (error) {
+      console.error('Failed to update constant:', error);
+      alert('Failed to update constant');
+    }
+  };
+
+  const deleteConstant = async (monitorId: string) => {
+    try {
+      const response = await fetch(`/api/constant/${monitorId}`, {
+        method: 'DELETE'
+      });
+      if (response.ok) {
+        await loadMonitors(); // Reload to remove deleted constant
+      } else {
+        alert('Failed to delete constant');
+      }
+    } catch (error) {
+      console.error('Failed to delete constant:', error);
+      alert('Failed to delete constant');
+    }
+  };
+
+  const editConstant = (monitor: MonitorSummary) => {
+    const name = prompt('Constant name:', monitor.monitor_name || '');
+    if (name === null) return;
+
+    const valueStr = prompt('Value:', monitor.latest_value?.toString() || '');
+    if (valueStr === null) return;
+    const value = parseFloat(valueStr);
+
+    const unit = prompt('Unit (optional):', monitor.unit || '');
+    const description = prompt('Description (optional):', monitor.description || '');
+    const color = prompt('Color (hex):', monitor.color || '#3b82f6');
+
+    updateConstant(monitor.monitor_id, {
+      monitor_name: name,
+      latest_value: value,
+      unit: unit || null,
+      description: description || null,
+      color: color || '#3b82f6'
+    } as any); // Use 'as any' since we're passing to API with different field names
+  };
 
   const updateThreshold = async (monitorId: string, upper?: number, lower?: number, level?: string) => {
     const newThresholds = new Map(thresholds);
@@ -980,9 +1034,51 @@ function App() {
                           </p>
                         )}
                       </div>
+                      <div style={{ display: 'flex', gap: '4px', position: 'relative', zIndex: 100 }}>
+                        <button
+                          className="threshold-btn"
+                          onMouseDown={(e) => e.stopPropagation()}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            editConstant(monitor);
+                          }}
+                          title="Edit constant"
+                          style={{ pointerEvents: 'auto' }}
+                        >
+                          <Settings size={14} />
+                        </button>
+                        <button
+                          className="threshold-btn"
+                          onMouseDown={(e) => e.stopPropagation()}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            if (window.confirm('Are you sure you want to delete this constant card?')) {
+                              deleteConstant(monitor.monitor_id);
+                            }
+                          }}
+                          title="Delete constant"
+                          style={{ color: 'var(--destructive)', pointerEvents: 'auto' }}
+                        >
+                          ✕
+                        </button>
+                      </div>
                     </div>
-                    <div className="bento-value" style={{ fontSize: '48px', margin: '20px 0' }}>
-                      {formatValue(monitor.latest_value, monitor.unit)}
+
+                    <div className="bento-value constant-value" style={{ color: monitor.color || '#3b82f6' }}>
+                      {monitor.latest_value !== null ? monitor.latest_value.toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                      }) : 'N/A'}
+                      {monitor.unit && <span className="unit-text">{monitor.unit}</span>}
+                    </div>
+
+                    <div className="bento-stats" style={{ opacity: 0.5 }}>
+                      <div className="bento-stat">
+                        <span className="label">Type</span>
+                        <span className="value">Constant</span>
+                      </div>
                     </div>
                   </div>
                 );

@@ -15,6 +15,7 @@ from app.models.database import (
     MonitorSummary,
     get_db_session
 )
+from pydantic import BaseModel
 
 router = APIRouter()
 
@@ -467,3 +468,77 @@ async def execute_command(command_data: Dict[str, str]) -> Dict[str, Any]:
             "error": f"Error executing command: {str(e)}",
             "output": ""
         }
+
+
+# Constant card management endpoints
+class ConstantUpdate(BaseModel):
+    """Model for updating constant cards."""
+    name: Optional[str] = None
+    value: Optional[float] = None
+    unit: Optional[str] = None
+    description: Optional[str] = None
+    color: Optional[str] = None
+
+
+@router.put("/constant/{monitor_id}")
+async def update_constant(monitor_id: str, update: ConstantUpdate):
+    """Update a constant card (monitor with type='constant')."""
+    db = get_db_session()
+    try:
+        # Get the constant's latest record
+        constant = db.query(MonitoringData).filter(
+            MonitoringData.monitor_id == monitor_id,
+            MonitoringData.monitor_type == 'constant'
+        ).order_by(desc(MonitoringData.timestamp)).first()
+
+        if not constant:
+            raise HTTPException(status_code=404, detail="Constant not found")
+
+        # Update fields
+        if update.name is not None:
+            constant.monitor_name = update.name
+        if update.value is not None:
+            constant.value = update.value
+        if update.unit is not None:
+            constant.unit = update.unit
+        if update.description is not None:
+            constant.description = update.description
+        if update.color is not None:
+            constant.color = update.color
+
+        constant.timestamp = datetime.utcnow()
+        db.commit()
+
+        return {"success": True, "message": "Constant updated"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to update constant: {str(e)}")
+    finally:
+        db.close()
+
+
+@router.delete("/constant/{monitor_id}")
+async def delete_constant(monitor_id: str):
+    """Delete a constant card."""
+    db = get_db_session()
+    try:
+        # Delete all records for this constant
+        deleted = db.query(MonitoringData).filter(
+            MonitoringData.monitor_id == monitor_id,
+            MonitoringData.monitor_type == 'constant'
+        ).delete()
+
+        if deleted == 0:
+            raise HTTPException(status_code=404, detail="Constant not found")
+
+        db.commit()
+        return {"success": True, "message": f"Deleted {deleted} record(s)"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to delete constant: {str(e)}")
+    finally:
+        db.close()
