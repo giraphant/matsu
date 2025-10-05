@@ -92,8 +92,13 @@ const DexRates: React.FC = () => {
       return sortOrder === 'asc' ? a.localeCompare(b) : b.localeCompare(a);
     } else if (sortBy === 'spread') {
       // Sort by spread - only include enabled exchanges
-      const spreadA = calculateSpread(a) ?? 0;
-      const spreadB = calculateSpread(b) ?? 0;
+      const spreadA = calculateSpread(a);
+      const spreadB = calculateSpread(b);
+
+      // Put N/A (null) values at the end always
+      if (spreadA === null && spreadB === null) return 0;
+      if (spreadA === null) return 1;
+      if (spreadB === null) return -1;
 
       return sortOrder === 'asc' ? spreadA - spreadB : spreadB - spreadA;
     } else {
@@ -101,10 +106,10 @@ const DexRates: React.FC = () => {
       const rateA = groupedRates[a].find(r => r.exchange === sortBy)?.rate;
       const rateB = groupedRates[b].find(r => r.exchange === sortBy)?.rate;
 
-      // Put null/undefined values at the end
+      // Put N/A (null/undefined) values at the end always
       if ((rateA === null || rateA === undefined) && (rateB === null || rateB === undefined)) return 0;
-      if (rateA === null || rateA === undefined) return sortOrder === 'asc' ? 1 : -1;
-      if (rateB === null || rateB === undefined) return sortOrder === 'asc' ? -1 : 1;
+      if (rateA === null || rateA === undefined) return 1;
+      if (rateB === null || rateB === undefined) return -1;
 
       return sortOrder === 'asc' ? rateA - rateB : rateB - rateA;
     }

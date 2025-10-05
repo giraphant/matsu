@@ -395,11 +395,14 @@ async def get_funding_rates(force_refresh: bool = Query(False, description="Forc
     try:
         rates, last_updated = await get_cached_rates(force_refresh=force_refresh)
 
+        print(f"Returning {len(rates)} rates to frontend, last_updated: {last_updated}")
+
         return FundingRatesResponse(
             rates=rates,
             last_updated=last_updated
         )
     except Exception as e:
+        print(f"Error in get_funding_rates: {e}")
         return FundingRatesResponse(
             rates=[],
             last_updated=datetime.utcnow(),
