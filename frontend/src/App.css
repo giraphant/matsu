@@ -2180,13 +2180,17 @@ header p {
 .funding-rate-alerts {
   max-width: 600px;
   width: 90%;
-  max-height: 80vh;
+  max-height: 85vh;
   background: var(--card);
-  border-radius: var(--radius);
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  border-radius: calc(var(--radius) + 2px);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.05),
+    0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
   display: flex;
   flex-direction: column;
-  animation: slideUp 0.3s ease-out;
+  animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
 }
 
 @keyframes fadeIn {
@@ -2209,19 +2213,24 @@ header p {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px;
+  padding: 20px 24px;
   border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
 }
 
 .bottom-sheet-header h2 {
   margin: 0;
-  font-size: 20px;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--foreground);
+  letter-spacing: -0.01em;
 }
 
 .close-btn {
-  background: none;
+  background: transparent;
   border: none;
-  font-size: 28px;
+  font-size: 24px;
+  line-height: 1;
   cursor: pointer;
   color: var(--muted-foreground);
   width: 32px;
@@ -2229,8 +2238,8 @@ header p {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 4px;
-  transition: all 0.2s;
+  border-radius: calc(var(--radius) - 4px);
+  transition: all 0.15s;
 }
 
 .close-btn:hover {
@@ -2238,10 +2247,15 @@ header p {
   color: var(--foreground);
 }
 
+.close-btn:active {
+  transform: scale(0.95);
+}
+
 .bottom-sheet-content {
-  padding: 20px;
+  padding: 24px;
   overflow-y: auto;
   flex: 1;
+  overscroll-behavior: contain;
 }
 
 .alerts-list {
@@ -2256,17 +2270,18 @@ header p {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  padding: 16px;
-  background: var(--card);
+  padding: 14px 16px;
+  background: var(--background);
   border: 1px solid var(--border);
   border-radius: calc(var(--radius) - 2px);
   gap: 12px;
-  transition: all 0.2s;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .funding-rate-alerts .alert-item:hover {
-  border-color: var(--ring);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  background: var(--accent);
+  border-color: var(--muted-foreground);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .funding-rate-alerts .alert-info {
@@ -2278,36 +2293,44 @@ header p {
   font-size: 15px;
   font-weight: 600;
   color: var(--foreground);
+  line-height: 1.4;
 }
 
 .funding-rate-alerts .alert-actions {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   flex-shrink: 0;
 }
 
 .funding-rate-alerts .icon-btn {
-  background: var(--background);
+  background: transparent;
   border: 1px solid var(--border);
-  border-radius: calc(var(--radius) - 2px);
-  padding: 8px;
+  border-radius: calc(var(--radius) - 3px);
+  padding: 6px;
   cursor: pointer;
-  color: var(--foreground);
-  transition: all 0.2s;
+  color: var(--muted-foreground);
+  transition: all 0.15s;
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 32px;
+  height: 32px;
 }
 
 .funding-rate-alerts .icon-btn:hover {
-  background: var(--accent);
-  border-color: var(--ring);
+  background: var(--card);
+  border-color: var(--foreground);
+  color: var(--foreground);
+}
+
+.funding-rate-alerts .icon-btn:active {
+  transform: scale(0.95);
 }
 
 
 /* Funding Rate Alerts Form Styles - shadcn inspired */
 .funding-rate-alerts .form-group {
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
 .funding-rate-alerts .form-group label {
@@ -2316,21 +2339,23 @@ header p {
   font-weight: 500;
   color: var(--foreground);
   margin-bottom: 8px;
-  line-height: 1.5;
+  line-height: 1;
 }
 
 .funding-rate-alerts .form-group input[type="text"],
 .funding-rate-alerts .form-group input[type="number"],
 .funding-rate-alerts .form-group select {
+  display: flex;
+  height: 40px;
   width: 100%;
-  background: var(--background);
-  border: 1px solid var(--border);
   border-radius: calc(var(--radius) - 2px);
-  padding: 10px 12px;
+  border: 1px solid var(--border);
+  background: var(--background);
+  padding: 8px 12px;
   font-size: 14px;
   color: var(--foreground);
   font-family: inherit;
-  transition: all 0.2s;
+  transition: all 0.15s;
   line-height: 1.5;
 }
 
@@ -2338,50 +2363,107 @@ header p {
 .funding-rate-alerts .form-group input[type="number"]:focus,
 .funding-rate-alerts .form-group select:focus {
   outline: none;
-  border-color: var(--ring);
-  box-shadow: 0 0 0 3px rgba(var(--ring-rgb, 99, 102, 241), 0.1);
+  border-color: transparent;
+  box-shadow: 0 0 0 2px var(--ring);
 }
 
 .funding-rate-alerts .form-group input::placeholder {
   color: var(--muted-foreground);
-  opacity: 0.6;
+}
+
+.funding-rate-alerts .form-group input:disabled,
+.funding-rate-alerts .form-group select:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 
 .funding-rate-alerts .exchange-checkboxes {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
 }
 
 .funding-rate-alerts .checkbox-label {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
-  background: var(--background);
-  border: 1px solid var(--border);
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--card);
+  border: 1.5px solid var(--border);
   border-radius: calc(var(--radius) - 2px);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
   user-select: none;
 }
 
 .funding-rate-alerts .checkbox-label:hover {
   background: var(--accent);
-  border-color: var(--ring);
+  border-color: var(--muted-foreground);
+}
+
+.funding-rate-alerts .checkbox-label:has(input:checked) {
+  background: hsl(var(--primary) / 0.05);
+  border-color: var(--primary);
+}
+
+.funding-rate-alerts .checkbox-label:has(input:focus-visible) {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--background), 0 0 0 4px var(--ring);
 }
 
 .funding-rate-alerts .checkbox-label input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
   width: 16px;
   height: 16px;
+  border: 1.5px solid var(--primary);
+  border-radius: 3px;
   cursor: pointer;
-  accent-color: var(--primary);
+  background: var(--background);
+  transition: all 0.15s;
+  flex-shrink: 0;
+  position: relative;
+  margin: 0;
+}
+
+.funding-rate-alerts .checkbox-label input[type="checkbox"]:hover {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px hsl(var(--primary) / 0.1);
+}
+
+.funding-rate-alerts .checkbox-label input[type="checkbox"]:checked {
+  background: var(--primary);
+  border-color: var(--primary);
+}
+
+.funding-rate-alerts .checkbox-label input[type="checkbox"]:checked::after {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 1px;
+  width: 5px;
+  height: 9px;
+  border: solid var(--primary-foreground);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.funding-rate-alerts .checkbox-label input[type="checkbox"]:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--ring);
+}
+
+.funding-rate-alerts .checkbox-label input[type="checkbox"]:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 
 .funding-rate-alerts .checkbox-label span {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
   color: var(--foreground);
+  line-height: 1;
 }
 
 .funding-rate-alerts .form-actions {
