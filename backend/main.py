@@ -19,6 +19,7 @@ from app.api.alerts import router as alerts_router
 from app.api.constants import router as constants_router
 from app.api.auth import router as auth_router
 from app.api.dex import router as dex_router
+from app.api.polymarket import router as polymarket_router
 from app.models.database import create_tables, get_db_session, User
 
 
@@ -52,6 +53,7 @@ app.include_router(data_router, prefix="/api", tags=["data"])
 app.include_router(alerts_router, prefix="/api", tags=["alerts"])
 app.include_router(constants_router, prefix="/api", tags=["constants"])
 app.include_router(dex_router, prefix="/api", tags=["dex"])
+app.include_router(polymarket_router, prefix="/api", tags=["polymarket"])
 
 
 async def background_cache_warmer():
@@ -92,6 +94,41 @@ async def funding_rate_alert_checker_task():
         await asyncio.sleep(60)
 
 
+async def polymarket_fetcher_task():
+    """Background task to fetch Polymarket markets daily."""
+    import requests
+
+    # Wait before starting
+    await asyncio.sleep(30)
+
+    print("✓ Polymarket fetcher started")
+
+    POLYMARKET_API_URL = "https://clob.polymarket.com"
+
+    while True:
+        try:
+            # Fetch active markets
+            response = requests.get(
+                f"{POLYMARKET_API_URL}/markets",
+                params={"limit": 50},
+                timeout=30
+            )
+
+            if response.status_code == 200:
+                # Trigger the internal endpoint to process and store
+                import requests as req
+                req.post("http://localhost:8000/api/polymarket/fetch?limit=50")
+                print("✓ Polymarket markets refreshed")
+            else:
+                print(f"⚠ Failed to fetch Polymarket markets: {response.status_code}")
+
+        except Exception as e:
+            print(f"⚠ Error in Polymarket fetcher: {e}")
+
+        # Wait 24 hours (86400 seconds) before next fetch
+        await asyncio.sleep(86400)
+
+
 @app.on_event("startup")
 async def startup_event():
     """Initialize database on startup."""
@@ -100,6 +137,7 @@ async def startup_event():
     # Start background tasks
     asyncio.create_task(background_cache_warmer())
     asyncio.create_task(funding_rate_alert_checker_task())
+    asyncio.create_task(polymarket_fetcher_task())
 
     # Remove formula column if it exists (SQLite migration)
     import sqlite3

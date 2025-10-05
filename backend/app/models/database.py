@@ -227,6 +227,50 @@ class ConstantCard(Base):
         return f"<ConstantCard(name='{self.name}', value={self.value})>"
 
 
+class PolymarketMarket(Base):
+    """Database model for Polymarket prediction markets."""
+
+    __tablename__ = "polymarket_markets"
+
+    id = Column(Integer, primary_key=True, index=True)
+    condition_id = Column(String, unique=True, index=True, nullable=False)
+    question_id = Column(String, nullable=True)
+    question = Column(String, nullable=False)
+    description = Column(Text, nullable=True)
+    market_slug = Column(String, nullable=True)
+    end_date_iso = Column(DateTime, nullable=True)
+    game_start_time = Column(DateTime, nullable=True)
+    icon = Column(String, nullable=True)
+    image = Column(String, nullable=True)
+    active = Column(Boolean, default=True)
+    closed = Column(Boolean, default=False)
+    archived = Column(Boolean, default=False)
+    # Store tokens as JSON
+    tokens_json = Column(Text, nullable=True)  # JSON string of token data
+    tags = Column(Text, nullable=True)  # Comma-separated tags
+    # Metadata
+    fetched_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    def __repr__(self):
+        return f"<PolymarketMarket(question='{self.question}', condition_id='{self.condition_id}')>"
+
+
+class PolymarketAnalysis(Base):
+    """Database model for storing LLM analysis of Polymarket markets."""
+
+    __tablename__ = "polymarket_analyses"
+
+    id = Column(Integer, primary_key=True, index=True)
+    condition_id = Column(String, ForeignKey('polymarket_markets.condition_id'), nullable=False)
+    analysis_text = Column(Text, nullable=False)
+    model_name = Column(String, nullable=True)  # e.g., "gpt-4", "claude-3"
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f"<PolymarketAnalysis(condition_id='{self.condition_id}', created_at='{self.created_at}')>"
+
+
 def create_tables():
     """Create database tables."""
     Base.metadata.create_all(bind=engine)
