@@ -2377,93 +2377,34 @@ header p {
   opacity: 0.5;
 }
 
-.funding-rate-alerts .exchange-checkboxes {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 12px;
+/* Exchange filters use the same style as the main page */
+.funding-rate-alerts .exchange-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
-.funding-rate-alerts .checkbox-label {
-  position: relative;
+/* Simple checkbox for "Enable this alert" */
+.funding-rate-alerts .enable-checkbox-label {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 14px;
-  background: var(--card);
-  border: 1.5px solid var(--border);
-  border-radius: calc(var(--radius) - 2px);
+  gap: 10px;
   cursor: pointer;
-  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
   user-select: none;
 }
 
-.funding-rate-alerts .checkbox-label:hover {
-  background: var(--accent);
-  border-color: var(--muted-foreground);
-}
-
-.funding-rate-alerts .checkbox-label:has(input:checked) {
-  background: hsl(var(--primary) / 0.05);
-  border-color: var(--primary);
-}
-
-.funding-rate-alerts .checkbox-label:has(input:focus-visible) {
-  outline: none;
-  box-shadow: 0 0 0 2px var(--background), 0 0 0 4px var(--ring);
-}
-
-.funding-rate-alerts .checkbox-label input[type="checkbox"] {
-  appearance: none;
-  -webkit-appearance: none;
-  width: 16px;
-  height: 16px;
-  border: 1.5px solid var(--primary);
-  border-radius: 3px;
+.funding-rate-alerts .enable-checkbox-label input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
   cursor: pointer;
-  background: var(--background);
-  transition: all 0.15s;
-  flex-shrink: 0;
-  position: relative;
+  accent-color: var(--primary);
   margin: 0;
 }
 
-.funding-rate-alerts .checkbox-label input[type="checkbox"]:hover {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 4px hsl(var(--primary) / 0.1);
-}
-
-.funding-rate-alerts .checkbox-label input[type="checkbox"]:checked {
-  background: var(--primary);
-  border-color: var(--primary);
-}
-
-.funding-rate-alerts .checkbox-label input[type="checkbox"]:checked::after {
-  content: '';
-  position: absolute;
-  left: 4px;
-  top: 1px;
-  width: 5px;
-  height: 9px;
-  border: solid var(--primary-foreground);
-  border-width: 0 2px 2px 0;
-  transform: rotate(45deg);
-}
-
-.funding-rate-alerts .checkbox-label input[type="checkbox"]:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 2px var(--ring);
-}
-
-.funding-rate-alerts .checkbox-label input[type="checkbox"]:disabled {
-  cursor: not-allowed;
-  opacity: 0.5;
-}
-
-.funding-rate-alerts .checkbox-label span {
+.funding-rate-alerts .enable-checkbox-label span {
   font-size: 14px;
   font-weight: 500;
   color: var(--foreground);
-  line-height: 1;
 }
 
 .funding-rate-alerts .form-actions {

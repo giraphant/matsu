@@ -211,15 +211,15 @@ const FundingRateAlerts: React.FC<FundingRateAlertsProps> = ({ onClose }) => {
 
               <div className="form-group">
                 <label>选择交易所</label>
-                <div className="exchange-checkboxes">
+                <div className="exchange-filters">
                   {availableExchanges.map(exchange => (
-                    <label key={exchange} className="checkbox-label">
+                    <label key={exchange} className="exchange-checkbox">
                       <input
                         type="checkbox"
                         checked={formData.exchanges.includes(exchange)}
                         onChange={() => toggleExchange(exchange)}
                       />
-                      <span>{exchange.toUpperCase()}</span>
+                      <span>{exchange === 'backpack' ? 'BP' : exchange.toUpperCase()}</span>
                     </label>
                   ))}
                 </div>
@@ -242,7 +242,7 @@ const FundingRateAlerts: React.FC<FundingRateAlertsProps> = ({ onClose }) => {
               </div>
 
               <div className="form-group">
-                <label className="checkbox-label">
+                <label className="enable-checkbox-label">
                   <input
                     type="checkbox"
                     checked={formData.enabled}
