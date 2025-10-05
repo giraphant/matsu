@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { Settings, Moon, Sun, LayoutGrid, LineChart as LineChartIcon, Bell, Plus, Pencil, Trash2, TrendingUp } from 'lucide-react';
+import { Settings, Moon, Sun, LayoutGrid, LineChart as LineChartIcon, Bell, Plus, Pencil, Trash2, TrendingUp, Lock, Unlock } from 'lucide-react';
 import GridLayout from 'react-grid-layout';
 import ManageMonitorItem from './ManageMonitorItem';
 import ConstantCardModal from './ConstantCardModal';
@@ -98,6 +98,7 @@ function App() {
   const [showConstantModal, setShowConstantModal] = useState(false);
   const [editingConstant, setEditingConstant] = useState<ConstantCard | null>(null);
   const [isMobile, setIsMobile] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
 
   // Detect mobile device
   useEffect(() => {
@@ -451,8 +452,10 @@ function App() {
   };
 
   const onLayoutChange = (layout: any[]) => {
-    // Don't save layout changes on mobile to prevent constants from moving to bottom
-    if (isMobile) return;
+    // Only save layout changes when:
+    // 1. Desktop mode (always editable), OR
+    // 2. Mobile in edit mode
+    if (isMobile && !isEditMode) return;
 
     setGridLayout(layout);
     localStorage.setItem('gridLayout', JSON.stringify(layout));
@@ -887,6 +890,16 @@ function App() {
             >
               <TrendingUp size={18} />
             </button>
+            {isMobile && viewMode === 'overview' && (
+              <button
+                className={`btn-secondary ${isEditMode ? 'active' : ''}`}
+                onClick={() => setIsEditMode(!isEditMode)}
+                title={isEditMode ? 'Lock cards' : 'Edit cards'}
+                style={{ padding: '8px 12px' }}
+              >
+                {isEditMode ? <Unlock size={18} /> : <Lock size={18} />}
+              </button>
+            )}
             <button
               className="btn-secondary"
               onClick={toggleDarkMode}
@@ -909,7 +922,7 @@ function App() {
           <code>POST /webhook/distill</code>
         </div>
       ) : viewMode === 'overview' ? (
-        <div className="bento-container">
+        <div className={`bento-container ${isMobile && isEditMode ? 'edit-mode' : ''}`}>
           <GridLayout
             className="bento-grid"
             layout={gridLayout.length > 0 ? getMergedLayout(visibleMonitors, constants, gridLayout) : generateDefaultLayout(visibleMonitors)}
@@ -917,8 +930,8 @@ function App() {
             rowHeight={200}
             width={1600}
             onLayoutChange={onLayoutChange}
-            isDraggable={!isMobile}
-            isResizable={!isMobile}
+            isDraggable={isMobile ? isEditMode : true}
+            isResizable={isMobile ? isEditMode : true}
             compactType={null}
             preventCollision={false}
           >
@@ -1116,35 +1129,37 @@ function App() {
                       </p>
                     )}
                   </div>
-                  <div style={{ display: 'flex', gap: '4px', position: 'relative', zIndex: 100 }}>
-                    <button
-                      className="threshold-btn"
-                      onMouseDown={(e) => e.stopPropagation()}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setEditingConstant(constant);
-                        setShowConstantModal(true);
-                      }}
-                      title="Edit constant"
-                      style={{ pointerEvents: 'auto' }}
-                    >
-                      <Pencil size={14} />
-                    </button>
-                    <button
-                      className="threshold-btn"
-                      onMouseDown={(e) => e.stopPropagation()}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        deleteConstant(constant.id);
-                      }}
-                      title="Delete constant"
-                      style={{ color: 'var(--destructive)', pointerEvents: 'auto' }}
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
+                  {(!isMobile || isEditMode) && (
+                    <div style={{ display: 'flex', gap: '4px', position: 'relative', zIndex: 100 }}>
+                      <button
+                        className="threshold-btn"
+                        onMouseDown={(e) => e.stopPropagation()}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setEditingConstant(constant);
+                          setShowConstantModal(true);
+                        }}
+                        title="Edit constant"
+                        style={{ pointerEvents: 'auto' }}
+                      >
+                        <Pencil size={14} />
+                      </button>
+                      <button
+                        className="threshold-btn"
+                        onMouseDown={(e) => e.stopPropagation()}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          deleteConstant(constant.id);
+                        }}
+                        title="Delete constant"
+                        style={{ color: 'var(--destructive)', pointerEvents: 'auto' }}
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 <div className="bento-value constant-value" style={{ color: constant.color }}>
@@ -1165,17 +1180,19 @@ function App() {
             ))}
           </GridLayout>
 
-          {/* Floating Action Button for Adding Constants */}
-          <button
-            className="fab"
-            onClick={() => {
-              setEditingConstant(null);
-              setShowConstantModal(true);
-            }}
-            title="Add constant card"
-          >
-            <Plus size={20} />
-          </button>
+          {/* Floating Action Button for Adding Constants - only show in edit mode on mobile */}
+          {(!isMobile || isEditMode) && (
+            <button
+              className="fab"
+              onClick={() => {
+                setEditingConstant(null);
+                setShowConstantModal(true);
+              }}
+              title="Add constant card"
+            >
+              <Plus size={20} />
+            </button>
+          )}
         </div>
       ) : viewMode === 'dex' ? (
         <DexRates />

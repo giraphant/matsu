@@ -755,6 +755,16 @@ header p {
   -webkit-overflow-scrolling: touch;
 }
 
+/* Edit mode visual indicator on mobile */
+.bento-container.edit-mode .bento-item {
+  box-shadow: 0 0 0 2px var(--primary) inset !important;
+  cursor: move !important;
+}
+
+.bento-container.edit-mode .react-grid-item.react-draggable {
+  cursor: move !important;
+}
+
 .bento-grid {
   position: relative;
   margin: 0 auto;
