@@ -14,8 +14,12 @@ from collections import defaultdict
 import json
 
 from app.models.database import get_db, FundingRateAlert
+from app.api.alerts import send_pushover_notification
 
 router = APIRouter()
+
+# Background task flag
+_alert_checker_running = False
 
 # Global cache for funding rates
 _funding_rates_cache: Optional[List['FundingRate']] = None
@@ -611,3 +615,114 @@ async def delete_funding_rate_alert(
     db.commit()
 
     return {"message": "Alert deleted successfully"}
+
+
+async def check_funding_rate_alerts():
+    """Check all enabled funding rate alerts and send notifications if triggered."""
+    from app.models.database import SessionLocal
+
+    db = SessionLocal()
+    try:
+        # Get current funding rates
+        rates, last_updated = await get_cached_rates(force_refresh=False)
+
+        # Group rates by symbol
+        grouped_rates = {}
+        for rate in rates:
+            if rate.symbol not in grouped_rates:
+                grouped_rates[rate.symbol] = {}
+            grouped_rates[rate.symbol][rate.exchange] = rate.rate
+
+        # Get all enabled alerts
+        alerts = db.query(FundingRateAlert).filter(FundingRateAlert.enabled == True).all()
+
+        for alert in alerts:
+            exchanges = json.loads(alert.exchanges)
+            triggered = False
+            message = ""
+
+            if alert.alert_type == 'single':
+                # Check single exchange funding rates
+                for symbol, exchange_rates in grouped_rates.items():
+                    for exchange in exchanges:
+                        if exchange in exchange_rates and exchange_rates[exchange] is not None:
+                            rate = exchange_rates[exchange]
+                            if rate >= alert.threshold:
+                                triggered = True
+                                message = f"🎯 {alert.name}\n{symbol} on {exchange.upper()}: {rate*100:.4f}% (threshold: {alert.threshold*100:.2f}%)"
+                                break
+                    if triggered:
+                        break
+
+            elif alert.alert_type == 'spread':
+                # Check spread between exchanges
+                for symbol, exchange_rates in grouped_rates.items():
+                    # Get rates for selected exchanges
+                    selected_rates = []
+                    for exchange in exchanges:
+                        if exchange in exchange_rates and exchange_rates[exchange] is not None:
+                            selected_rates.append((exchange, exchange_rates[exchange]))
+
+                    if len(selected_rates) >= 2:
+                        rates_only = [r[1] for r in selected_rates]
+                        spread = max(rates_only) - min(rates_only)
+
+                        if spread >= alert.threshold:
+                            triggered = True
+                            # Find which exchanges have max/min
+                            max_exchange = [e for e, r in selected_rates if r == max(rates_only)][0]
+                            min_exchange = [e for e, r in selected_rates if r == min(rates_only)][0]
+                            message = f"📊 {alert.name}\n{symbol} spread: {spread*100:.4f}%\n{max_exchange.upper()}: {max(rates_only)*100:.4f}% | {min_exchange.upper()}: {min(rates_only)*100:.4f}%\n(threshold: {alert.threshold*100:.2f}%)"
+                            break
+
+            if triggered:
+                # Send notification
+                try:
+                    await send_pushover_notification(
+                        title="Funding Rate Alert",
+                        message=message,
+                        priority=1,
+                        db=db
+                    )
+                    # Update last triggered time
+                    alert.last_triggered_at = datetime.utcnow()
+                    db.commit()
+                    print(f"Alert triggered: {alert.name}")
+                except Exception as e:
+                    print(f"Failed to send alert notification: {e}")
+
+    except Exception as e:
+        print(f"Error checking funding rate alerts: {e}")
+    finally:
+        db.close()
+
+
+async def funding_rate_alert_checker_task():
+    """Background task to check funding rate alerts every minute."""
+    global _alert_checker_running
+    _alert_checker_running = True
+
+    print("Starting funding rate alert checker...")
+
+    while _alert_checker_running:
+        try:
+            await check_funding_rate_alerts()
+        except Exception as e:
+            print(f"Error in alert checker task: {e}")
+
+        # Wait 60 seconds before next check
+        await asyncio.sleep(60)
+
+
+@router.post("/dex/funding-rate-alerts/start-checker")
+async def start_alert_checker():
+    """Start the background alert checker task."""
+    global _alert_checker_running
+
+    if _alert_checker_running:
+        return {"message": "Alert checker is already running"}
+
+    # Start background task
+    asyncio.create_task(funding_rate_alert_checker_task())
+
+    return {"message": "Alert checker started"}

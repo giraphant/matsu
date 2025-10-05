@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowUp, ArrowDown, RefreshCw } from 'lucide-react';
+import { ArrowUp, ArrowDown, RefreshCw, Bell } from 'lucide-react';
+import FundingRateAlerts from './FundingRateAlerts';
 
 interface FundingRate {
   exchange: string;
@@ -27,6 +28,7 @@ const DexRates: React.FC = () => {
   const [enabledExchanges, setEnabledExchanges] = useState<Set<string>>(
     new Set(['binance', 'bybit', 'hyperliquid', 'lighter', 'aster', 'grvt', 'backpack'])
   );
+  const [showAlertManager, setShowAlertManager] = useState(false);
 
   const fetchRates = async (forceRefresh: boolean = false) => {
     try {
@@ -186,10 +188,16 @@ const DexRates: React.FC = () => {
             </span>
           )}
         </div>
-        <button onClick={() => fetchRates(true)} className="refresh-btn" disabled={loading}>
-          <RefreshCw size={16} className={loading ? 'spinning' : ''} />
-          Refresh
-        </button>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button onClick={() => setShowAlertManager(true)} className="btn-secondary" style={{ padding: '8px 12px' }}>
+            <Bell size={16} />
+            管理提醒
+          </button>
+          <button onClick={() => fetchRates(true)} className="refresh-btn" disabled={loading}>
+            <RefreshCw size={16} className={loading ? 'spinning' : ''} />
+            Refresh
+          </button>
+        </div>
       </div>
 
       <div className="dex-filters">
@@ -366,6 +374,10 @@ const DexRates: React.FC = () => {
       <div className="dex-footer">
         Showing {sortedSymbols.length} symbols
       </div>
+
+      {showAlertManager && (
+        <FundingRateAlerts onClose={() => setShowAlertManager(false)} />
+      )}
     </div>
   );
 };
