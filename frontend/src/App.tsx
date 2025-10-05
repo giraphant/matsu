@@ -471,11 +471,13 @@ function App() {
     const allItems = [
       ...visibleMonitors.map(m => ({
         type: 'monitor',
+        id: m.monitor_id,
         data: m,
         layout: layoutMap.get(m.monitor_id) || { y: 999, x: 0 }
       })),
       ...constants.map(c => ({
         type: 'constant',
+        id: `const-${c.id}`,
         data: c,
         layout: layoutMap.get(`const-${c.id}`) || { y: 999, x: 0 }
       }))
@@ -486,6 +488,12 @@ function App() {
       if (a.layout.y !== b.layout.y) return a.layout.y - b.layout.y;
       return a.layout.x - b.layout.x;
     });
+
+    console.log('Mobile sorted items:', allItems.map(item => ({
+      id: item.id,
+      type: item.type,
+      y: item.layout.y
+    })));
 
     // Split back into monitors and constants, maintaining order
     const sortedMonitors = allItems

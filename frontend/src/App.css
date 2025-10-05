@@ -1353,50 +1353,52 @@ header p {
 @media (max-width: 768px) {
   /* Header adjustments - compact mobile layout */
   header {
-    padding: 12px 16px;
+    padding: 10px 12px;
+    position: relative;
+  }
+
+  header > div {
+    position: relative;
   }
 
   header h1 {
-    font-size: 18px;
+    font-size: 16px;
     margin-bottom: 0;
+    padding-right: 180px; /* Space for buttons */
   }
 
   header p {
     display: none; /* Hide subtitle on mobile */
   }
 
-  /* Make buttons smaller and horizontal */
-  header > div {
-    flex-direction: row;
-    gap: 8px;
-    align-items: center;
-    flex-wrap: wrap;
-  }
-
-  header > div > div {
-    display: flex;
-    gap: 4px;
+  /* Move buttons to top right corner, absolutely positioned */
+  header > div > div:last-child {
+    position: absolute !important;
+    top: 0;
+    right: 0;
+    display: flex !important;
+    gap: 4px !important;
+    z-index: 100;
+    flex-direction: row !important;
+    align-items: center !important;
   }
 
   header button {
     padding: 6px !important;
-    min-width: 36px;
-    min-height: 36px;
+    min-width: 32px !important;
+    min-height: 32px !important;
   }
 
   header button svg {
-    width: 18px;
-    height: 18px;
+    width: 16px !important;
+    height: 16px !important;
   }
 
-  /* Hide button text, show only icons */
+  /* Logout button compact */
   header .btn-secondary:not(:has(svg)) {
-    font-size: 0;
-    min-width: 36px;
-  }
-
-  header .btn-secondary:not(:has(svg))::before {
-    font-size: 14px;
+    padding: 6px 10px !important;
+    font-size: 11px !important;
+    min-width: auto !important;
   }
 
   /* Dashboard layout - stack on mobile */
