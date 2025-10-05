@@ -2386,12 +2386,11 @@ header p {
 
 /* Simple checkbox for "Enable this alert" */
 .funding-rate-alerts .enable-checkbox-label {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 10px;
   cursor: pointer;
   user-select: none;
-  padding: 2px 0;
 }
 
 .funding-rate-alerts .enable-checkbox-label input[type="checkbox"] {
@@ -2400,15 +2399,17 @@ header p {
   cursor: pointer;
   accent-color: var(--primary);
   margin: 0;
+  padding: 0;
   border-radius: 4px;
   flex-shrink: 0;
+  vertical-align: middle;
 }
 
 .funding-rate-alerts .enable-checkbox-label span {
   font-size: 14px;
   font-weight: 500;
   color: var(--foreground);
-  line-height: 1.5;
+  line-height: 1;
 }
 
 .funding-rate-alerts .form-actions {
