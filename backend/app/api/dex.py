@@ -91,53 +91,57 @@ async def fetch_grvt_funding_rates() -> List[FundingRate]:
             if not instruments:
                 return []
 
-            # Step 2: Fetch funding for each instrument with delay
-            rates = []
-            for i, instrument in enumerate(instruments):
+            # Step 2: Fetch funding for instruments with concurrency limit
+            # Use semaphore to limit concurrent requests to avoid rate limiting
+            semaphore = asyncio.Semaphore(5)  # Max 5 concurrent requests
+
+            async def fetch_instrument_funding(instrument):
                 instrument_id = instrument.get("instrument")
                 base_currency = instrument.get("base")
 
                 if not instrument_id or not base_currency:
-                    continue
+                    return None
 
-                try:
-                    funding_response = await client.post(funding_url, json={
-                        "instrument": instrument_id,
-                        "limit": 1
-                    }, headers={
-                        "Accept": "application/json",
-                        "Content-Type": "application/json"
-                    })
-                    funding_response.raise_for_status()
-                    funding_data = funding_response.json()
+                async with semaphore:
+                    try:
+                        funding_response = await client.post(funding_url, json={
+                            "instrument": instrument_id,
+                            "limit": 1
+                        }, headers={
+                            "Accept": "application/json",
+                            "Content-Type": "application/json"
+                        })
+                        funding_response.raise_for_status()
+                        funding_data = funding_response.json()
 
-                    funding_result = funding_data.get("result", [])
-                    if not funding_result:
-                        continue
+                        funding_result = funding_data.get("result", [])
+                        if not funding_result:
+                            return None
 
-                    funding_point = funding_result[0]
-                    # Use 8h average if available
-                    funding_rate = funding_point.get("funding_rate_8_h_avg") or funding_point.get("funding_rate")
+                        funding_point = funding_result[0]
+                        # Use 8h average if available
+                        funding_rate = funding_point.get("funding_rate_8_h_avg") or funding_point.get("funding_rate")
 
-                    if funding_rate is not None:
-                        # GRVT returns percentage, divide by 100
-                        rate_value = float(funding_rate) / 100
+                        if funding_rate is not None:
+                            # GRVT returns percentage, divide by 100
+                            rate_value = float(funding_rate) / 100
 
-                        rates.append(FundingRate(
-                            exchange="grvt",
-                            symbol=base_currency.upper(),
-                            rate=rate_value,
-                            next_funding_time=funding_point.get("funding_time"),
-                            mark_price=float(funding_point.get("mark_price")) if funding_point.get("mark_price") else None
-                        ))
+                            return FundingRate(
+                                exchange="grvt",
+                                symbol=base_currency.upper(),
+                                rate=rate_value,
+                                next_funding_time=funding_point.get("funding_time"),
+                                mark_price=float(funding_point.get("mark_price")) if funding_point.get("mark_price") else None
+                            )
+                    except Exception as e:
+                        return None
 
-                    # Delay 500ms to avoid rate limiting
-                    if i < len(instruments) - 1:
-                        await asyncio.sleep(0.5)
+            # Fetch all instruments concurrently with rate limiting
+            tasks = [fetch_instrument_funding(inst) for inst in instruments]
+            results = await asyncio.gather(*tasks)
 
-                except Exception as e:
-                    continue
-
+            # Filter out None results
+            rates = [r for r in results if r is not None]
             return rates
     except Exception as e:
         print(f"Error fetching GRVT rates: {e}")
@@ -338,6 +342,9 @@ async def normalize_binance_rates(rates: List[FundingRate]) -> List[FundingRate]
 
 async def fetch_all_funding_rates() -> List[FundingRate]:
     """Fetch funding rates from all DEXs and normalize them."""
+    import time
+    start_time = time.time()
+
     # Fetch from all sources in parallel
     lighter_rates, aster_rates, grvt_rates, backpack_rates = await asyncio.gather(
         fetch_lighter_funding_rates(),
@@ -348,6 +355,9 @@ async def fetch_all_funding_rates() -> List[FundingRate]:
 
     # Normalize Binance rates to 8-hour periods
     normalized_lighter = await normalize_binance_rates(lighter_rates)
+
+    elapsed = time.time() - start_time
+    print(f"Fetched all funding rates in {elapsed:.2f}s - Lighter: {len(normalized_lighter)}, ASTER: {len(aster_rates)}, GRVT: {len(grvt_rates)}, Backpack: {len(backpack_rates)}")
 
     # Combine all rates
     return normalized_lighter + aster_rates + grvt_rates + backpack_rates
