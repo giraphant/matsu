@@ -687,9 +687,22 @@ function App() {
     };
 
     const soundFile = soundFiles[level as keyof typeof soundFiles] || soundFiles.medium;
+    console.log(`[Alert Sound] Playing ${level} alert sound: ${soundFile}, volume: ${config.volume}`);
+
     const audio = new Audio(soundFile);
     audio.volume = config.volume;
-    audio.play().catch(e => console.log('Audio play failed:', e));
+
+    audio.addEventListener('canplaythrough', () => {
+      console.log(`[Alert Sound] Audio loaded successfully: ${soundFile}`);
+    });
+
+    audio.addEventListener('error', (e) => {
+      console.error(`[Alert Sound] Failed to load audio: ${soundFile}`, e);
+    });
+
+    audio.play()
+      .then(() => console.log(`[Alert Sound] Playing sound: ${soundFile}`))
+      .catch(e => console.error('[Alert Sound] Play failed:', e));
   };
 
   const requestNotificationPermission = async () => {
