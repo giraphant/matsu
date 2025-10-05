@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { Settings, Moon, Sun, LayoutGrid, LineChart as LineChartIcon, Bell, Plus, Pencil, Trash2, TrendingUp, Menu, X } from 'lucide-react';
 import GridLayout from 'react-grid-layout';
@@ -492,6 +492,7 @@ function App() {
     // Don't save layout changes on mobile (use dedicated editor instead)
     if (isMobile) return;
 
+    console.log('[Layout Debug] onLayoutChange called, new layout IDs:', layout.map(l => l.i));
     setGridLayout(layout);
     localStorage.setItem('gridLayout', JSON.stringify(layout));
   };
@@ -893,6 +894,15 @@ function App() {
     return !isHidden && matchesTag;
   });
 
+  // Memoize the computed layout to prevent unnecessary recalculations
+  const computedLayout = useMemo(() => {
+    const result = gridLayout.length > 0
+      ? getMergedLayout(visibleMonitors, constants, gridLayout)
+      : generateDefaultLayout(visibleMonitors, constants);
+    console.log('[Layout Debug] useMemo computed new layout');
+    return result;
+  }, [visibleMonitors, constants, gridLayout]);
+
   const currentMonitor = monitors.find(m => m.monitor_id === selectedMonitor);
 
   if (loading) {
@@ -1071,7 +1081,7 @@ function App() {
         <div className="bento-container">
           <GridLayout
             className="bento-grid"
-            layout={gridLayout.length > 0 ? getMergedLayout(visibleMonitors, constants, gridLayout) : generateDefaultLayout(visibleMonitors, constants)}
+            layout={computedLayout}
             cols={4}
             rowHeight={200}
             width={1600}
