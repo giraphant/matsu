@@ -473,6 +473,9 @@ function App() {
     // Don't save layout changes on mobile (use dedicated editor instead)
     if (isMobile) return;
 
+    console.log('[Layout] onLayoutChange called, saving layout with', layout.length, 'items');
+    console.log('[Layout] New layout constant IDs:', layout.filter(l => l.i.startsWith('const-')).map(l => l.i));
+
     setGridLayout(layout);
     localStorage.setItem('gridLayout', JSON.stringify(layout));
   };
@@ -877,6 +880,8 @@ function App() {
     // Log constant card positions for debugging
     const constantLayouts = result.filter(l => l.i.startsWith('const-'));
     console.log('[Layout] Constant positions:', constantLayouts.map(l => ({ id: l.i, x: l.x, y: l.y })));
+    console.log('[Layout] gridLayout has constants:', gridLayout.filter(l => l.i.startsWith('const-')).length);
+    console.log('[Layout] constants state count:', constants.length);
 
     return result;
   }, [visibleMonitors, constants, gridLayout]);
