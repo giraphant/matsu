@@ -506,6 +506,70 @@ header p {
   justify-content: flex-end;
 }
 
+/* Constant form styles */
+.constant-form {
+  padding: 0;
+  margin-top: 16px;
+}
+
+.constant-form .form-group {
+  margin-bottom: 20px;
+}
+
+.constant-form .form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--card-foreground);
+}
+
+.form-input,
+.form-textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: calc(var(--radius) - 2px);
+  border: 1px solid var(--border);
+  background: var(--background);
+  color: var(--foreground);
+  font-family: inherit;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.form-input:focus,
+.form-textarea:focus {
+  outline: none;
+  border-color: var(--ring);
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.05);
+}
+
+.form-textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.color-picker-group {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.color-picker {
+  width: 60px;
+  height: 44px;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) - 2px);
+  cursor: pointer;
+  padding: 2px;
+}
+
+.color-value {
+  color: var(--muted-foreground);
+  font-size: 14px;
+  font-family: monospace;
+}
+
 .btn-primary,
 .btn-secondary {
   border-radius: calc(var(--radius) - 2px);
@@ -1328,14 +1392,50 @@ header p {
     gap: 12px;
   }
 
-  /* Modals */
+  /* Modals - optimized for mobile */
+  .modal-overlay {
+    padding: 0;
+    align-items: flex-end; /* Bottom sheet style on mobile */
+  }
+
   .modal-content {
-    width: 95%;
-    max-width: 95%;
-    margin: 20px auto;
-    padding: 20px;
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 24px 20px;
     max-height: 90vh;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: var(--radius) var(--radius) 0 0; /* Only round top corners */
+  }
+
+  .modal-content h3 {
+    font-size: 20px !important;
+  }
+
+  /* Larger inputs in modals */
+  .custom-unit-input input,
+  .pushover-input,
+  input[type="text"],
+  input[type="number"],
+  input[type="password"],
+  select {
+    padding: 14px 12px !important;
+    font-size: 16px !important; /* Prevents iOS zoom */
+    min-height: 48px;
+  }
+
+  /* Larger buttons in modals */
+  .modal-actions button,
+  .pushover-actions button {
+    padding: 14px 20px !important;
+    font-size: 16px !important;
+    min-height: 48px;
+  }
+
+  .modal-actions {
+    gap: 12px;
+    margin-top: 20px;
   }
 
   .modal h2 {
@@ -1365,23 +1465,77 @@ header p {
     justify-content: flex-end;
   }
 
-  /* Buttons */
+  /* Buttons - larger touch targets */
   .btn-primary,
   .btn-secondary,
   .btn-destructive {
-    padding: 10px 16px;
-    font-size: 14px;
+    padding: 14px 20px !important;
+    font-size: 16px !important;
+    min-height: 48px;
   }
 
-  /* Threshold popover */
+  /* Bell icon button for alerts */
+  .threshold-btn {
+    min-width: 44px !important;
+    min-height: 44px !important;
+    padding: 12px !important;
+  }
+
+  /* FAB for adding constants */
+  .fab {
+    width: 60px !important;
+    height: 60px !important;
+    font-size: 24px !important;
+  }
+
+  /* Threshold popover - full screen on mobile for better UX */
   .threshold-popover {
     position: fixed !important;
     left: 50% !important;
     top: 50% !important;
     transform: translate(-50%, -50%) !important;
     width: 90%;
-    max-width: 320px;
-    z-index: 1000;
+    max-width: 350px;
+    z-index: 10001;
+    max-height: 85vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Larger touch targets for threshold inputs */
+  .threshold-input-group input,
+  .alert-level-select {
+    padding: 14px 12px !important;
+    font-size: 16px !important; /* Prevents iOS zoom on focus */
+    min-height: 48px;
+  }
+
+  .threshold-input-group label {
+    font-size: 14px !important;
+    margin-bottom: 8px !important;
+  }
+
+  .threshold-popover h4 {
+    font-size: 16px !important;
+    margin-bottom: 16px !important;
+  }
+
+  .threshold-popover-actions button {
+    padding: 14px !important;
+    font-size: 16px !important;
+    min-height: 48px;
+  }
+
+  /* Add backdrop overlay for threshold popover */
+  .bento-item:has(.threshold-popover)::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 10000;
   }
 
   /* Empty state */

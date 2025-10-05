@@ -67,33 +67,29 @@ export default function ConstantCardModal({ show, onClose, onSave, editingConsta
   if (!show) return null;
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-content" style={{ maxWidth: '500px' }}>
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '500px' }}>
         <div className="modal-header">
-          <h2>{editingConstant ? 'Edit Constant Card' : 'New Constant Card'}</h2>
+          <h3>{editingConstant ? 'Edit Constant Card' : 'New Constant Card'}</h3>
           <button className="close-btn" onClick={onClose}>×</button>
         </div>
 
-        <form onSubmit={handleSubmit} style={{ padding: '20px' }}>
-          <div className="form-group" style={{ marginBottom: '16px' }}>
-            <label htmlFor="const-name" style={{ display: 'block', marginBottom: '8px', fontWeight: 500 }}>
-              Name *
-            </label>
+        <form onSubmit={handleSubmit} className="constant-form">
+          <div className="form-group">
+            <label htmlFor="const-name">Name *</label>
             <input
               id="const-name"
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Target APR, Risk-Free Rate"
-              style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--background)', color: 'var(--foreground)' }}
+              className="form-input"
               required
             />
           </div>
 
-          <div className="form-group" style={{ marginBottom: '16px' }}>
-            <label htmlFor="const-value" style={{ display: 'block', marginBottom: '8px', fontWeight: 500 }}>
-              Value *
-            </label>
+          <div className="form-group">
+            <label htmlFor="const-value">Value *</label>
             <input
               id="const-value"
               type="number"
@@ -101,65 +97,50 @@ export default function ConstantCardModal({ show, onClose, onSave, editingConsta
               value={value}
               onChange={(e) => setValue(e.target.value)}
               placeholder="e.g. 10.5"
-              style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--background)', color: 'var(--foreground)' }}
+              className="form-input"
               required
             />
           </div>
 
-          <div className="form-group" style={{ marginBottom: '16px' }}>
-            <label htmlFor="const-unit" style={{ display: 'block', marginBottom: '8px', fontWeight: 500 }}>
-              Unit
-            </label>
+          <div className="form-group">
+            <label htmlFor="const-unit">Unit</label>
             <input
               id="const-unit"
               type="text"
               value={unit}
               onChange={(e) => setUnit(e.target.value)}
               placeholder="e.g. %, $, ETH"
-              style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--background)', color: 'var(--foreground)' }}
+              className="form-input"
             />
           </div>
 
-          <div className="form-group" style={{ marginBottom: '16px' }}>
-            <label htmlFor="const-desc" style={{ display: 'block', marginBottom: '8px', fontWeight: 500 }}>
-              Description
-            </label>
+          <div className="form-group">
+            <label htmlFor="const-desc">Description</label>
             <textarea
               id="const-desc"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Optional description..."
               rows={3}
-              style={{
-                width: '100%',
-                padding: '8px',
-                borderRadius: '6px',
-                border: '1px solid var(--border)',
-                fontFamily: 'inherit',
-                resize: 'vertical',
-                background: 'var(--background)',
-                color: 'var(--foreground)'
-              }}
+              className="form-textarea"
             />
           </div>
 
-          <div className="form-group" style={{ marginBottom: '24px' }}>
-            <label htmlFor="const-color" style={{ display: 'block', marginBottom: '8px', fontWeight: 500 }}>
-              Color
-            </label>
-            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <div className="form-group">
+            <label htmlFor="const-color">Color</label>
+            <div className="color-picker-group">
               <input
                 id="const-color"
                 type="color"
                 value={color}
                 onChange={(e) => setColor(e.target.value)}
-                style={{ width: '60px', height: '40px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}
+                className="color-picker"
               />
-              <span style={{ color: 'var(--muted-foreground)', fontSize: '14px' }}>{color}</span>
+              <span className="color-value">{color}</span>
             </div>
           </div>
 
-          <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+          <div className="modal-actions">
             <button type="button" className="btn-secondary" onClick={onClose}>
               Cancel
             </button>
