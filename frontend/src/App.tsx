@@ -288,7 +288,6 @@ function App() {
     try {
       const response = await fetch('/api/constants');
       const data = await response.json();
-      console.log('[Constants Debug] Loaded constants:', data.map((c: any) => ({ id: c.id, name: c.name })));
       setConstants(data);
     } catch (error) {
       console.error('Failed to load constants:', error);
@@ -419,13 +418,6 @@ function App() {
   };
 
   const getMergedLayout = (monitors: MonitorSummary[], constants: ConstantCard[], savedLayout: any[]) => {
-    console.log('[Layout Debug] getMergedLayout called');
-    console.log('[Layout Debug] monitors count:', monitors.length);
-    console.log('[Layout Debug] constants count:', constants.length);
-    console.log('[Layout Debug] constants order:', constants.map(c => ({ id: c.id, name: c.name })));
-    console.log('[Layout Debug] savedLayout count:', savedLayout.length);
-    console.log('[Layout Debug] savedLayout IDs:', savedLayout.map(l => l.i));
-
     // Create set of all current IDs
     const allCurrentIds = new Set<string>();
     monitors.forEach(m => allCurrentIds.add(m.monitor_id));
@@ -433,7 +425,6 @@ function App() {
 
     // Start with saved layouts that still exist
     const allLayouts: any[] = savedLayout.filter(l => allCurrentIds.has(l.i));
-    console.log('[Layout Debug] After filtering savedLayout:', allLayouts.map(l => l.i));
 
     // Track which items we've already added
     const addedIds = new Set(allLayouts.map(l => l.i));
@@ -480,11 +471,9 @@ function App() {
           maxH: 3
         });
         addedIds.add(constId);
-        console.log('[Layout Debug] Added new constant:', constId);
       }
     });
 
-    console.log('[Layout Debug] Final layout IDs:', allLayouts.map(l => l.i));
     return allLayouts;
   };
 
@@ -492,7 +481,6 @@ function App() {
     // Don't save layout changes on mobile (use dedicated editor instead)
     if (isMobile) return;
 
-    console.log('[Layout Debug] onLayoutChange called, new layout IDs:', layout.map(l => l.i));
     setGridLayout(layout);
     localStorage.setItem('gridLayout', JSON.stringify(layout));
   };
@@ -896,11 +884,9 @@ function App() {
 
   // Memoize the computed layout to prevent unnecessary recalculations
   const computedLayout = useMemo(() => {
-    const result = gridLayout.length > 0
+    return gridLayout.length > 0
       ? getMergedLayout(visibleMonitors, constants, gridLayout)
       : generateDefaultLayout(visibleMonitors, constants);
-    console.log('[Layout Debug] useMemo computed new layout');
-    return result;
   }, [visibleMonitors, constants, gridLayout]);
 
   const currentMonitor = monitors.find(m => m.monitor_id === selectedMonitor);
