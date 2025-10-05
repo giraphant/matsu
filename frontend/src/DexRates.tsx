@@ -301,8 +301,16 @@ const DexRates: React.FC = () => {
                       {hasBinanceSpot && (
                         <span style={{
                           marginLeft: '6px',
-                          color: '#f97316',
-                          fontSize: '16px',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          width: '16px',
+                          height: '16px',
+                          borderRadius: '50%',
+                          backgroundColor: '#f97316',
+                          color: 'white',
+                          fontSize: '10px',
+                          fontWeight: 'bold',
                           verticalAlign: 'middle'
                         }} title="Has Binance spot trading">
                           ✓
