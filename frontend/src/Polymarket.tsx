@@ -36,10 +36,16 @@ export default function Polymarket() {
   const loadMarkets = async () => {
     try {
       const response = await fetch('/api/polymarket/markets?active_only=true&limit=20');
+      if (!response.ok) {
+        console.error('Failed to fetch markets:', response.status);
+        setMarkets([]);
+        return;
+      }
       const data = await response.json();
-      setMarkets(data);
+      setMarkets(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Failed to load markets:', error);
+      setMarkets([]);
     } finally {
       setLoading(false);
     }
