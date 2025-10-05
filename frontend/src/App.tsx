@@ -861,8 +861,8 @@ function App() {
       <div className="App">
         <div className="login-container">
           <div className="login-card">
-            <h1>Distill Webhook Visualiser</h1>
-            <p className="login-subtitle">Please sign in to continue</p>
+            <h1>Matsu 媽祖</h1>
+            <p className="login-subtitle">Guardian deity for smooth crypto sailing</p>
 
             <form onSubmit={handleLogin}>
               <div className="form-group">
@@ -904,8 +904,8 @@ function App() {
       <header>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <h1>Distill Webhook Visualiser</h1>
-            {!isMobile && <p>Monitor your web data in real-time</p>}
+            <h1>Matsu 媽祖</h1>
+            {!isMobile && <p>Guardian deity for smooth crypto sailing</p>}
           </div>
 
           {isMobile ? (
