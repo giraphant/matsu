@@ -418,18 +418,20 @@ function App() {
   };
 
   const getMergedLayout = (monitors: MonitorSummary[], constants: ConstantCard[], savedLayout: any[]) => {
-    // Create a map of saved layouts by id
-    const savedLayoutMap = new Map(savedLayout.map(l => [l.i, l]));
+    // Create set of all current IDs
+    const allCurrentIds = new Set<string>();
+    monitors.forEach(m => allCurrentIds.add(m.monitor_id));
+    constants.forEach(c => allCurrentIds.add(`const-${c.id}`));
 
-    // Collect all layouts (existing + new) without modifying savedLayoutMap during iteration
-    const allLayouts: any[] = [];
+    // Start with saved layouts that still exist
+    const allLayouts: any[] = savedLayout.filter(l => allCurrentIds.has(l.i));
 
-    // Process monitors first
+    // Track which items we've already added
+    const addedIds = new Set(allLayouts.map(l => l.i));
+
+    // Add new monitors that aren't in saved layout
     monitors.forEach((monitor, index) => {
-      if (savedLayoutMap.has(monitor.monitor_id)) {
-        allLayouts.push(savedLayoutMap.get(monitor.monitor_id));
-      } else {
-        // New monitor - calculate position based on all existing layouts
+      if (!addedIds.has(monitor.monitor_id)) {
         const maxY = allLayouts.length > 0 ? Math.max(...allLayouts.map(l => l.y + l.h)) : 0;
 
         let w = 1, h = 1;
@@ -447,16 +449,14 @@ function App() {
           maxW: 4,
           maxH: 3
         });
+        addedIds.add(monitor.monitor_id);
       }
     });
 
-    // Process constants
+    // Add new constants that aren't in saved layout
     constants.forEach((constant) => {
       const constId = `const-${constant.id}`;
-      if (savedLayoutMap.has(constId)) {
-        allLayouts.push(savedLayoutMap.get(constId));
-      } else {
-        // New constant - calculate position based on all existing layouts
+      if (!addedIds.has(constId)) {
         const maxY = allLayouts.length > 0 ? Math.max(...allLayouts.map(l => l.y + l.h)) : 0;
 
         allLayouts.push({
@@ -470,6 +470,7 @@ function App() {
           maxW: 4,
           maxH: 3
         });
+        addedIds.add(constId);
       }
     });
 
