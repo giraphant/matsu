@@ -56,11 +56,14 @@ class MonitoringData(Base):
     id = Column(Integer, primary_key=True, index=True)
     monitor_id = Column(String, index=True, nullable=False)
     monitor_name = Column(String, nullable=True)
-    url = Column(String, nullable=False)
+    monitor_type = Column(String, nullable=True, default='monitor')  # 'monitor' or 'constant'
+    url = Column(String, nullable=False, default='')
     value = Column(Float, nullable=True)
     text_value = Column(Text, nullable=True)
     unit = Column(String, nullable=True)  # Unit for display (%, $, ETH, etc.)
-    status = Column(String, nullable=False)
+    color = Column(String, nullable=True)  # For constant cards
+    description = Column(Text, nullable=True)  # For constant cards
+    status = Column(String, nullable=False, default='active')
     timestamp = Column(DateTime, nullable=False, index=True)
     webhook_received_at = Column(DateTime, default=datetime.utcnow)
     is_change = Column(Boolean, default=False)
@@ -183,8 +186,11 @@ class MonitorSummary(BaseModel):
     """Summary statistics for a monitor."""
     monitor_id: str
     monitor_name: Optional[str]
+    monitor_type: Optional[str] = 'monitor'  # 'monitor' or 'constant'
     url: str
     unit: Optional[str]
+    color: Optional[str] = None  # For constant cards
+    description: Optional[str] = None  # For constant cards
     total_records: int
     latest_value: Optional[float]
     latest_timestamp: datetime

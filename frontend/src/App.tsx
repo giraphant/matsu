@@ -12,8 +12,11 @@ import 'react-grid-layout/css/styles.css';
 interface MonitorSummary {
   monitor_id: string;
   monitor_name: string | null;
+  monitor_type?: string;  // 'monitor' or 'constant'
   url: string;
   unit: string | null;
+  color?: string | null;  // For constant cards
+  description?: string | null;  // For constant cards
   total_records: number;
   latest_value: number | null;
   latest_timestamp: string;

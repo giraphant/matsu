@@ -113,8 +113,11 @@ async def get_monitor_summaries() -> List[MonitorSummary]:
             result.append(MonitorSummary(
                 monitor_id=monitor.monitor_id,
                 monitor_name=monitor.monitor_name,
+                monitor_type=latest_record.monitor_type or 'monitor',
                 url=monitor.url,
                 unit=latest_record.unit,
+                color=latest_record.color,
+                description=latest_record.description,
                 total_records=total_records,
                 latest_value=latest_record.value,
                 latest_timestamp=latest_record.timestamp,
