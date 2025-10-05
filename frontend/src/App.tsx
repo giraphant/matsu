@@ -861,8 +861,8 @@ function App() {
       <div className="App">
         <div className="login-container">
           <div className="login-card">
-            <h1>Matsu 媽祖</h1>
-            <p className="login-subtitle">Guardian deity for smooth crypto sailing</p>
+            <h1>Matsu</h1>
+            <p className="login-subtitle">Monitor your Distill data in real-time</p>
 
             <form onSubmit={handleLogin}>
               <div className="form-group">
@@ -904,8 +904,8 @@ function App() {
       <header>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <h1>Matsu 媽祖</h1>
-            {!isMobile && <p>Guardian deity for smooth crypto sailing</p>}
+            <h1>Matsu</h1>
+            {!isMobile && <p>Monitor your Distill data in real-time</p>}
           </div>
 
           {isMobile ? (
