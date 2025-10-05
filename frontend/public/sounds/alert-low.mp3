@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oops! - Ringtones, message tones and other sounds</title>
+
+    
+    <meta name="description" content="404 - Page Not Found">
+
+            <script type="application/ld+json">
+            {
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              "name": "Notification Sounds",
+              "url": "https://notificationsounds.com",
+              "logo": "https://notificationsounds.com/logo.svg"
+            }
+        </script>
+        <script type="application/ld+json">
+            {
+              "@context": "https://schema.org",
+              "@type": "WebSite",
+              "name": "Notification Sounds",
+              "abstract": "Hundreds of original notification sounds & ringtones in multiple formats, for free.",
+              "url": "https://notificationsounds.com",
+              "image": "https://notificationsounds.com/storage/generic-image-1200x628.png"
+            }
+        </script>
+            <meta property="og:title" content="Oops! - Ringtones, message tones and other sounds" />
+    <meta property="og:description" content="404 - Page Not Found" />
+    <meta property="og:url" content="https://notificationsounds.com/404" />
+    <meta property="og:type" content="article" />
+    <meta property="og:site_name" content="Notification Sounds" />
+    <meta property="og:image" content="https://notificationsounds.com/storage/generic-image-1200x628.png" />
+
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://notificationsounds.com/404">
+    <meta property="twitter:title" content="Oops! - Ringtones, message tones and other sounds">
+    <meta property="twitter:description" content="404 - Page Not Found">
+    <meta property="twitter:image" content="https://notificationsounds.com/storage/generic-image-1200x628.png">
+
+            <script>
+            document.addEventListener('coffeeRequested', () => {
+                document.querySelector('html').classList.add('needs-coffee');
+            });
+            document.addEventListener('adsenseLoaded', () => {
+                
+                setTimeout(() => {
+                    if (typeof adsbygoogle !== 'undefined' && adsbygoogle.push && adsbygoogle.push.length === 0) {
+                        document.querySelector('html').classList.add('needs-coffee');
+                    }
+                }, 2000);
+            });
+        </script>
+        <script
+                async
+                src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6742778535079080"
+                crossorigin="anonymous"
+                onerror="document.dispatchEvent(new CustomEvent('coffeeRequested'))"
+                onload="document.dispatchEvent(new CustomEvent('adsenseLoaded'))"
+        ></script>
+
+            
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" href="/favicon-96x96.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#af343f">
+    <meta name="msapplication-TileColor" content="#2b5797">
+    <meta name="theme-color" content="#ffffff">
+
+    <style>/*! tailwindcss v2.0.3 | MIT License | https://tailwindcss.com*/
+
+/*! modern-normalize v1.0.0 | MIT License | https://github.com/sindresorhus/modern-normalize */:root{-moz-tab-size:4;-o-tab-size:4;tab-size:4}html{line-height:1.15;-webkit-text-size-adjust:100%}body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif,Apple Color Emoji,Segoe UI Emoji}hr{height:0;color:inherit}abbr[title]{-webkit-text-decoration:underline dotted;text-decoration:underline dotted}b,strong{font-weight:bolder}code,kbd,pre,samp{font-family:ui-monospace,SFMono-Regular,Consolas,Liberation Mono,Menlo,monospace;font-size:1em}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit}button,input,optgroup,select,textarea{font-family:inherit;font-size:100%;line-height:1.15;margin:0}button,select{text-transform:none}[type=button],[type=submit],button{-webkit-appearance:button}legend{padding:0}progress{vertical-align:baseline}summary{display:list-item}blockquote,dd,dl,figure,h1,h2,h3,h4,h5,h6,hr,p,pre{margin:0}button{background-color:transparent;background-image:none}button:focus{outline:1px dotted;outline:5px auto -webkit-focus-ring-color}fieldset,ol,ul{margin:0;padding:0}ol,ul{list-style:none}html{font-family:ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica Neue,Arial,Noto Sans,sans-serif,Apple Color Emoji,Segoe UI Emoji,Segoe UI Symbol,Noto Color Emoji;line-height:1.5}body{font-family:inherit;line-height:inherit}*,:after,:before{box-sizing:border-box;border:0 solid #edf2f7}hr{border-top-width:1px}img{border-style:solid}textarea{resize:vertical}[role=button],button{cursor:pointer}table{border-collapse:collapse}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;text-decoration:inherit}button,input,optgroup,select,textarea{padding:0;line-height:inherit;color:inherit}code,kbd,pre,samp{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,Liberation Mono,Courier New,monospace}audio,canvas,embed,iframe,img,object,svg,video{display:block;vertical-align:middle}img,video{max-width:100%;height:auto}[multiple],[type=date],[type=email],[type=text],[type=time],[type=url],select,textarea{-webkit-appearance:none;-moz-appearance:none;appearance:none;background-color:#fff;border-color:#e2e8f0;border-width:1px;border-radius:.375rem;padding:.5rem .75rem;font-size:1rem;line-height:1.5rem}[multiple]:focus,[type=date]:focus,[type=email]:focus,[type=text]:focus,[type=time]:focus,[type=url]:focus,select:focus,textarea:focus{outline:2px solid transparent;outline-offset:2px;--ring-inset:var(--tailwind-empty,/*!*/ /*!*/);--ring-offset-width:0px;--ring-offset-color:#fff;--ring-color:#3182ce;--ring-offset-shadow:var(--ring-inset) 0 0 0 var(--ring-offset-width) var(--ring-offset-color);--ring-shadow:var(--ring-inset) 0 0 0 calc(1px + var(--ring-offset-width)) var(--ring-color);box-shadow:var(--ring-offset-shadow),var(--ring-shadow),0 0 transparent;box-shadow:var(--ring-offset-shadow),var(--ring-shadow),var(--box-shadow,0 0 transparent);border-color:#3182ce}input::-moz-placeholder, textarea::-moz-placeholder{color:#cbd5e0;opacity:1}input:-ms-input-placeholder, textarea:-ms-input-placeholder{color:#cbd5e0;opacity:1}input::placeholder,textarea::placeholder{color:#cbd5e0;opacity:1}select{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%23cbd5e0' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E");background-position:right .5rem center;background-repeat:no-repeat;background-size:1.5em 1.5em;padding-right:2.5rem;-webkit-print-color-adjust:exact;color-adjust:exact}[multiple]{background-image:none;background-position:0 0;background-repeat:unset;background-size:initial;padding-right:.75rem;-webkit-print-color-adjust:unset;color-adjust:unset}[type=checkbox],[type=radio]{-webkit-appearance:none;-moz-appearance:none;appearance:none;padding:0;-webkit-print-color-adjust:exact;color-adjust:exact;display:inline-block;vertical-align:middle;background-origin:border-box;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;flex-shrink:0;height:1rem;width:1rem;color:#3182ce;background-color:#fff;border-color:#e2e8f0;border-width:1px}[type=checkbox]{border-radius:.25rem}[type=radio]{border-radius:100%}[type=checkbox]:focus,[type=radio]:focus{outline:2px solid transparent;outline-offset:2px;--ring-inset:var(--tailwind-empty,/*!*/ /*!*/);--ring-offset-width:2px;--ring-offset-color:#fff;--ring-color:#3182ce;--ring-offset-shadow:var(--ring-inset) 0 0 0 var(--ring-offset-width) var(--ring-offset-color);--ring-shadow:var(--ring-inset) 0 0 0 calc(2px + var(--ring-offset-width)) var(--ring-color);box-shadow:var(--ring-offset-shadow),var(--ring-shadow),0 0 transparent;box-shadow:var(--ring-offset-shadow),var(--ring-shadow),var(--box-shadow,0 0 transparent);border-color:#e2e8f0}[type=checkbox]:checked,[type=radio]:checked{border-color:transparent;background-color:currentColor;background-size:100% 100%;background-position:50%;background-repeat:no-repeat}[type=checkbox]:checked{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg viewBox='0 0 16 16' fill='%23fff' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3E%3C/svg%3E")}[type=radio]:checked{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg viewBox='0 0 16 16' fill='%23fff' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='8' cy='8' r='3'/%3E%3C/svg%3E")}[type=checkbox]:checked:focus,[type=checkbox]:checked:hover,[type=radio]:checked:focus,[type=radio]:checked:hover{border-color:transparent;background-color:currentColor}[type=checkbox]:indeterminate{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 16 16'%3E%3Cpath stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M4 8h8'/%3E%3C/svg%3E");border-color:transparent;background-color:currentColor;background-size:100% 100%;background-position:50%;background-repeat:no-repeat}[type=checkbox]:indeterminate:focus,[type=checkbox]:indeterminate:hover{border-color:transparent;background-color:currentColor}[type=file]{background:unset;border-color:inherit;border-width:0;border-radius:0;padding:0;font-size:unset;line-height:inherit}[type=file]:focus{outline:1px auto -webkit-focus-ring-color}.container{width:100%}@media (min-width:640px){.container{max-width:640px}}@media (min-width:768px){.container{max-width:768px}}@media (min-width:1024px){.container{max-width:1024px}}@media (min-width:1280px){.container{max-width:1280px}}.space-y-2>:not([hidden])~:not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.5rem*(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.5rem*var(--tw-space-y-reverse))}.space-x-2>:not([hidden])~:not([hidden]){--tw-space-x-reverse:0;margin-right:calc(0.5rem*var(--tw-space-x-reverse));margin-left:calc(0.5rem*(1 - var(--tw-space-x-reverse)))}.space-x-12>:not([hidden])~:not([hidden]){--tw-space-x-reverse:0;margin-right:calc(3rem*var(--tw-space-x-reverse));margin-left:calc(3rem*(1 - var(--tw-space-x-reverse)))}.bg-transparent{background-color:transparent}.bg-white{--tw-bg-opacity:1;background-color:rgba(255,255,255,var(--tw-bg-opacity))}.bg-gray-100{--tw-bg-opacity:1;background-color:rgba(247,250,252,var(--tw-bg-opacity))}.bg-gray-300{--tw-bg-opacity:1;background-color:rgba(226,232,240,var(--tw-bg-opacity))}.bg-gray-800{--tw-bg-opacity:1;background-color:rgba(45,55,72,var(--tw-bg-opacity))}.bg-gray-900{--tw-bg-opacity:1;background-color:rgba(26,32,44,var(--tw-bg-opacity))}.bg-orange-100{--tw-bg-opacity:1;background-color:rgba(255,250,240,var(--tw-bg-opacity))}.bg-primary{--tw-bg-opacity:1;background-color:rgba(176,50,60,var(--tw-bg-opacity))}.bg-bg{background-color:rgba(245,247,248,var(--tw-bg-opacity))}.bg-bg,.bg-link{--tw-bg-opacity:1}.bg-link{background-color:rgba(42,100,150,var(--tw-bg-opacity))}.hover\:bg-white:hover{--tw-bg-opacity:1;background-color:rgba(255,255,255,var(--tw-bg-opacity))}.hover\:bg-gray-300:hover{--tw-bg-opacity:1;background-color:rgba(226,232,240,var(--tw-bg-opacity))}.hover\:bg-primary:hover{--tw-bg-opacity:1;background-color:rgba(176,50,60,var(--tw-bg-opacity))}.hover\:bg-primary-lighter:hover{--tw-bg-opacity:1;background-color:rgba(255,96,110,var(--tw-bg-opacity))}.bg-opacity-98{--tw-bg-opacity:0.98}.border-white{--tw-border-opacity:1;border-color:rgba(255,255,255,var(--tw-border-opacity))}.border-gray-300{--tw-border-opacity:1;border-color:rgba(226,232,240,var(--tw-border-opacity))}.border-orange-200{--tw-border-opacity:1;border-color:rgba(254,235,200,var(--tw-border-opacity))}.border-yellow-700{--tw-border-opacity:1;border-color:rgba(183,121,31,var(--tw-border-opacity))}.border-primary{--tw-border-opacity:1;border-color:rgba(176,50,60,var(--tw-border-opacity))}.border-secondary{--tw-border-opacity:1;border-color:rgba(252,161,94,var(--tw-border-opacity))}.border-link{--tw-border-opacity:1;border-color:rgba(42,100,150,var(--tw-border-opacity))}.hover\:border-primary-lighter:hover{--tw-border-opacity:1;border-color:rgba(255,96,110,var(--tw-border-opacity))}.border-opacity-25{--tw-border-opacity:0.25}.rounded-sm{border-radius:.125rem}.rounded{border-radius:.25rem}.rounded-lg{border-radius:.5rem}.rounded-r{border-top-right-radius:.25rem;border-bottom-right-radius:.25rem}.rounded-l{border-top-left-radius:.25rem;border-bottom-left-radius:.25rem}.rounded-b-lg{border-bottom-right-radius:.5rem;border-bottom-left-radius:.5rem}.border-2{border-width:2px}.border-4{border-width:4px}.border{border-width:1px}.border-r-0{border-right-width:0}.border-l-2{border-left-width:2px}.border-r{border-right-width:1px}.border-b{border-bottom-width:1px}.block{display:block}.inline-block{display:inline-block}.inline{display:inline}.flex{display:flex}.inline-flex{display:inline-flex}.table{display:table}.grid{display:grid}.contents{display:contents}.hidden{display:none}.flex-col{flex-direction:column}.flex-wrap{flex-wrap:wrap}.items-end{align-items:flex-end}.items-center{align-items:center}.justify-items-start{justify-items:start}.justify-start{justify-content:flex-start}.justify-center{justify-content:center}.justify-between{justify-content:space-between}.justify-around{justify-content:space-around}.flex-1{flex:1 1 0%}.flex-grow{flex-grow:1}.font-light{font-weight:300}.font-normal{font-weight:400}.font-medium{font-weight:500}.font-bold{font-weight:700}.font-extrabold{font-weight:800}.h-3{height:.75rem}.h-5{height:1.25rem}.h-6{height:1.5rem}.h-8{height:2rem}.h-10{height:2.5rem}.h-24{height:6rem}.h-64{height:16rem}.h-full{height:100%}.h-screen{height:100vh}.text-xs{font-size:.75rem}.text-sm{font-size:.875rem}.text-base{font-size:1rem}.text-lg{font-size:1.125rem}.text-xl{font-size:1.25rem}.text-2xl{font-size:1.5rem}.text-3xl{font-size:1.875rem}.text-4xl{font-size:2.25rem}.text-5xl{font-size:3rem}.text-6xl{font-size:4rem}.leading-4{line-height:1rem}.leading-6{line-height:1.5rem}.leading-8{line-height:2rem}.leading-none{line-height:1}.leading-normal{line-height:1.5}.mx-2{margin-left:.5rem;margin-right:.5rem}.mx-auto{margin-left:auto;margin-right:auto}.mb-0{margin-bottom:0}.mr-1{margin-right:.25rem}.mb-1{margin-bottom:.25rem}.mt-2{margin-top:.5rem}.mr-2{margin-right:.5rem}.mb-2{margin-bottom:.5rem}.mb-3{margin-bottom:.75rem}.mt-4{margin-top:1rem}.mr-4{margin-right:1rem}.mb-4{margin-bottom:1rem}.ml-4{margin-left:1rem}.mb-6{margin-bottom:1.5rem}.mt-8{margin-top:2rem}.mr-8{margin-right:2rem}.mb-8{margin-bottom:2rem}.ml-8{margin-left:2rem}.mb-12{margin-bottom:3rem}.mt-16{margin-top:4rem}.-mr-2{margin-right:-.5rem}.-mt-4{margin-top:-1rem}.min-h-screen{min-height:100vh}.opacity-0{opacity:0}.opacity-10{opacity:.1}.opacity-50{opacity:.5}.opacity-100{opacity:1}.focus\:outline-none:focus{outline:2px solid transparent;outline-offset:2px}.overflow-hidden{overflow:hidden}.p-0{padding:0}.p-1{padding:.25rem}.p-2{padding:.5rem}.p-4{padding:1rem}.p-6{padding:1.5rem}.p-8{padding:2rem}.p-10{padding:2.5rem}.py-1{padding-top:.25rem;padding-bottom:.25rem}.py-2{padding-top:.5rem;padding-bottom:.5rem}.px-2{padding-left:.5rem;padding-right:.5rem}.py-3{padding-top:.75rem;padding-bottom:.75rem}.py-4{padding-top:1rem;padding-bottom:1rem}.px-4{padding-left:1rem;padding-right:1rem}.py-6{padding-top:1.5rem;padding-bottom:1.5rem}.px-6{padding-left:1.5rem;padding-right:1.5rem}.py-8{padding-top:2rem;padding-bottom:2rem}.px-8{padding-left:2rem;padding-right:2rem}.py-12{padding-top:3rem;padding-bottom:3rem}.pr-0{padding-right:0}.pr-1{padding-right:.25rem}.pl-1{padding-left:.25rem}.pt-2{padding-top:.5rem}.pt-4{padding-top:1rem}.pr-4{padding-right:1rem}.pb-4{padding-bottom:1rem}.pl-4{padding-left:1rem}.pb-5{padding-bottom:1.25rem}.pr-6{padding-right:1.5rem}.pt-8{padding-top:2rem}.pr-8{padding-right:2rem}.pb-8{padding-bottom:2rem}.pt-10{padding-top:2.5rem}.static{position:static}.fixed{position:fixed}.absolute{position:absolute}.relative{position:relative}.sticky{position:sticky}.inset-0{top:0;bottom:0}.inset-0,.inset-x-0{right:0;left:0}.top-0{top:0}.right-0{right:0}.bottom-0{bottom:0}.left-0{left:0}*{--tw-shadow:0 0 transparent}.shadow{--tw-shadow:0 1px 3px 0 rgba(0,0,0,0.1),0 1px 2px 0 rgba(0,0,0,0.06)}.shadow,.shadow-lg{box-shadow:0 0 transparent,0 0 transparent,var(--tw-shadow);box-shadow:var(--tw-ring-offset-shadow,0 0 transparent),var(--tw-ring-shadow,0 0 transparent),var(--tw-shadow)}.shadow-lg{--tw-shadow:0 10px 15px -3px rgba(0,0,0,0.1),0 4px 6px -2px rgba(0,0,0,0.05)}.shadow-2xl{--tw-shadow:0 25px 50px -12px rgba(0,0,0,0.25);box-shadow:0 0 transparent,0 0 transparent,var(--tw-shadow);box-shadow:var(--tw-ring-offset-shadow,0 0 transparent),var(--tw-ring-shadow,0 0 transparent),var(--tw-shadow)}*{--tw-ring-inset:var(--tw-empty,/*!*/ /*!*/);--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgba(66,153,225,0.5);--tw-ring-offset-shadow:0 0 transparent;--tw-ring-shadow:0 0 transparent}.focus\:ring:focus{--tw-ring-offset-shadow:var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);--tw-ring-shadow:var(--tw-ring-inset) 0 0 0 calc(3px + var(--tw-ring-offset-width)) var(--tw-ring-color);box-shadow:var(--tw-ring-offset-shadow),var(--tw-ring-shadow),0 0 transparent;box-shadow:var(--tw-ring-offset-shadow),var(--tw-ring-shadow),var(--tw-shadow,0 0 transparent)}.text-center{text-align:center}.text-white{--tw-text-opacity:1;color:rgba(255,255,255,var(--tw-text-opacity))}.text-gray-200{--tw-text-opacity:1;color:rgba(237,242,247,var(--tw-text-opacity))}.text-gray-500{--tw-text-opacity:1;color:rgba(160,174,192,var(--tw-text-opacity))}.text-gray-600{--tw-text-opacity:1;color:rgba(113,128,150,var(--tw-text-opacity))}.text-gray-700{--tw-text-opacity:1;color:rgba(74,85,104,var(--tw-text-opacity))}.text-gray-800{--tw-text-opacity:1;color:rgba(45,55,72,var(--tw-text-opacity))}.text-gray-900{--tw-text-opacity:1;color:rgba(26,32,44,var(--tw-text-opacity))}.text-yellow-700{--tw-text-opacity:1;color:rgba(183,121,31,var(--tw-text-opacity))}.text-teal-800{--tw-text-opacity:1;color:rgba(40,94,97,var(--tw-text-opacity))}.text-primary{--tw-text-opacity:1;color:rgba(176,50,60,var(--tw-text-opacity))}.text-secondary{--tw-text-opacity:1;color:rgba(252,161,94,var(--tw-text-opacity))}.text-accent{--tw-text-opacity:1;color:rgba(235,202,76,var(--tw-text-opacity))}.text-link{--tw-text-opacity:1;color:rgba(42,100,150,var(--tw-text-opacity))}.hover\:text-white:hover{--tw-text-opacity:1;color:rgba(255,255,255,var(--tw-text-opacity))}.hover\:text-gray-900:hover{--tw-text-opacity:1;color:rgba(26,32,44,var(--tw-text-opacity))}.hover\:text-primary:hover{--tw-text-opacity:1;color:rgba(176,50,60,var(--tw-text-opacity))}.truncate{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.uppercase{text-transform:uppercase}.underline{text-decoration:underline}.no-underline{text-decoration:none}.hover\:underline:hover{text-decoration:underline}.antialiased{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}.tracking-wider{letter-spacing:.05em}.select-none{-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}.visible{visibility:visible}.invisible{visibility:hidden}.whitespace-nowrap{white-space:nowrap}.w-3{width:.75rem}.w-5{width:1.25rem}.w-6{width:1.5rem}.w-8{width:2rem}.w-full{width:100%}.z-20{z-index:20}.z-40{z-index:40}.z-50{z-index:50}.gap-4{gap:1rem}.grid-cols-1{grid-template-columns:repeat(1,minmax(0,1fr))}.grid-cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}.col-span-1{grid-column:span 1/span 1}.col-span-2{grid-column:span 2/span 2}.col-span-3{grid-column:span 3/span 3}.col-span-4{grid-column:span 4/span 4}.row-span-2{grid-row:span 2/span 2}.transform{--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;transform:translateX(var(--tw-translate-x)) translateY(var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.transition-all{transition-property:all;transition-timing-function:cubic-bezier(.4,0,.2,1);transition-duration:.15s}.ease-out{transition-timing-function:cubic-bezier(0,0,.2,1)}.ease-in-out{transition-timing-function:cubic-bezier(.4,0,.2,1)}.duration-100{transition-duration:.1s}@-webkit-keyframes spin{to{transform:rotate(1turn)}}@keyframes spin{to{transform:rotate(1turn)}}@-webkit-keyframes ping{75%,to{transform:scale(2);opacity:0}}@keyframes ping{75%,to{transform:scale(2);opacity:0}}@-webkit-keyframes pulse{50%{opacity:.5}}@keyframes pulse{50%{opacity:.5}}@-webkit-keyframes bounce{0%,to{transform:translateY(-25%);-webkit-animation-timing-function:cubic-bezier(.8,0,1,1);animation-timing-function:cubic-bezier(.8,0,1,1)}50%{transform:none;-webkit-animation-timing-function:cubic-bezier(0,0,.2,1);animation-timing-function:cubic-bezier(0,0,.2,1)}}@keyframes bounce{0%,to{transform:translateY(-25%);-webkit-animation-timing-function:cubic-bezier(.8,0,1,1);animation-timing-function:cubic-bezier(.8,0,1,1)}50%{transform:none;-webkit-animation-timing-function:cubic-bezier(0,0,.2,1);animation-timing-function:cubic-bezier(0,0,.2,1)}}body{touch-action:manipulation}.home-background{background-color:#af343f;background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 700 700'%3E%3Cdefs%3E%3ClinearGradient id='a' x1='50%25' x2='50%25' y1='0%25' y2='100%25' gradientTransform='rotate(150 .5 .5)'%3E%3Cstop offset='0%25' stop-color='%23fba166'/%3E%3Cstop offset='100%25' stop-color='%23af343f'/%3E%3C/linearGradient%3E%3Cfilter id='b' width='140%25' height='140%25' x='-20%25' y='-20%25' color-interpolation-filters='sRGB' filterUnits='objectBoundingBox' primitiveUnits='userSpaceOnUse'%3E%3CfeTurbulence x='0%25' y='0%25' baseFrequency='0.005 0.003' numOctaves='2' result='turbulence' seed='2' stitchTiles='stitch' type='fractalNoise'/%3E%3CfeGaussianBlur x='0%25' y='0%25' in='turbulence' result='blur' stdDeviation='20 0'/%3E%3CfeBlend x='0%25' y='0%25' in='SourceGraphic' in2='blur' mode='overlay' result='blend'/%3E%3C/filter%3E%3C/defs%3E%3Cpath fill='url(%23a)' d='M0 0h700v700H0z' filter='url(%23b)'/%3E%3C/svg%3E");background-attachment:fixed;background-size:cover;background-position-x:center;width:100%}@media (max-width:640px){.home-background{background-size:2000px}}.text-shadow{text-shadow:0 2px 2px rgba(0,0,0,.13333333333333333)}.player{position:relative;background:#b0323c;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;opacity:0;height:9rem}.player svg:first-child{display:flex;width:100%;height:9rem;position:relative;z-index:5}.player-large,.player-large svg:first-child{height:16rem}.player object{opacity:0}@media (min-width:1024px){.player-large svg:first-child{height:16rem}}.player svg.player-button{position:absolute;z-index:10;left:0;right:0;top:0;bottom:0;margin:auto;cursor:pointer;filter:url(#shadow);-webkit-tap-highlight-color:transparent}.player svg.player-button circle{fill:hsla(0,0%,100%,.8)}.player svg.player-button path{fill:#b0323c}.player svg.player-button .btn-shape-pause{visibility:hidden}.player[data-playing=false] svg.player-button .btn-shape-play,.player[data-playing=true] svg.player-button .btn-shape-pause{visibility:visible}.player[data-playing=true] svg.player-button .btn-shape-play{visibility:hidden}.player path.waveform{filter:url(#shadow)}.player svg.player-body path{fill:#fff;stroke:#fff;stroke-width:1px}.player svg.player-body path.waveform-outline{fill:transparent}.player .over-playhead{fill:#344562;fill-opacity:.64}.player .playhead-line{stroke:#fff;stroke-opacity:.33;stroke-width:1;visibility:hidden}.bounding-box{fill:transparent}.player-button-template{position:absolute;left:-500px}.player svg line,.player svg path,.player svg rect{vector-effect:non-scaling-stroke}.player.th-1{background-color:#b2313d;}.player.th-1 svg.player-button{filter:url(#btn-shadow)}.player.th-1 svg.player-body path{fill:#fff;stroke:#fff;stroke-width:1px}.player.th-1 svg.player-body path.waveform-outline{fill:transparent}.player.th-1 .over-playhead{fill:#b2313d;fill-opacity:.64}.player.th-1 .playhead-line{stroke:#fff;stroke-opacity:1;stroke-width:1}.player.th-2{background-color:#f96167;}.player.th-2 svg.player-button{filter:url(#btn-shadow)}.player.th-2 svg.player-body path{fill:#fce77d;stroke:#fce77d;stroke-width:1px}.player.th-2 svg.player-body path.waveform-outline{fill:transparent}.player.th-2 .over-playhead{fill:#f96167;fill-opacity:.64}.player.th-2 .playhead-line{stroke:#fce77d;stroke-opacity:1;stroke-width:1}.player.th-3{background-color:#04107f;}.player.th-3 svg.player-button{filter:url(#btn-shadow)}.player.th-3 svg.player-body path{fill:#35829b;stroke:#fff;stroke-width:1px}.player.th-3 svg.player-body path.waveform-outline{fill:transparent}.player.th-3 .over-playhead{fill:#04107f;fill-opacity:.64}.player.th-3 .playhead-line{stroke:#fff;stroke-opacity:1;stroke-width:1}.player.th-4{background-color:#910d0d;}.player.th-4 svg.player-button{filter:url(#btn-shadow)}.player.th-4 svg.player-body path{fill:#c29c05;stroke:#fff;stroke-width:1px}.player.th-4 svg.player-body path.waveform-outline{fill:transparent}.player.th-4 .over-playhead{fill:#910d0d;fill-opacity:.64}.player.th-4 .playhead-line{stroke:#fff;stroke-opacity:1;stroke-width:1}.player.th-5{background-color:#3d155f;}.player.th-5 svg.player-button{filter:url(#btn-shadow)}.player.th-5 svg.player-body path{fill:#df678c;stroke:#df678c;stroke-width:1px}.player.th-5 svg.player-body path.waveform-outline{fill:transparent}.player.th-5 .over-playhead{fill:#3d155f;fill-opacity:.64}.player.th-5 .playhead-line{stroke:#df678c;stroke-opacity:1;stroke-width:1}.player.th-6{background-color:#4831d4;}.player.th-6 svg.player-button{filter:url(#btn-shadow)}.player.th-6 svg.player-body path{fill:#ccf381;stroke:#ccf381;stroke-width:1px}.player.th-6 svg.player-body path.waveform-outline{fill:transparent}.player.th-6 .over-playhead{fill:#4831d4;fill-opacity:.64}.player.th-6 .playhead-line{stroke:#ccf381;stroke-opacity:1;stroke-width:1}.player.th-7{background-color:#002a73;}.player.th-7 svg.player-button{filter:url(#btn-shadow)}.player.th-7 svg.player-body path{fill:#f05b5b;stroke:#f05b5b;stroke-width:1px}.player.th-7 svg.player-body path.waveform-outline{fill:transparent}.player.th-7 .over-playhead{fill:#344562;fill-opacity:.64}.player.th-7 .playhead-line{stroke:#f05b5b;stroke-opacity:1;stroke-width:1}.player.th-8{background-color:#344562;}.player.th-8 svg.player-button{filter:url(#btn-shadow)}.player.th-8 svg.player-body path{fill:#222d3f;stroke:#fff;stroke-width:1px}.player.th-8 svg.player-body path.waveform-outline{fill:transparent}.player.th-8 .over-playhead{fill:#344562;fill-opacity:.64}.player.th-8 .playhead-line{stroke:#fff;stroke-opacity:1;stroke-width:1}.player.th-9{background-color:#2a3845;}.player.th-9 svg.player-button{filter:url(#btn-shadow)}.player.th-9 svg.player-body path{fill:#fbc886;stroke:#fff;stroke-width:1px}.player.th-9 svg.player-body path.waveform-outline{fill:transparent}.player.th-9 .over-playhead{fill:#2a3845;fill-opacity:.64}.player.th-9 .playhead-line{stroke:#fff;stroke-opacity:1;stroke-width:1}.player.th-10{background-color:#344562;}.player.th-10 svg.player-button{filter:url(#btn-shadow)}.player.th-10 svg.player-body path{fill:#627eac;stroke:#fff;stroke-width:1px}.player.th-10 svg.player-body path.waveform-outline{fill:transparent}.player.th-10 .over-playhead{fill:#344562;fill-opacity:.64}.player.th-10 .playhead-line{stroke:#fff;stroke-opacity:1;stroke-width:1}.player.th-11{background-color:#dc4e44;}.player.th-11 svg.player-button{filter:url(#btn-shadow)}.player.th-11 svg.player-body path{fill:#ecc827;stroke:#fff;stroke-width:1px}.player.th-11 svg.player-body path.waveform-outline{fill:transparent}.player.th-11 .over-playhead{fill:#4f4f59;fill-opacity:.64}.player.th-11 .playhead-line{stroke:#fff;stroke-opacity:1;stroke-width:1}.player.th-12{background-color:#44b7a8;}.player.th-12 svg.player-button{filter:url(#btn-shadow)}.player.th-12 svg.player-body path{fill:#0e4952;stroke:#edc629;stroke-width:1px}.player.th-12 svg.player-body path.waveform-outline{fill:transparent}.player.th-12 .over-playhead{fill:#44b7a8;fill-opacity:.64}.player.th-12 .playhead-line{stroke:#edc629;stroke-opacity:1;stroke-width:1}.player.th-13{background-color:#243665;}.player.th-13 svg.player-button{filter:url(#btn-shadow)}.player.th-13 svg.player-body path{fill:#8bd8bd;stroke:#8bd8bd;stroke-width:1px}.player.th-13 svg.player-body path.waveform-outline{fill:transparent}.player.th-13 .over-playhead{fill:#243665;fill-opacity:.64}.player.th-13 .playhead-line{stroke:#8bd8bd;stroke-opacity:1;stroke-width:1}.player.th-14{background-color:#295f2d;}.player.th-14 svg.player-button{filter:url(#btn-shadow)}.player.th-14 svg.player-body path{fill:#ffe67c;stroke:#ffe67c;stroke-width:1px}.player.th-14 svg.player-body path.waveform-outline{fill:transparent}.player.th-14 .over-playhead{fill:#295f2d;fill-opacity:.64}.player.th-14 .playhead-line{stroke:#ffe67c;stroke-opacity:1;stroke-width:1}.player.th-15{background-color:#4a171e;}.player.th-15 svg.player-button{filter:url(#btn-shadow)}.player.th-15 svg.player-body path{fill:#e1b151;stroke:#e1b151;stroke-width:1px}.player.th-15 svg.player-body path.waveform-outline{fill:transparent}.player.th-15 .over-playhead{fill:#4a171e;fill-opacity:.64}.player.th-15 .playhead-line{stroke:#e1b151;stroke-opacity:1;stroke-width:1}.player.th-16{background-color:#1c464f;}.player.th-16 svg.player-button{filter:url(#btn-shadow)}.player.th-16 svg.player-body path{fill:#f4a896;stroke:#f4a896;stroke-width:1px}.player.th-16 svg.player-body path.waveform-outline{fill:transparent}.player.th-16 .over-playhead{fill:#1c464f;fill-opacity:.64}.player.th-16 .playhead-line{stroke:#f4a896;stroke-opacity:1;stroke-width:1}.player.th-17{background-color:#191919;}.player.th-17 svg.player-button{filter:url(#btn-shadow)}.player.th-17 svg.player-body path{fill:#fdf5a6;stroke:#fdf5a6;stroke-width:1px}.player.th-17 svg.player-body path.waveform-outline{fill:transparent}.player.th-17 .over-playhead{fill:#191919;fill-opacity:.64}.player.th-17 .playhead-line{stroke:#fdf5a6;stroke-opacity:1;stroke-width:1}.player.th-18{background-color:#ec449b;}.player.th-18 svg.player-button{filter:url(#btn-shadow)}.player.th-18 svg.player-body path{fill:#99f443;stroke:#99f443;stroke-width:1px}.player.th-18 svg.player-body path.waveform-outline{fill:transparent}.player.th-18 .over-playhead{fill:#ec449b;fill-opacity:.64}.player.th-18 .playhead-line{stroke:#99f443;stroke-opacity:1;stroke-width:1}.player.th-19{background-color:#ee4e34;}.player.th-19 svg.player-button{filter:url(#btn-shadow)}.player.th-19 svg.player-body path{fill:#fcedda;stroke:#fcedda;stroke-width:1px}.player.th-19 svg.player-body path.waveform-outline{fill:transparent}.player.th-19 .over-playhead{fill:#ee4e34;fill-opacity:.64}.player.th-19 .playhead-line{stroke:#fcedda;stroke-opacity:1;stroke-width:1}.player.th-20{background-color:#072c50;}.player.th-20 svg.player-button{filter:url(#btn-shadow)}.player.th-20 svg.player-body path{fill:#fff;stroke:#fff;stroke-width:1px}.player.th-20 svg.player-body path.waveform-outline{fill:transparent}.player.th-20 .over-playhead{fill:#072c50;fill-opacity:.64}.player.th-20 .playhead-line{stroke:#fff;stroke-opacity:1;stroke-width:1}.player.th-21{background-color:#007d98;}.player.th-21 svg.player-button{filter:url(#btn-shadow)}.player.th-21 svg.player-body path{fill:#80cfd5;stroke:#80cfd5;stroke-width:1px}.player.th-21 svg.player-body path.waveform-outline{fill:transparent}.player.th-21 .over-playhead{fill:#007d98;fill-opacity:.64}.player.th-21 .playhead-line{stroke:#80cfd5;stroke-opacity:1;stroke-width:1}.player.th-22{background-color:#d94d5c;}.player.th-22 svg.player-button{filter:url(#btn-shadow)}.player.th-22 svg.player-body path{fill:#ebc354;stroke:#ebc354;stroke-width:1px}.player.th-22 svg.player-body path.waveform-outline{fill:transparent}.player.th-22 .over-playhead{fill:#d94d5c;fill-opacity:.64}.player.th-22 .playhead-line{stroke:#ebc354;stroke-opacity:1;stroke-width:1}.player.th-23{background-color:#263571;}.player.th-23 svg.player-button{filter:url(#btn-shadow)}.player.th-23 svg.player-body path{fill:#feda14;stroke:#feda14;stroke-width:1px}.player.th-23 svg.player-body path.waveform-outline{fill:transparent}.player.th-23 .over-playhead{fill:#263571;fill-opacity:.64}.player.th-23 .playhead-line{stroke:#feda14;stroke-opacity:1;stroke-width:1}.player.th-24{background-color:#f84d08;}.player.th-24 svg.player-button{filter:url(#btn-shadow)}.player.th-24 svg.player-body path{fill:#fdee50;stroke:#fdee50;stroke-width:1px}.player.th-24 svg.player-body path.waveform-outline{fill:transparent}.player.th-24 .over-playhead{fill:#f84d08;fill-opacity:.64}.player.th-24 .playhead-line{stroke:#fdee50;stroke-opacity:1;stroke-width:1}.player.th-25{background-color:#64ab5d;}.player.th-25 svg.player-button{filter:url(#btn-shadow)}.player.th-25 svg.player-body path{fill:#fff;stroke:#fff;stroke-width:1px}.player.th-25 svg.player-body path.waveform-outline{fill:transparent}.player.th-25 .over-playhead{fill:#64ab5d;fill-opacity:.64}.player.th-25 .playhead-line{stroke:#fff;stroke-opacity:1;stroke-width:1}.player.th-26{background-color:#0fbfd6;}.player.th-26 svg.player-button{filter:url(#btn-shadow)}.player.th-26 svg.player-body path{fill:#3c3c3c;stroke:#1ad6ef;stroke-width:1px}.player.th-26 svg.player-body path.waveform-outline{fill:transparent}.player.th-26 .over-playhead{fill:#0fbfd6;fill-opacity:.64}.player.th-26 .playhead-line{stroke:#1ad6ef;stroke-opacity:1;stroke-width:1}.player.th-27{background-color:#383838;}.player.th-27 svg.player-button{filter:url(#btn-shadow)}.player.th-27 svg.player-body path{fill:#b79105;stroke:#fad757;stroke-width:1px}.player.th-27 svg.player-body path.waveform-outline{fill:transparent}.player.th-27 .over-playhead{fill:#383838;fill-opacity:.64}.player.th-27 .playhead-line{stroke:#fad757;stroke-opacity:1;stroke-width:1}.player.th-28{background-color:#754c85;}.player.th-28 svg.player-button{filter:url(#btn-shadow)}.player.th-28 svg.player-body path{fill:#c9bdbd;stroke:#e0e0e0;stroke-width:1px}.player.th-28 svg.player-body path.waveform-outline{fill:transparent}.player.th-28 .over-playhead{fill:#754c85;fill-opacity:.64}.player.th-28 .playhead-line{stroke:#e0e0e0;stroke-opacity:1;stroke-width:1}.player.th-29{background-color:#be7b37;}.player.th-29 svg.player-button{filter:url(#btn-shadow)}.player.th-29 svg.player-body path{fill:#f4f2f5;stroke:#fff;stroke-width:1px}.player.th-29 svg.player-body path.waveform-outline{fill:transparent}.player.th-29 .over-playhead{fill:#be7b37;fill-opacity:.64}.player.th-29 .playhead-line{stroke:#fff;stroke-opacity:1;stroke-width:1}.player.th-30{background-color:#2c373d;}.player.th-30 svg.player-button{filter:url(#btn-shadow)}.player.th-30 svg.player-body path{fill:#67a7c0;stroke:#fcd97f;stroke-width:1px}.player.th-30 svg.player-body path.waveform-outline{fill:transparent}.player.th-30 .over-playhead{fill:#2c373d;fill-opacity:.64}.player.th-30 .playhead-line{stroke:#fcd97f;stroke-opacity:1;stroke-width:1}.player.th-31{background-color:#292826;}.player.th-31 svg.player-button{filter:url(#btn-shadow)}.player.th-31 svg.player-body path{fill:#f9d342;stroke:#f9d342;stroke-width:1px}.player.th-31 svg.player-body path.waveform-outline{fill:transparent}.player.th-31 .over-playhead{fill:#292826;fill-opacity:.64}.player.th-31 .playhead-line{stroke:#f9d342;stroke-opacity:1;stroke-width:1}.player.th-32{background-color:#0377aa;}.player.th-32 svg.player-button{filter:url(#btn-shadow)}.player.th-32 svg.player-body path{fill:#c4e5db;stroke:#fff;stroke-width:1px}.player.th-32 svg.player-body path.waveform-outline{fill:transparent}.player.th-32 .over-playhead{fill:#0377aa;fill-opacity:.64}.player.th-32 .playhead-line{stroke:#fff;stroke-opacity:1;stroke-width:1}.player.th-33{background-color:#3f695f;}.player.th-33 svg.player-button{filter:url(#btn-shadow)}.player.th-33 svg.player-body path{fill:#62a090;stroke:#fff;stroke-width:1px}.player.th-33 svg.player-body path.waveform-outline{fill:transparent}.player.th-33 .over-playhead{fill:#3f695f;fill-opacity:.64}.player.th-33 .playhead-line{stroke:#fff;stroke-opacity:1;stroke-width:1}.custom-prose{font-size:1.25rem;line-height:1.8}.custom-prose>:first-child,.custom-prose h2+*{margin-top:0}.custom-prose p{margin-top:1.2em;margin-bottom:1.2em}.custom-prose h2{font-size:1.8em;margin-top:1.5555556em;margin-bottom:.8888889em;line-height:1.1111111}.custom-prose ul{margin-top:1.2em;margin-bottom:1.2em;list-style:disc inside}.custom-prose ul>li{padding-left:1.8em}.custom-prose li{margin-top:.6em;margin-bottom:.6em}.custom-prose a{color:rgb(42 100 150)}#logo{display:inline-block}#logo:hover #icon{-webkit-animation:icon .3s ease-out 0s;animation:icon .3s ease-out 0s}#logo:hover #dot,#logo:hover #icon{transform-origin:center;transform-box:fill-box}#logo:hover #dot{-webkit-animation:dot .4s ease-in-out 0s;animation:dot .4s ease-in-out 0s}#logo:hover #inner-dot{-webkit-animation:inner-dot .5s ease-in-out 0s;animation:inner-dot .5s ease-in-out 0s;transform-origin:center;transform-box:fill-box}@-webkit-keyframes icon{0%{transform:scale(1)}50%{transform:scale(1.2)}70%{transform:scale(.9)}to{transform:scale(1)}}@keyframes icon{0%{transform:scale(1)}50%{transform:scale(1.2)}70%{transform:scale(.9)}to{transform:scale(1)}}@-webkit-keyframes dot{0%{transform:scale(0)}to{transform:scale(1)}}@keyframes dot{0%{transform:scale(0)}to{transform:scale(1)}}@-webkit-keyframes inner-dot{0%{transform:scale(0)}90%{transform:scale(1.2)}to{transform:scale(1)}}@keyframes inner-dot{0%{transform:scale(0)}90%{transform:scale(1.2)}to{transform:scale(1)}}.ad{background:transparent;}.ad div.w-full{min-height:100px!important}@media (min-width:641px){.ad-2-cells-h,.ad-2-cells-h .w-full,.ad-2-cells-h ins.adsbygoogle,.ad-2-cells-v ins.adsbygoogle,.ad-3-cells-h,.ad-3-cells-h .w-full,.ad-3-cells-h ins.adsbygoogle,.ad-4-cells-h,.ad-4-cells-h .w-full,.ad-4-cells-h ins.adsbygoogle,.ad-single-cell,.ad-single-cell .w-full,.ad-single-cell ins.adsbygoogle{min-width:286px!important;width:100%!important;min-height:76px!important;height:100%!important;max-height:355px!important}}@media (max-width:640px){.ad-2-cells-h,.ad-2-cells-h .w-full,.ad-2-cells-h ins.adsbygoogle,.ad-2-cells-v ins.adsbygoogle,.ad-3-cells-h,.ad-3-cells-h .w-full,.ad-3-cells-h ins.adsbygoogle,.ad-4-cells-h,.ad-4-cells-h .w-full,.ad-4-cells-h ins.adsbygoogle,.ad-single-cell,.ad-single-cell .w-full,.ad-single-cell ins.adsbygoogle{min-width:250px!important;width:100%!important;min-height:300px!important;height:100%!important}}@-webkit-keyframes cardfadein{0%{opacity:0}20%{opacity:0}40%{opacity:0}70%{opacity:.5}to{opacity:1}}@keyframes cardfadein{0%{opacity:0}20%{opacity:0}40%{opacity:0}70%{opacity:.5}to{opacity:1}}.loaded{opacity:1}.gradient{background:linear-gradient(45deg,#b0323c,#2a6496,#ebca4c);background-size:600% 600%}@-webkit-keyframes shimmer{0%{background-position:100% 0}to{background-position:100% 100%}}@keyframes shimmer{0%{background-position:100% 0}to{background-position:100% 100%}}.gsc-control-cse{padding:0!important;border:none!important}.gsc-control-cse input.gsc-input:focus{border:0!important;outline:0!important;box-shadow:none!important}table.gsc-search-box{margin-bottom:0!important}table.gsc-search-box td.gsc-input{padding-right:0!important}button.gsc-search-button{margin-left:0!important}td.gsc-search-button{background:#b0323c}form.gsc-search-box{margin-bottom:0!important}.coffee-wrapper{display:none}html.needs-coffee .coffee-wrapper{display:block!important}html.needs-coffee .ad-ns-home-1-wrapper,html.needs-coffee .sound-details-coffee,html.needs-coffee ins.adsbygoogle{display:none!important}@media (min-width:640px){.sm\:flex{display:flex}.sm\:px-0{padding-left:0;padding-right:0}.sm\:pb-0{padding-bottom:0}}@media (min-width:768px){.md\:rounded-b{border-bottom-right-radius:.25rem;border-bottom-left-radius:.25rem}.md\:block{display:block}.md\:flex{display:flex}.md\:hidden{display:none}.md\:flex-row{flex-direction:row}.md\:flex-wrap{flex-wrap:wrap}.md\:items-center{align-items:center}.md\:justify-between{justify-content:space-between}.md\:h-6{height:1.5rem}.md\:h-8{height:2rem}.md\:h-10{height:2.5rem}.md\:text-base{font-size:1rem}.md\:text-6xl{font-size:4rem}.md\:mb-0{margin-bottom:0}.md\:mr-4{margin-right:1rem}.md\:opacity-100{opacity:1}.md\:px-6{padding-left:1.5rem;padding-right:1.5rem}.md\:px-12{padding-left:3rem;padding-right:3rem}.md\:visible{visibility:visible}.md\:invisible{visibility:hidden}.md\:w-auto{width:auto}.md\:grid-cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}}@media (min-width:1024px){.lg\:block{display:block}.lg\:flex{display:flex}.lg\:hidden{display:none}.lg\:mb-0{margin-bottom:0}.lg\:ml-0{margin-left:0}.lg\:ml-16{margin-left:4rem}.lg\:px-0{padding-right:0}.lg\:pl-0,.lg\:px-0{padding-left:0}.lg\:text-right{text-align:right}.lg\:w-2\/3{width:66.666667%}.lg\:w-2\/5{width:40%}.lg\:w-3\/5{width:60%}.lg\:grid-cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}}@media (min-width:1280px){.xl\:block{display:block}.xl\:grid{display:grid}.xl\:hidden{display:none}.xl\:mb-0{margin-bottom:0}.xl\:gap-8{gap:2rem}.xl\:grid-cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}.xl\:grid-cols-4{grid-template-columns:repeat(4,minmax(0,1fr))}.xl\:grid-cols-5{grid-template-columns:repeat(5,minmax(0,1fr))}}
+</style>
+
+    
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-NFMFGFQ7WV"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-NFMFGFQ7WV');
+    </script>
+</head>
+<body class="h-screen antialiased leading-none bg-bg flex flex-col h-full">
+
+    <svg style="display:none;">
+        <symbol id="icon-android" viewBox="0 0 16 18">
+            <path d="M1.499 5.83c-.31 0-.574.109-.79.325a1.062 1.062 0 0 0-.324.779v4.651c0 .31.108.574.324.79.216.216.48.325.79.325.31 0 .571-.109.784-.325.213-.216.32-.48.32-.79V6.934c0-.303-.109-.563-.325-.779a1.063 1.063 0 0 0-.78-.324ZM10.456 1.655l.768-1.417c.05-.094.032-.166-.054-.216-.094-.044-.166-.022-.217.065l-.778 1.428A5.318 5.318 0 0 0 8 1.06c-.764 0-1.49.152-2.174.455L5.047.087C4.997 0 4.924-.022 4.831.022c-.087.05-.105.122-.054.216l.768 1.417c-.779.397-1.4.95-1.86 1.66a4.194 4.194 0 0 0-.693 2.332h10.006c0-.844-.231-1.62-.693-2.331a4.762 4.762 0 0 0-1.85-1.661Zm-4.441 2.06a.405.405 0 0 1-.298.125.387.387 0 0 1-.292-.124.415.415 0 0 1-.118-.298c0-.115.04-.214.118-.297a.389.389 0 0 1 .292-.124c.116 0 .215.041.298.124a.407.407 0 0 1 .125.297.407.407 0 0 1-.125.298Zm4.56 0a.388.388 0 0 1-.293.125.405.405 0 0 1-.297-.124.405.405 0 0 1-.125-.298c0-.115.042-.214.125-.297a.406.406 0 0 1 .297-.124c.116 0 .213.041.292.124.08.083.12.182.12.297 0 .116-.04.215-.12.298ZM3.035 13.24c0 .332.115.613.346.844.23.23.512.346.844.346h.8l.011 2.456c0 .31.108.573.324.79.217.216.477.324.78.324.31 0 .573-.108.789-.324.216-.217.324-.48.324-.79V14.43h1.493v2.456c0 .31.108.573.325.79.216.216.479.324.79.324.31 0 .572-.108.789-.324.216-.217.324-.48.324-.79V14.43h.812c.324 0 .601-.115.832-.346.231-.23.346-.511.346-.844V6.036h-9.93v7.204ZM14.501 5.83c-.303 0-.562.107-.779.32a1.058 1.058 0 0 0-.324.784v4.651c0 .31.108.574.324.79.217.216.476.325.78.325.31 0 .572-.109.789-.325.216-.216.324-.48.324-.79V6.934c0-.31-.108-.571-.324-.784a1.085 1.085 0 0 0-.79-.32Z"/>
+        </symbol>
+        <symbol id="icon-apple" viewBox="0 0 15 18">
+            <path d="M14.686 14.028a9.818 9.818 0 0 1-.958 1.74c-.503.726-.915 1.228-1.233 1.507-.493.457-1.02.692-1.585.705-.406 0-.895-.117-1.464-.353-.572-.236-1.097-.352-1.577-.352-.503 0-1.043.116-1.62.352-.579.236-1.045.36-1.401.372-.542.023-1.082-.218-1.621-.724-.344-.304-.775-.824-1.29-1.56-.553-.787-1.008-1.7-1.364-2.74C.19 11.853 0 10.766 0 9.713c0-1.207.258-2.247.774-3.119.406-.7.946-1.253 1.622-1.658a4.328 4.328 0 0 1 2.193-.626c.43 0 .995.135 1.696.4.7.265 1.148.4 1.345.4.147 0 .646-.158 1.492-.472.8-.29 1.475-.411 2.027-.364 1.499.123 2.624.72 3.373 1.795-1.34.82-2.003 1.97-1.99 3.445.012 1.148.425 2.104 1.235 2.863a4.05 4.05 0 0 0 1.233.818c-.099.29-.203.567-.314.834ZM11.249.361c0 .9-.325 1.74-.974 2.518-.782.925-1.729 1.46-2.755 1.375a2.832 2.832 0 0 1-.021-.34c0-.865.372-1.79 1.033-2.546.33-.383.75-.701 1.259-.955.508-.25.988-.389 1.44-.412.013.12.018.24.018.36Z"/>
+        </symbol>
+        <symbol id="icon-windows" viewBox="0 0 16 16">
+            <path d="M0 8.77v4.66l6.65.96V8.77H0ZM6.65 1.61 0 2.57v4.66h6.65V1.6ZM16 7.23V.19L8.2 1.31v5.92H16ZM8.2 14.69 16 15.8V8.77H8.2v5.92Z"/>
+        </symbol>
+        <symbol id="icon-cc" viewBox="0 0 20 20">
+            <title>Free ringtone (Creative Commons)</title>
+            <path d="M9.982 0c2.797 0 5.179.977 7.143 2.929a9.615 9.615 0 0 1 2.142 3.223C19.755 7.36 20 8.643 20 10c0 1.37-.242 2.652-.723 3.848a9.181 9.181 0 0 1-2.134 3.17c-.952.948-2.08 1.7-3.322 2.214A9.955 9.955 0 0 1 9.982 20a9.719 9.719 0 0 1-3.794-.76 10.06 10.06 0 0 1-3.25-2.195A9.808 9.808 0 0 1 0 10c0-1.32.253-2.592.759-3.812A10.042 10.042 0 0 1 2.964 2.91C4.87.97 7.208 0 9.982 0Zm.036 1.804c-2.286 0-4.209.798-5.768 2.393a8.597 8.597 0 0 0-1.813 2.687 7.876 7.876 0 0 0-.634 3.117c0 1.071.211 2.104.634 3.097A8.284 8.284 0 0 0 4.25 15.76a8.242 8.242 0 0 0 2.66 1.786c.989.41 2.025.616 3.108.616 1.071 0 2.11-.208 3.117-.625a8.638 8.638 0 0 0 2.722-1.804c1.56-1.523 2.34-3.434 2.34-5.732a8.211 8.211 0 0 0-.608-3.143 7.994 7.994 0 0 0-1.767-2.643c-1.608-1.607-3.542-2.411-5.804-2.411ZM9.893 8.34l-1.34.696c-.143-.297-.319-.506-.527-.625a1.186 1.186 0 0 0-.58-.178c-.893 0-1.34.589-1.34 1.768 0 .535.113.963.34 1.285.226.322.56.483 1 .483.583 0 .994-.286 1.232-.858l1.232.625a2.938 2.938 0 0 1-2.625 1.572c-.893 0-1.613-.273-2.16-.822-.548-.547-.822-1.309-.822-2.285 0-.952.277-1.708.83-2.268.554-.56 1.253-.84 2.099-.84 1.238 0 2.126.482 2.661 1.447Zm5.768 0-1.322.696c-.143-.297-.319-.506-.527-.625a1.215 1.215 0 0 0-.598-.178c-.893 0-1.34.589-1.34 1.768 0 .535.114.963.34 1.285.226.322.559.483 1 .483.583 0 .994-.286 1.231-.858l1.25.625a3.07 3.07 0 0 1-1.106 1.152c-.464.28-.97.42-1.518.42-.905 0-1.628-.273-2.169-.822-.542-.547-.813-1.309-.813-2.285 0-.952.277-1.708.83-2.268.554-.56 1.253-.84 2.098-.84 1.239 0 2.12.482 2.644 1.447Z"/>
+        </symbol>
+    </svg>
+
+    <header class="bg-white border-b border-gray-300">
+        <div class="container mx-auto px-6">
+            <div class="flex justify-between py-6 pb-5">
+                <a href="/" class="block" id="logo" title="Free ringtones, message tones and other notification sounds">
+                    <svg height="35" viewBox="0 0 288 83" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path id="text" d="M22.633 48.378c-1.078-.876-2.155-1.516-3.233-1.92-1.078-.438-2.122-.657-3.132-.657-1.28 0-2.324.303-3.132.91-.808.607-1.213 1.398-1.213 2.374 0 .674.202 1.23.606 1.667.404.437.926.825 1.566 1.162.674.303 1.415.573 2.223.808l2.476.758c3.233 1.078 5.59 2.526 7.073 4.345 1.516 1.785 2.273 4.126 2.273 7.022 0 1.953-.337 3.722-1 5.305a10.909 10.909 0 01-2.88 4.092c-1.246 1.11-2.796 1.97-4.648 2.577-1.82.64-3.9.96-6.214.96-4.816 0-9.28-1.43-13.388-4.294l4.244-7.982c1.482 1.314 2.947 2.3 4.395 2.93 1.448.63 2.88.96 4.294.96 1.617 0 2.812-.37 3.587-1.11.808-.74 1.213-1.583 1.213-2.526 0-.573-.1-1.06-.303-1.465-.202-.438-.54-.825-1-1.162-.472-.37-1.095-.707-1.87-1a52.05 52.05 0 00-2.728-1.01 71.755 71.755 0 01-3.789-1.314 12.893 12.893 0 01-3.284-1.97c-.943-.808-1.718-1.82-2.324-3.03-.572-1.246-.86-2.812-.86-4.698 0-1.886.303-3.587.91-5.102.64-1.55 1.516-2.863 2.627-3.94 1.145-1.11 2.526-1.97 4.143-2.577 1.65-.606 3.486-.91 5.507-.91 1.886 0 3.856.27 5.91.808a25.23 25.23 0 015.911 2.273l-3.94 7.73-.02-.014zm89.55-9.75V59.34c.001 1.146.034 2.291.101 3.435.1 1.145.353 2.19.757 3.132.438.943 1.112 1.718 2.02 2.324.9.573 2.19.86 3.84.86s2.913-.286 3.79-.86c.91-.606 1.583-1.38 2.02-2.324a8.38 8.38 0 00.757-3.132c.1-1.142.15-2.288.152-3.435V38.627h9.85v22.077c0 5.928-1.364 10.256-4.092 12.984-2.694 2.728-6.854 4.092-12.478 4.092s-9.8-1.364-12.53-4.092c-2.73-2.728-4.092-7.056-4.092-12.984V38.627h9.902l.003.001zM154.93 76.72V38.627h9.902l18.288 23.3v-23.3h9.852V76.72h-9.852l-18.288-23.3v23.3h-9.902zm67.386-8.386h2.274c1.717 0 3.25-.27 4.597-.808 1.347-.538 2.475-1.28 3.385-2.223a9.11 9.11 0 002.122-3.334c.505-1.313.757-2.745.757-4.294 0-1.516-.252-2.93-.757-4.244-.505-1.314-1.23-2.442-2.173-3.385-.91-.943-2.037-1.684-3.385-2.223-1.348-.539-2.862-.808-4.546-.808h-2.274v21.319zm-9.902-29.706h14.65c2.593 0 5.018.522 7.275 1.566 2.3 1.044 4.277 2.442 5.96 4.193 1.718 1.718 3.065 3.74 4.042 6.063a18.227 18.227 0 011.465 7.224c0 2.492-.488 4.9-1.465 7.224a18.715 18.715 0 01-3.99 6.063c-1.684 1.75-3.67 3.15-5.962 4.193-2.256 1.044-4.698 1.566-7.325 1.566h-14.65V38.628zm69.926 9.75c-1.078-.876-2.156-1.516-3.234-1.92-1.077-.438-2.12-.657-3.132-.657-1.28 0-2.324.303-3.132.91-.808.607-1.213 1.398-1.213 2.374 0 .674.203 1.23.607 1.667.404.437.926.825 1.566 1.162.721.32 1.464.59 2.223.808.842.236 1.667.488 2.475.758 3.234 1.078 5.59 2.526 7.073 4.345 1.516 1.785 2.274 4.126 2.274 7.022 0 1.953-.337 3.722-1.01 5.305a10.91 10.91 0 01-2.88 4.092c-1.246 1.11-2.795 1.97-4.647 2.577-1.82.64-3.89.96-6.214.96-4.817 0-9.28-1.43-13.388-4.294l4.243-7.982c1.482 1.314 2.947 2.3 4.396 2.93 1.449.63 2.88.96 4.294.96 1.617 0 2.812-.37 3.587-1.11.808-.74 1.212-1.583 1.212-2.526 0-.573-.1-1.06-.303-1.465-.202-.438-.54-.825-1-1.162-.472-.37-1.095-.707-1.87-1-.74-.303-1.65-.64-2.728-1a72.368 72.368 0 01-3.789-1.314 12.887 12.887 0 01-3.283-1.97c-.944-.808-1.718-1.82-2.324-3.03-.573-1.246-.86-2.812-.86-4.698 0-1.886.303-3.587.91-5.102.64-1.55 1.516-2.863 2.627-3.94 1.145-1.11 2.526-1.97 4.143-2.577 1.65-.606 3.486-.91 5.507-.91 1.886 0 3.856.27 5.9.808a25.222 25.222 0 015.911 2.273l-3.94 7.73-.001-.024zM1.718 25.224V.684h6.457L20.1 15.688V.684h6.424v24.54H20.1L8.174 10.22v15.004H1.718zm39.066-12.27c0 .976.187 1.877.56 2.7a6.83 6.83 0 001.515 2.148 7.134 7.134 0 002.207 1.432 7.538 7.538 0 002.701.488c.944 0 1.834-.163 2.668-.488a7.038 7.038 0 002.24-1.432 6.477 6.477 0 002.108-4.848c0-.975-.187-1.877-.56-2.702a6.59 6.59 0 00-1.548-2.148 6.614 6.614 0 00-2.24-1.4 6.88 6.88 0 00-2.668-.52 7.12 7.12 0 00-2.701.521 6.68 6.68 0 00-2.207 1.4 6.831 6.831 0 00-1.515 2.148 6.475 6.475 0 00-.56 2.701zm-6.753 0c0-1.823.34-3.515 1.02-5.078a12.635 12.635 0 012.833-4.133C39.092 2.572 40.532 1.66 42.2 1.01 43.892.336 45.747 0 47.768 0c1.998 0 3.843.336 5.534 1.01 1.69.65 3.14 1.562 4.348 2.734a12.42 12.42 0 012.866 4.134c.68 1.562 1.02 3.255 1.02 5.078 0 1.823-.34 3.526-1.02 5.1a12.509 12.509 0 01-2.866 4.101c-1.208 1.172-2.657 2.094-4.348 2.767-1.69.65-3.536.976-5.534.976-2.02 0-3.876-.326-5.567-.976-1.67-.673-3.107-1.595-4.315-2.767a12.778 12.778 0 01-2.833-4.1c-.68-1.584-1.02-3.287-1.02-5.1l-.002-.003zM77.91 6.086v19.138h-6.457V6.086H66.15V.684h17.064v5.403l-5.304-.001zM95.67.684v24.54h-6.457V.684h6.457zm22.55 5.403h-7.775v4.1h7.083V15.6h-7.083v9.634h-6.456V.684h14.23l.001 5.403zM131.654.684v24.54h-6.456V.684h6.456zm26.206 8.202c-1.494-1.8-3.338-2.702-5.534-2.702-.967 0-1.867.174-2.702.52a6.462 6.462 0 00-2.108 1.432 6.541 6.541 0 00-1.416 2.116 7.118 7.118 0 00-.494 2.67c0 .976.164 1.877.494 2.7.35.824.823 1.54 1.416 2.148a6.854 6.854 0 002.14 1.432c.81.347 1.69.52 2.636.52 2.064 0 3.92-.868 5.567-2.604v7.55l-.66.228c-.901.324-1.826.574-2.767.749-.835.171-1.685.258-2.537.26a13.24 13.24 0 01-4.941-.944 13.474 13.474 0 01-4.15-2.7 13.875 13.875 0 01-2.865-4.134c-.725-1.606-1.088-3.352-1.088-5.24 0-1.888.352-3.613 1.055-5.175.724-1.584 1.68-2.94 2.866-4.068a12.944 12.944 0 014.183-2.669c1.58-.65 3.24-.976 4.974-.976.99 0 1.955.11 2.9.326.966.195 1.977.5 3.03.944v7.616l.001.001zm21.3 7.226l-2.9-8.17-2.9 8.17h5.8zm1.713 4.85h-9.224l-1.482 4.264h-6.885l9.454-24.54h7.05l9.454 24.54h-6.885l-1.482-4.264zm22.65-14.874v19.138h-6.456V6.086h-5.304V.684h17.064v5.403l-5.304.001zm17.76-5.404v24.54h-6.457V.684h6.457zm13.95 12.27c0 .976.187 1.877.56 2.7a6.829 6.829 0 001.515 2.148 7.134 7.134 0 002.207 1.432 7.553 7.553 0 002.702.488 7.28 7.28 0 002.668-.488 7.053 7.053 0 002.24-1.432 6.58 6.58 0 001.548-2.148c.374-.825.56-1.725.56-2.7 0-.975-.186-1.877-.56-2.702a6.581 6.581 0 00-1.548-2.148 6.614 6.614 0 00-2.24-1.4 6.88 6.88 0 00-2.668-.52c-.944 0-1.845.173-2.702.52a6.69 6.69 0 00-2.207 1.4 6.83 6.83 0 00-1.515 2.148 6.48 6.48 0 00-.56 2.702zm-6.753 0c0-1.823.34-3.515 1.02-5.078a12.671 12.671 0 012.833-4.133c1.208-1.172 2.646-2.083 4.315-2.734C238.34.336 240.197 0 242.218 0c1.998 0 3.843.336 5.534 1.01 1.69.65 3.14 1.562 4.348 2.734a12.42 12.42 0 012.866 4.134c.68 1.562 1.02 3.255 1.02 5.078 0 1.823-.34 3.526-1.02 5.1a12.498 12.498 0 01-2.866 4.101c-1.208 1.172-2.657 2.094-4.348 2.767-1.69.65-3.536.976-5.534.976-2.02 0-3.877-.326-5.568-.976-1.67-.673-3.107-1.595-4.315-2.767a12.778 12.778 0 01-2.833-4.1c-.68-1.584-1.02-3.287-1.02-5.1l-.002-.003zm34.714 12.27V.684h6.457l11.924 15.005V.684H288v24.54h-6.424L269.652 10.22v15.004h-6.458z" fill="#AF343F"/><path id="icon" d="M46.693 47.447a12.955 12.955 0 017.232-7.232c2.31-.922 5.228-.922 11.06-.922 5.832 0 8.75 0 11.06.922a12.953 12.953 0 017.232 7.232c.922 2.31.922 5.228.922 11.06 0 5.832 0 8.75-.922 11.06a12.953 12.953 0 01-7.232 7.232c-2.31.922-5.228.922-11.06.922-5.832 0-8.75 0-11.06-.922a12.955 12.955 0 01-7.232-7.232c-.922-2.312-.922-5.228-.922-11.06 0-5.832 0-8.75.922-11.06zm4.77 1.31c-.94 1.847-.94 4.266-.94 9.102v1.295c0 4.837 0 7.255.94 9.102a8.635 8.635 0 003.774 3.774c1.847.94 4.266.94 9.102.94h1.295c4.837 0 7.255 0 9.102-.94a8.635 8.635 0 003.774-3.774c.94-1.847.94-4.266.94-9.102V57.86c0-4.837 0-7.255-.94-9.102a8.636 8.636 0 00-3.774-3.774c-1.847-.94-4.266-.94-9.102-.94h-1.295c-4.837 0-7.255 0-9.102.94a8.636 8.636 0 00-3.774 3.774v-.001z" fill="#FBA166"/><path id="dot" d="M89.814 41.237a8.42 8.42 0 11-16.84 0 8.42 8.42 0 0116.84 0z" fill="#fff"/><path id="inner-dot" d="M84.663 44.506a4.32 4.32 0 001.265-3.053 4.32 4.32 0 00-4.318-4.318 4.32 4.32 0 00-4.318 4.318 4.32 4.32 0 007.37 3.053z" fill="#AF343F"/>
+                    </svg>
+                </a>
+                <nav class="hidden md:flex md:items-center space-x-12 text-primary">
+                    <div class="relative">
+                        <button class="inline-flex items-center space-x-2" id="btn-categories">
+                            <span>COLLECTIONS</span>
+                            <svg class="w-3 h-3" width="11" height="7" viewBox="0 0 11 7" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M0.293031 1.29299C0.480558 1.10552 0.734866 1.0002 1.00003 1.0002C1.26519 1.0002 1.5195 1.10552 1.70703 1.29299L5.00003 4.58599L8.29303 1.29299C8.38528 1.19748 8.49562 1.1213 8.61763 1.06889C8.73963 1.01648 8.87085 0.988893 9.00363 0.987739C9.13641 0.986585 9.26809 1.01189 9.39098 1.06217C9.51388 1.11245 9.62553 1.1867 9.71943 1.28059C9.81332 1.37449 9.88757 1.48614 9.93785 1.60904C9.98813 1.73193 10.0134 1.86361 10.0123 1.99639C10.0111 2.12917 9.98354 2.26039 9.93113 2.38239C9.87872 2.5044 9.80254 2.61474 9.70703 2.70699L5.70703 6.70699C5.5195 6.89446 5.26519 6.99978 5.00003 6.99978C4.73487 6.99978 4.48056 6.89446 4.29303 6.70699L0.293031 2.70699C0.10556 2.51946 0.000244141 2.26515 0.000244141 1.99999C0.000244141 1.73483 0.10556 1.48052 0.293031 1.29299Z"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <a href="/about">ABOUT</a>
+                    <a href="/contact">CONTACT</a>
+                </nav>
+                <button class="md:hidden inline-flex items-center justify-center p-2 pr-0 -mr-2 text-primary focus:outline-none" id="burger">
+                    <span class="inline-block mr-2 font-bold" id="burger-text">MENU</span>
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" id="burger-default">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                    <svg class="h-6 w-6 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" id="burger-x">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div class="relative">
+    <nav class="bg-white p-6 shadow-lg invisible md:invisible opacity-0 transition-all duration-100 ease-in-out absolute left-0 right-0 z-50" id="mobile-menu">
+        <div class="text-sm text-secondary font-bold mb-4">COLLECTIONS</div>
+        <ul class="text-link text-base border-l-2 border-secondary mb-4">
+                            <li><a href="/asmr-ringtones" class="block py-4 ml-4 font-bold">✨ ASMR Sounds</a></li>
+                            <li><a href="/alarm-sounds-alerts-ringtones" class="block py-4 ml-4 font-bold">🚨 Alarms</a></li>
+                            <li><a href="/animals" class="block py-4 ml-4 font-bold">🦙 Animals</a></li>
+                            <li><a href="/annoying-ringtones" class="block py-4 ml-4 font-bold">😈 Annoying</a></li>
+                            <li><a href="/cartoon-sounds" class="block py-4 ml-4 font-bold">👀 Cartoon</a></li>
+                            <li><a href="/christmas-ringtones" class="block py-4 ml-4 font-bold">🌲 Christmas Ringtones</a></li>
+                            <li><a href="/classy-tones" class="block py-4 ml-4 font-bold">🧐 Classy</a></li>
+                            <li><a href="/cool-tones" class="block py-4 ml-4 font-bold">😎 Cool</a></li>
+                            <li><a href="/cute-ringtones" class="block py-4 ml-4 font-bold">🎀 Cute</a></li>
+                            <li><a href="/funny" class="block py-4 ml-4 font-bold">😂 Funny Ringtones</a></li>
+                            <li><a href="/free-game-sounds" class="block py-4 ml-4 font-bold">🎮 Game Sounds</a></li>
+                            <li><a href="/happy-tones" class="block py-4 ml-4 font-bold">🙂 Happy</a></li>
+                            <li><a href="/free-jingles-and-logos" class="block py-4 ml-4 font-bold">📺 Jingles and Logos</a></li>
+                            <li><a href="/mini-ringtone-songs" class="block py-4 ml-4 font-bold">🎵 Mini Ringtone Songs</a></li>
+                            <li><a href="/notification-sounds" class="block py-4 ml-4 font-bold">🛎️ Notification Sounds</a></li>
+                            <li><a href="/optimistic-tones" class="block py-4 ml-4 font-bold">☺️ Optimistic</a></li>
+                            <li><a href="/message-tones" class="block py-4 ml-4 font-bold">💬 SMS Message Tones</a></li>
+                            <li><a href="/soft-subtle-ringtones" class="block py-4 ml-4 font-bold">👂 Soft / Subtle</a></li>
+                            <li><a href="/sound-effects" class="block py-4 ml-4 font-bold">💥 Sound Effects</a></li>
+                            <li><a href="/spooky-tones" class="block py-4 ml-4 font-bold">👻 Spooky</a></li>
+                            <li><a href="/standard-ringtones" class="block py-4 ml-4 font-bold">📱 Standard Ringtones</a></li>
+                            <li><a href="/application-user-interface-ui-sounds" class="block py-4 ml-4 font-bold">🖥️ User Interface</a></li>
+                            <li><a href="/voice-ringtones" class="block py-4 ml-4 font-bold">👄 Voice Ringtones</a></li>
+                            <li><a href="/wake-up-tones" class="block py-4 ml-4 font-bold">⏰️ Wake-up Tones</a></li>
+                    </ul>
+        <ul class="text-link text-base">
+            <li><a href="/about" class="block py-4 font-bold">About</a></li>
+            <li><a href="/contact" class="block py-4 font-bold">Contact</a></li>
+        </ul>
+    </nav>
+</div>
+    <div class="fixed inset-0 z-40 hidden bg-transparent" id="menu-categories-backdrop"></div>
+<div class="container mx-auto px-2 z-50 hidden invisible opacity-0 transition-all duration-100 ease-in-out" id="menu-categories">
+    <div class="relative">
+        <div class="absolute shadow-2xl rounded-b-lg inset-x-0 p-10 transform bg-white">
+            <div class="flex text-link">
+                                <ul class="z-20 space-y-2 text-sm flex-grow">
+                                        <li>
+                        <a href="/asmr-ringtones" class="block px-4 py-4 hover:bg-gray-300 transition-all duration-100 ease-out rounded">✨ ASMR Sounds</a>
+                    </li>
+                                        <li>
+                        <a href="/alarm-sounds-alerts-ringtones" class="block px-4 py-4 hover:bg-gray-300 transition-all duration-100 ease-out rounded">🚨 Alarms</a>
+                    </li>
+                                        <li>
+                        <a href="/animals" class="block px-4 py-4 hover:bg-gray-300 transition-all duration-100 ease-out rounded">🦙 Animals</a>
+                    </li>
+                                        <li>
+                        <a href="/annoying-ringtones" class="block px-4 py-4 hover:bg-gray-300 transition-all duration-100 ease-out rounded">😈 Annoying</a>
+                    </li>
+                                        <li>
+                        <a href="/cartoon-sounds" class="block px-4 py-4 hover:bg-gray-300 transition-all duration-100 ease-out rounded">👀 Cartoon</a>
+                    </li>
+                                        <li>
+                        <a href="/christmas-ringtones" class="block px-4 py-4 hover:bg-gray-300 transition-all duration-100 ease-out rounded">🌲 Christmas Ringtones</a>
+                    </li>
+                                    </ul>
+                                <ul class="z-20 space-y-2 text-sm flex-grow">
+                                        <li>
+                        <a href="/classy-tones" class="block px-4 py-4 hover:bg-gray-300 transition-all duration-100 ease-out rounded">🧐 Classy</a>
+                    </li>
+                                        <li>
+                        <a href="/cool-tones" class="block px-4 py-4 hover:bg-gray-300 transition-all duration-100 ease-out rounded">😎 Cool</a>
+                    </li>
+                                        <li>
+                        <a href="/cute-ringtones" class="block px-4 py-4 hover:bg-gray-300 transition-all duration-100 ease-out rounded">🎀 Cute</a>
+                    </li>
+                                        <li>
+                        <a href="/funny" class="block px-4 py-4 hover:bg-gray-300 transition-all duration-100 ease-out rounded">😂 Funny Ringtones</a>
+                    </li>
+                                        <li>
+                        <a href="/free-game-sounds" class="block px-4 py-4 hover:bg-gray-300 transition-all duration-100 ease-out rounded">🎮 Game Sounds</a>
+                    </li>
+                                        <li>
+                        <a href="/happy-tones" class="block px-4 py-4 hover:bg-gray-300 transition-all duration-100 ease-out rounded">🙂 Happy</a>
+                    </li>
+                                    </ul>
+                                <ul class="z-20 space-y-2 text-sm flex-grow">
+                                        <li>
+                        <a href="/free-jingles-and-logos" class="block px-4 py-4 hover:bg-gray-300 transition-all duration-100 ease-out rounded">📺 Jingles and Logos</a>
+                    </li>
+                                        <li>
+                        <a href="/mini-ringtone-songs" class="block px-4 py-4 hover:bg-gray-300 transition-all duration-100 ease-out rounded">🎵 Mini Ringtone Songs</a>
+                    </li>
+                                        <li>
+                        <a href="/notification-sounds" class="block px-4 py-4 hover:bg-gray-300 transition-all duration-100 ease-out rounded">🛎️ Notification Sounds</a>
+                    </li>
+                                        <li>
+                        <a href="/optimistic-tones" class="block px-4 py-4 hover:bg-gray-300 transition-all duration-100 ease-out rounded">☺️ Optimistic</a>
+                    </li>
+                                        <li>
+                        <a href="/message-tones" class="block px-4 py-4 hover:bg-gray-300 transition-all duration-100 ease-out rounded">💬 SMS Message Tones</a>
+                    </li>
+                                        <li>
+                        <a href="/soft-subtle-ringtones" class="block px-4 py-4 hover:bg-gray-300 transition-all duration-100 ease-out rounded">👂 Soft / Subtle</a>
+                    </li>
+                                    </ul>
+                                <ul class="z-20 space-y-2 text-sm flex-grow">
+                                        <li>
+                        <a href="/sound-effects" class="block px-4 py-4 hover:bg-gray-300 transition-all duration-100 ease-out rounded">💥 Sound Effects</a>
+                    </li>
+                                        <li>
+                        <a href="/spooky-tones" class="block px-4 py-4 hover:bg-gray-300 transition-all duration-100 ease-out rounded">👻 Spooky</a>
+                    </li>
+                                        <li>
+                        <a href="/standard-ringtones" class="block px-4 py-4 hover:bg-gray-300 transition-all duration-100 ease-out rounded">📱 Standard Ringtones</a>
+                    </li>
+                                        <li>
+                        <a href="/application-user-interface-ui-sounds" class="block px-4 py-4 hover:bg-gray-300 transition-all duration-100 ease-out rounded">🖥️ User Interface</a>
+                    </li>
+                                        <li>
+                        <a href="/voice-ringtones" class="block px-4 py-4 hover:bg-gray-300 transition-all duration-100 ease-out rounded">👄 Voice Ringtones</a>
+                    </li>
+                                        <li>
+                        <a href="/wake-up-tones" class="block px-4 py-4 hover:bg-gray-300 transition-all duration-100 ease-out rounded">⏰️ Wake-up Tones</a>
+                    </li>
+                                    </ul>
+                            </div>
+        </div>
+    </div>
+</div>
+
+        <main class="container flex-1 mx-auto px-6 pt-10">
+        <article>
+            <header class="md:flex md:justify-between md:flex-wrap mb-8">
+                <h1 class="lg:w-2/3 text-4xl md:text-6xl text-primary font-extrabold relative pr-4">
+    <div class="text-sm font-bold uppercase absolute -mt-4 select-none">
+                    &nbsp;
+            </div>
+    <div class="flex items-center">
+        <span>
+            Oops!
+        </span>
+    </div>
+</h1>
+
+<div class="pt-8">
+    <nav class="flex items-center text-base text-gray-800 leading-8">
+                                    <a href="/" class="text-link hover:text-gray-900 transition-all duration-100 ease-in-out ">Home</a>
+            
+                            <svg class="block mx-2 h-6" viewBox="0 0 9 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <line x1="8.482" y1="0.132964" x2="0.481997" y2="29.133" stroke="currentColor"/>
+                </svg>
+                                                <span class="truncate">Oops!</span>
+            
+                        </nav>
+</div>
+            </header>
+
+            <div class="custom-prose">
+                <p>We can't seem to find the page you're looking for.</p>
+            </div>
+        </article>
+
+        <section>
+    <h2 class="uppercase text-primary mb-6 pt-4 font-extrabold text-3xl">RINGTONES YOU MIGHT LIKE</h2>
+
+    <div class="xl:grid xl:grid-cols-4 xl:gap-8 mb-12">
+                                    <article class="flex flex-col justify-start bg-white rounded overflow-hidden shadow-lg mb-8 xl:mb-0">
+        <div class="gradient">
+            <div class="w-full player th-8">
+                <object type="image/svg+xml" data="/storage/sounds/oringz-w427-371.svg" onload="i(this)"></object>
+                <audio>
+                    <source src="/storage/sounds/file-0b_oringz-pack-nine-07.ogg" type="audio/ogg">
+                    <source src="/storage/sounds/file-0b_oringz-pack-nine-07.mp3" type="audio/mpeg">
+                </audio>
+            </div>
+        </div>
+        <div class="flex flex-col flex-1 p-6">
+            <a href="/standard-ringtones/oringz-w427-371" class="block text-2xl text-link mb-6 leading-6" title="Go to 'Imagine' downloads page">Imagine</a>
+            <div class="flex flex-col flex-1">
+                <div class="text-xs text-gray-700 leading-6 mb-6 flex-1">Giving in to daydreaming.</div>
+                <div class="flex items-center justify-between">
+                    <a href="/terms-of-use#copyright" title="Free ringtone (Creative Commons)" class="text-gray-500">
+                        <svg width="20" height="20" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                            <use xlink:href="#icon-cc"></use>
+                        </svg>
+                    </a>
+                    <a href="/standard-ringtones/oringz-w427-371" class="flex text-xs text-white">
+                        <span class="flex justify-between items-center bg-link hover:bg-primary-lighter transition-all duration-100 ease-in-out px-2 py-1 rounded-sm mr-1" title="Download .mp3 android ringtone">
+                            <svg class="mr-2" width="16" height="18" fill="currentColor">
+                                <use xlink:href="#icon-android"></use>
+                            </svg>
+                            <span class="">mp3</span>
+                        </span>
+                        <span class="flex justify-between items-center bg-link hover:bg-primary-lighter transition-all duration-100 ease-in-out px-2 py-1 rounded-sm mr-1" title="Download .m4r iphone ringtone">
+                            <svg class="mr-2" width="15" height="18" fill="currentColor">
+                                <use xlink:href="#icon-apple"></use>
+                            </svg>
+                            <span class="">m4r</span>
+                        </span>
+                        <span class="flex justify-between items-center bg-link hover:bg-primary-lighter transition-all duration-100 ease-in-out px-2 py-1 rounded-sm" title="Download .ogg sound">
+                            <svg class="mr-2" width="16" height="16" fill="currentColor">
+                                <use xlink:href="#icon-windows"></use>
+                            </svg>
+                            <span class="">ogg</span>
+                        </span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </article>
+                                                <article class="flex flex-col justify-start bg-white rounded overflow-hidden shadow-lg mb-8 xl:mb-0">
+        <div class="gradient">
+            <div class="w-full player th-4">
+                <object type="image/svg+xml" data="/storage/sounds/arpeggio-467.svg" onload="i(this)"></object>
+                <audio>
+                    <source src="/storage/sounds/file-sounds-767-arpeggio.ogg" type="audio/ogg">
+                    <source src="/storage/sounds/file-sounds-767-arpeggio.mp3" type="audio/mpeg">
+                </audio>
+            </div>
+        </div>
+        <div class="flex flex-col flex-1 p-6">
+            <a href="/wake-up-tones/arpeggio-467" class="block text-2xl text-link mb-6 leading-6" title="Go to 'Arpeggio' downloads page">Arpeggio</a>
+            <div class="flex flex-col flex-1">
+                <div class="text-xs text-gray-700 leading-6 mb-6 flex-1"><p>There are so many reasons to be THIS cheerful!</p></div>
+                <div class="flex items-center justify-between">
+                    <a href="/terms-of-use#copyright" title="Free ringtone (Creative Commons)" class="text-gray-500">
+                        <svg width="20" height="20" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                            <use xlink:href="#icon-cc"></use>
+                        </svg>
+                    </a>
+                    <a href="/wake-up-tones/arpeggio-467" class="flex text-xs text-white">
+                        <span class="flex justify-between items-center bg-link hover:bg-primary-lighter transition-all duration-100 ease-in-out px-2 py-1 rounded-sm mr-1" title="Download .mp3 android ringtone">
+                            <svg class="mr-2" width="16" height="18" fill="currentColor">
+                                <use xlink:href="#icon-android"></use>
+                            </svg>
+                            <span class="">mp3</span>
+                        </span>
+                        <span class="flex justify-between items-center bg-link hover:bg-primary-lighter transition-all duration-100 ease-in-out px-2 py-1 rounded-sm mr-1" title="Download .m4r iphone ringtone">
+                            <svg class="mr-2" width="15" height="18" fill="currentColor">
+                                <use xlink:href="#icon-apple"></use>
+                            </svg>
+                            <span class="">m4r</span>
+                        </span>
+                        <span class="flex justify-between items-center bg-link hover:bg-primary-lighter transition-all duration-100 ease-in-out px-2 py-1 rounded-sm" title="Download .ogg sound">
+                            <svg class="mr-2" width="16" height="16" fill="currentColor">
+                                <use xlink:href="#icon-windows"></use>
+                            </svg>
+                            <span class="">ogg</span>
+                        </span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </article>
+                                                <article class="flex flex-col justify-start bg-white rounded overflow-hidden shadow-lg mb-8 xl:mb-0">
+        <div class="gradient">
+            <div class="w-full player th-21">
+                <object type="image/svg+xml" data="/storage/sounds/et-voila-message-tone.svg" onload="i(this)"></object>
+                <audio>
+                    <source src="/storage/sounds/file-sounds-1214-et-voila.ogg" type="audio/ogg">
+                    <source src="/storage/sounds/file-sounds-1214-et-voila.mp3" type="audio/mpeg">
+                </audio>
+            </div>
+        </div>
+        <div class="flex flex-col flex-1 p-6">
+            <a href="/message-tones/et-voila-message-tone" class="block text-2xl text-link mb-6 leading-6" title="Go to 'Et voilà!' downloads page">Et voilà!</a>
+            <div class="flex flex-col flex-1">
+                <div class="text-xs text-gray-700 leading-6 mb-6 flex-1">It wasn't complicated, at least not for me. Done!</div>
+                <div class="flex items-center justify-between">
+                    <a href="/terms-of-use#copyright" title="Free ringtone (Creative Commons)" class="text-gray-500">
+                        <svg width="20" height="20" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                            <use xlink:href="#icon-cc"></use>
+                        </svg>
+                    </a>
+                    <a href="/message-tones/et-voila-message-tone" class="flex text-xs text-white">
+                        <span class="flex justify-between items-center bg-link hover:bg-primary-lighter transition-all duration-100 ease-in-out px-2 py-1 rounded-sm mr-1" title="Download .mp3 android ringtone">
+                            <svg class="mr-2" width="16" height="18" fill="currentColor">
+                                <use xlink:href="#icon-android"></use>
+                            </svg>
+                            <span class="">mp3</span>
+                        </span>
+                        <span class="flex justify-between items-center bg-link hover:bg-primary-lighter transition-all duration-100 ease-in-out px-2 py-1 rounded-sm mr-1" title="Download .m4r iphone ringtone">
+                            <svg class="mr-2" width="15" height="18" fill="currentColor">
+                                <use xlink:href="#icon-apple"></use>
+                            </svg>
+                            <span class="">m4r</span>
+                        </span>
+                        <span class="flex justify-between items-center bg-link hover:bg-primary-lighter transition-all duration-100 ease-in-out px-2 py-1 rounded-sm" title="Download .ogg sound">
+                            <svg class="mr-2" width="16" height="16" fill="currentColor">
+                                <use xlink:href="#icon-windows"></use>
+                            </svg>
+                            <span class="">ogg</span>
+                        </span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </article>
+                                                <article class="flex flex-col justify-start bg-white rounded overflow-hidden shadow-lg mb-8 xl:mb-0">
+        <div class="gradient">
+            <div class="w-full player th-21">
+                <object type="image/svg+xml" data="/storage/sounds/open-up-587.svg" onload="i(this)"></object>
+                <audio>
+                    <source src="/storage/sounds/file-sounds-1134-open-up.ogg" type="audio/ogg">
+                    <source src="/storage/sounds/file-sounds-1134-open-up.mp3" type="audio/mpeg">
+                </audio>
+            </div>
+        </div>
+        <div class="flex flex-col flex-1 p-6">
+            <a href="/message-tones/open-up-587" class="block text-2xl text-link mb-6 leading-6" title="Go to 'Open up' downloads page">Open up</a>
+            <div class="flex flex-col flex-1">
+                <div class="text-xs text-gray-700 leading-6 mb-6 flex-1"><p>A sound escaped from a Stephen King book.</p></div>
+                <div class="flex items-center justify-between">
+                    <a href="/terms-of-use#copyright" title="Free ringtone (Creative Commons)" class="text-gray-500">
+                        <svg width="20" height="20" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                            <use xlink:href="#icon-cc"></use>
+                        </svg>
+                    </a>
+                    <a href="/message-tones/open-up-587" class="flex text-xs text-white">
+                        <span class="flex justify-between items-center bg-link hover:bg-primary-lighter transition-all duration-100 ease-in-out px-2 py-1 rounded-sm mr-1" title="Download .mp3 android ringtone">
+                            <svg class="mr-2" width="16" height="18" fill="currentColor">
+                                <use xlink:href="#icon-android"></use>
+                            </svg>
+                            <span class="">mp3</span>
+                        </span>
+                        <span class="flex justify-between items-center bg-link hover:bg-primary-lighter transition-all duration-100 ease-in-out px-2 py-1 rounded-sm mr-1" title="Download .m4r iphone ringtone">
+                            <svg class="mr-2" width="15" height="18" fill="currentColor">
+                                <use xlink:href="#icon-apple"></use>
+                            </svg>
+                            <span class="">m4r</span>
+                        </span>
+                        <span class="flex justify-between items-center bg-link hover:bg-primary-lighter transition-all duration-100 ease-in-out px-2 py-1 rounded-sm" title="Download .ogg sound">
+                            <svg class="mr-2" width="16" height="16" fill="currentColor">
+                                <use xlink:href="#icon-windows"></use>
+                            </svg>
+                            <span class="">ogg</span>
+                        </span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </article>
+                                                <article class="flex flex-col justify-start bg-white rounded overflow-hidden shadow-lg mb-8 xl:mb-0">
+        <div class="gradient">
+            <div class="w-full player th-29">
+                <object type="image/svg+xml" data="/storage/sounds/oringz-w447-425.svg" onload="i(this)"></object>
+                <audio>
+                    <source src="/storage/sounds/file-63_oringz-pack-nine-27.ogg" type="audio/ogg">
+                    <source src="/storage/sounds/file-63_oringz-pack-nine-27.mp3" type="audio/mpeg">
+                </audio>
+            </div>
+        </div>
+        <div class="flex flex-col flex-1 p-6">
+            <a href="/featured-sounds/oringz-w447-425" class="block text-2xl text-link mb-6 leading-6" title="Go to 'High up there' downloads page">High up there</a>
+            <div class="flex flex-col flex-1">
+                <div class="text-xs text-gray-700 leading-6 mb-6 flex-1">High pitched, stylish and a bit annoying - but that's what you usually want from a ringtone.</div>
+                <div class="flex items-center justify-between">
+                    <a href="/terms-of-use#copyright" title="Free ringtone (Creative Commons)" class="text-gray-500">
+                        <svg width="20" height="20" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                            <use xlink:href="#icon-cc"></use>
+                        </svg>
+                    </a>
+                    <a href="/featured-sounds/oringz-w447-425" class="flex text-xs text-white">
+                        <span class="flex justify-between items-center bg-link hover:bg-primary-lighter transition-all duration-100 ease-in-out px-2 py-1 rounded-sm mr-1" title="Download .mp3 android ringtone">
+                            <svg class="mr-2" width="16" height="18" fill="currentColor">
+                                <use xlink:href="#icon-android"></use>
+                            </svg>
+                            <span class="">mp3</span>
+                        </span>
+                        <span class="flex justify-between items-center bg-link hover:bg-primary-lighter transition-all duration-100 ease-in-out px-2 py-1 rounded-sm mr-1" title="Download .m4r iphone ringtone">
+                            <svg class="mr-2" width="15" height="18" fill="currentColor">
+                                <use xlink:href="#icon-apple"></use>
+                            </svg>
+                            <span class="">m4r</span>
+                        </span>
+                        <span class="flex justify-between items-center bg-link hover:bg-primary-lighter transition-all duration-100 ease-in-out px-2 py-1 rounded-sm" title="Download .ogg sound">
+                            <svg class="mr-2" width="16" height="16" fill="currentColor">
+                                <use xlink:href="#icon-windows"></use>
+                            </svg>
+                            <span class="">ogg</span>
+                        </span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </article>
+                                                <article class="flex flex-col justify-start bg-white rounded overflow-hidden shadow-lg mb-8 xl:mb-0">
+        <div class="gradient">
+            <div class="w-full player th-27">
+                <object type="image/svg+xml" data="/storage/sounds/isnt-it-524.svg" onload="i(this)"></object>
+                <audio>
+                    <source src="/storage/sounds/file-sounds-969-isnt-it.ogg" type="audio/ogg">
+                    <source src="/storage/sounds/file-sounds-969-isnt-it.mp3" type="audio/mpeg">
+                </audio>
+            </div>
+        </div>
+        <div class="flex flex-col flex-1 p-6">
+            <a href="/standard-ringtones/isnt-it-524" class="block text-2xl text-link mb-6 leading-6" title="Go to 'Isn&#039;t it' downloads page">Isn&#039;t it</a>
+            <div class="flex flex-col flex-1">
+                <div class="text-xs text-gray-700 leading-6 mb-6 flex-1"><p>Makes you think of a chirping bird, except it's a completely artificial sound.</p></div>
+                <div class="flex items-center justify-between">
+                    <a href="/terms-of-use#copyright" title="Free ringtone (Creative Commons)" class="text-gray-500">
+                        <svg width="20" height="20" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                            <use xlink:href="#icon-cc"></use>
+                        </svg>
+                    </a>
+                    <a href="/standard-ringtones/isnt-it-524" class="flex text-xs text-white">
+                        <span class="flex justify-between items-center bg-link hover:bg-primary-lighter transition-all duration-100 ease-in-out px-2 py-1 rounded-sm mr-1" title="Download .mp3 android ringtone">
+                            <svg class="mr-2" width="16" height="18" fill="currentColor">
+                                <use xlink:href="#icon-android"></use>
+                            </svg>
+                            <span class="">mp3</span>
+                        </span>
+                        <span class="flex justify-between items-center bg-link hover:bg-primary-lighter transition-all duration-100 ease-in-out px-2 py-1 rounded-sm mr-1" title="Download .m4r iphone ringtone">
+                            <svg class="mr-2" width="15" height="18" fill="currentColor">
+                                <use xlink:href="#icon-apple"></use>
+                            </svg>
+                            <span class="">m4r</span>
+                        </span>
+                        <span class="flex justify-between items-center bg-link hover:bg-primary-lighter transition-all duration-100 ease-in-out px-2 py-1 rounded-sm" title="Download .ogg sound">
+                            <svg class="mr-2" width="16" height="16" fill="currentColor">
+                                <use xlink:href="#icon-windows"></use>
+                            </svg>
+                            <span class="">ogg</span>
+                        </span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </article>
+                                                <article class="flex flex-col justify-start bg-white rounded overflow-hidden shadow-lg mb-8 xl:mb-0">
+        <div class="gradient">
+            <div class="w-full player th-20">
+                <object type="image/svg+xml" data="/storage/sounds/here-i-am-449.svg" onload="i(this)"></object>
+                <audio>
+                    <source src="/storage/sounds/file-4f_here-I-am.ogg" type="audio/ogg">
+                    <source src="/storage/sounds/file-4f_here-I-am.mp3" type="audio/mpeg">
+                </audio>
+            </div>
+        </div>
+        <div class="flex flex-col flex-1 p-6">
+            <a href="/standard-ringtones/here-i-am-449" class="block text-2xl text-link mb-6 leading-6" title="Go to 'Here I am' downloads page">Here I am</a>
+            <div class="flex flex-col flex-1">
+                <div class="text-xs text-gray-700 leading-6 mb-6 flex-1"><p>Sophisticated sound, born to be the greatest message tone of all.</p></div>
+                <div class="flex items-center justify-between">
+                    <a href="/terms-of-use#copyright" title="Free ringtone (Creative Commons)" class="text-gray-500">
+                        <svg width="20" height="20" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                            <use xlink:href="#icon-cc"></use>
+                        </svg>
+                    </a>
+                    <a href="/standard-ringtones/here-i-am-449" class="flex text-xs text-white">
+                        <span class="flex justify-between items-center bg-link hover:bg-primary-lighter transition-all duration-100 ease-in-out px-2 py-1 rounded-sm mr-1" title="Download .mp3 android ringtone">
+                            <svg class="mr-2" width="16" height="18" fill="currentColor">
+                                <use xlink:href="#icon-android"></use>
+                            </svg>
+                            <span class="">mp3</span>
+                        </span>
+                        <span class="flex justify-between items-center bg-link hover:bg-primary-lighter transition-all duration-100 ease-in-out px-2 py-1 rounded-sm mr-1" title="Download .m4r iphone ringtone">
+                            <svg class="mr-2" width="15" height="18" fill="currentColor">
+                                <use xlink:href="#icon-apple"></use>
+                            </svg>
+                            <span class="">m4r</span>
+                        </span>
+                        <span class="flex justify-between items-center bg-link hover:bg-primary-lighter transition-all duration-100 ease-in-out px-2 py-1 rounded-sm" title="Download .ogg sound">
+                            <svg class="mr-2" width="16" height="16" fill="currentColor">
+                                <use xlink:href="#icon-windows"></use>
+                            </svg>
+                            <span class="">ogg</span>
+                        </span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </article>
+                                                <article class="flex flex-col justify-start bg-white rounded overflow-hidden shadow-lg mb-8 xl:mb-0">
+        <div class="gradient">
+            <div class="w-full player th-12">
+                <object type="image/svg+xml" data="/storage/sounds/confident-543.svg" onload="i(this)"></object>
+                <audio>
+                    <source src="/storage/sounds/file-sounds-1083-confident.ogg" type="audio/ogg">
+                    <source src="/storage/sounds/file-sounds-1083-confident.mp3" type="audio/mpeg">
+                </audio>
+            </div>
+        </div>
+        <div class="flex flex-col flex-1 p-6">
+            <a href="/notification-sounds/confident-543" class="block text-2xl text-link mb-6 leading-6" title="Go to 'Confident' downloads page">Confident</a>
+            <div class="flex flex-col flex-1">
+                <div class="text-xs text-gray-700 leading-6 mb-6 flex-1"><p>Self-assured and straight to the point.</p></div>
+                <div class="flex items-center justify-between">
+                    <a href="/terms-of-use#copyright" title="Free ringtone (Creative Commons)" class="text-gray-500">
+                        <svg width="20" height="20" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                            <use xlink:href="#icon-cc"></use>
+                        </svg>
+                    </a>
+                    <a href="/notification-sounds/confident-543" class="flex text-xs text-white">
+                        <span class="flex justify-between items-center bg-link hover:bg-primary-lighter transition-all duration-100 ease-in-out px-2 py-1 rounded-sm mr-1" title="Download .mp3 android ringtone">
+                            <svg class="mr-2" width="16" height="18" fill="currentColor">
+                                <use xlink:href="#icon-android"></use>
+                            </svg>
+                            <span class="">mp3</span>
+                        </span>
+                        <span class="flex justify-between items-center bg-link hover:bg-primary-lighter transition-all duration-100 ease-in-out px-2 py-1 rounded-sm mr-1" title="Download .m4r iphone ringtone">
+                            <svg class="mr-2" width="15" height="18" fill="currentColor">
+                                <use xlink:href="#icon-apple"></use>
+                            </svg>
+                            <span class="">m4r</span>
+                        </span>
+                        <span class="flex justify-between items-center bg-link hover:bg-primary-lighter transition-all duration-100 ease-in-out px-2 py-1 rounded-sm" title="Download .ogg sound">
+                            <svg class="mr-2" width="16" height="16" fill="currentColor">
+                                <use xlink:href="#icon-windows"></use>
+                            </svg>
+                            <span class="">ogg</span>
+                        </span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </article>
+                        </div>
+</section>
+
+        <section>
+    <h2 class="uppercase text-primary mb-6 pt-4 font-extrabold text-3xl">Explore collections</h2>
+
+    <nav class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 items-center" style="grid-auto-rows: 1fr;">
+        <a href="/asmr-ringtones" class="bg-white hover:bg-primary hover:text-white transition-all duration-100 ease-in-out rounded border-2 border-primary text-primary text-shadow font-bold text-lg text-center px-8 py-4">✨ ASMR Sounds</a>
+        <a href="/notification-sounds" class="bg-white hover:bg-primary hover:text-white transition-all duration-100 ease-in-out rounded border-2 border-primary text-primary text-shadow font-bold text-lg text-center px-8 py-4">🛎️ Notification Sounds</a>
+        <a href="/standard-ringtones" class="bg-white hover:bg-primary hover:text-white transition-all duration-100 ease-in-out rounded border-2 border-primary text-primary text-shadow font-bold text-lg text-center px-8 py-4">📱 Ringtones</a>
+        <a href="/message-tones" class="bg-white hover:bg-primary hover:text-white transition-all duration-100 ease-in-out rounded border-2 border-primary text-primary text-shadow font-bold text-lg text-center px-8 py-4">💬 SMS Message Tones</a>
+
+        <a href="/wake-up-tones" class="bg-white hover:bg-primary hover:text-white transition-all duration-100 ease-in-out rounded border-2 border-primary text-primary text-shadow font-bold text-lg text-center px-8 py-4">⏰️ Wake-up Tones</a>
+        <a href="/mini-ringtone-songs" class="bg-white hover:bg-primary hover:text-white transition-all duration-100 ease-in-out rounded border-2 border-primary text-primary text-shadow font-bold text-lg text-center px-8 py-4">🎵 Mini Ringtone Songs</a>
+        <a href="/funny" class="bg-white hover:bg-primary hover:text-white transition-all duration-100 ease-in-out rounded border-2 border-primary text-primary text-shadow font-bold text-lg text-center px-8 py-4">😂 Funny</a>
+        <a href="/sound-effects" class="bg-white hover:bg-primary hover:text-white transition-all duration-100 ease-in-out rounded border-2 border-primary text-primary text-shadow font-bold text-lg text-center px-8 py-4">💥 Sound Effects</a>
+
+        <a href="/free-jingles-and-logos" class="bg-white hover:bg-primary hover:text-white transition-all duration-100 ease-in-out rounded border-2 border-primary text-primary text-shadow font-bold text-lg text-center px-8 py-4">📺 Jingles and Logos</a>
+        <a href="/application-user-interface-ui-sounds" class="bg-white hover:bg-primary hover:text-white transition-all duration-100 ease-in-out rounded border-2 border-primary text-primary text-shadow font-bold text-lg text-center px-8 py-4">🖥️ User Interface</a>
+        <a href="/free-game-sounds" class="bg-white hover:bg-primary hover:text-white transition-all duration-100 ease-in-out rounded border-2 border-primary text-primary text-shadow font-bold text-lg text-center px-8 py-4">🎮 Game Sounds</a>
+        <a href="/voice-ringtones" class="bg-white hover:bg-primary hover:text-white transition-all duration-100 ease-in-out rounded border-2 border-primary text-primary text-shadow font-bold text-lg text-center px-8 py-4">👄 Voice Ringtones</a>
+    </nav>
+</section>
+    </main>
+
+    <footer class="bg-primary mt-16">
+    <div class="container mx-auto px-6 py-6">
+        <div class="flex justify-between items-center">
+            <div>
+                <nav class="lg:flex lg:text-right text-white leading-6">
+                    <a href="/terms-of-use" class="block">Terms of use</a>
+                    <a href="/privacy-policy" class="block lg:ml-16">Privacy Policy</a>
+                    <a href="/contact" class="block lg:ml-16">Contact</a>
+                </nav>
+                <div class="text-gray-200 text-sm mb-4 lg:mb-0 leading-normal opacity-50 pt-4 hidden md:block">
+                    Copyright &copy; 2008 - 2025 Notification Sounds. All rights reserved.
+                </div>
+            </div>
+            <div class="bg-bg rounded flex flex-col md:flex-row overflow-hidden">
+                <a href="https://www.facebook.com/notificationsounds/" target="_blank" class="block px-4 py-4 hover:bg-white transition-all duration-100 ease-in-out" title="Notification Sounds on Facebook">
+                    <svg class="h-5 md:h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 1000 194"><path fill="#1877F2" d="M63 191H26V97H0V66h26V44C26 18 37 0 75 0l20 2v28H82c-13 0-19 4-19 15v21h32l-3 31H63v94zm87-127h-2c-35 0-51 26-51 63 0 47 21 66 51 66 18 0 29-7 36-21v19h36V66h-36v19c-5-12-17-21-34-21zm9 29c15 0 23 10 23 28v17c0 12-7 26-23 26-25 0-24-27-24-36 0-30 13-35 24-35zm76 35c0-15-1-64 63-64 26 0 37 8 37 8l-9 27s-10-6-25-6c-18 0-29 10-29 29v13c0 18 11 29 30 29 12 0 24-6 24-6l9 27s-10 8-36 8c-62 0-64-44-64-65zm310-64c35 0 51 26 51 63 0 47-20 66-51 66-17 0-30-7-37-21v19h-35V4l37-3v83c6-15 23-20 35-20zm-10 29c-15 0-25 10-25 28v17c0 12 7 26 25 26 25 0 24-27 24-36 0-30-13-35-24-35zM400 64c-39 0-60 21-60 60v7c0 50 29 63 64 63 34 0 50-10 50-10l-7-25s-19 7-38 7c-21 0-30-5-32-25h80v-20c0-42-24-57-57-57zm1 25c14 0 23 9 22 28h-46c1-20 10-28 24-28zm270-25c-40 0-62 23-62 64 0 56 37 65 62 65 37 0 62-20 62-65 0-47-28-64-62-64zm0 29c18 0 25 14 25 29v13c0 18-10 29-25 29-14 0-24-10-24-29v-13c0-21 11-29 24-29zm137-29c-41 0-62 23-62 64 0 56 37 65 62 65 37 0 61-20 61-65 0-47-27-64-61-64zm-1 29c18 0 25 14 25 29v13c0 18-10 29-25 29-14 0-24-10-24-29v-13c0-21 12-29 24-29zm77 98V4l37-3v125l38-60h39l-39 62 41 63h-40l-39-61v61h-37z"/></svg>
+                </a>
+                <a href="https://www.youtube.com/channel/UC2CF3pEYN6HQigaiM-QkEhQ/" target="_blank" class="block px-4 py-4 hover:bg-white transition-all duration-100 ease-in-out" title="Notification Sounds on YouTube">
+                    <svg class="h-5 md:h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 1420 318"><path fill="red" d="M444 50c-6-19-21-35-40-40-36-9-177-9-177-9S85 1 50 10c-20 5-35 21-40 40C0 85 0 159 0 159s0 74 10 109c5 19 20 35 40 40 35 9 177 9 177 9s141 0 177-9c19-5 34-21 40-40 9-35 9-109 9-109s0-74-9-109z"/><path fill="#fff" d="M182 227l117-68-117-68v136z"/><path fill="#282828" d="M657 289c-9-6-15-16-19-28-3-13-5-30-5-51v-29c0-21 2-38 6-51s11-23 20-29 21-9 36-9 27 3 36 9 15 16 19 29 6 30 6 51v29c0 21-2 38-6 51s-10 22-19 28-21 9-37 9c-15 0-28-3-37-9zm51-31c2-7 3-17 3-32v-62c0-14-1-24-3-31-3-7-7-10-14-10-6 0-10 3-12 10-3 6-4 17-4 31v62c0 15 1 25 3 32 3 6 7 9 13 9 7 0 11-3 14-9zM1345 210v10l1 29c1 6 2 11 5 14 2 3 6 4 11 4 6 0 11-2 13-7 3-6 4-14 4-26l39 2v7c0 18-5 32-15 41s-24 14-42 14c-22 0-38-7-47-21s-13-35-13-64v-35c0-30 5-51 14-65s25-21 47-21c15 0 27 3 35 9s14 14 18 26c3 12 5 28 5 49v34h-75zm5-83c-2 3-3 7-4 14l-1 29v14h32v-14l-1-29c-1-7-2-12-5-14-2-3-5-4-10-4s-8 1-11 4zM549 207L498 23h44l18 83 10 53h1l10-52 19-84h44l-51 184v88h-44v-88zM900 96v199h-34l-4-25h-1c-10 19-24 28-43 28-13 0-23-5-29-13-6-9-10-22-10-41V96h45v146c0 9 1 15 3 19s5 5 10 5c4 0 7-1 11-3 3-2 6-5 8-9V96h44zM1130 96v199h-35l-4-25h-1c-10 19-24 28-43 28-13 0-23-5-29-13-6-9-9-22-9-41V96h44v146c0 9 1 15 3 19s5 5 10 5c4 0 7-1 11-3s6-5 8-9V96h45z"/><path fill="#282828" d="M1022 59h-45v236h-43V59h-45V23h133v36zM1277 128c-2-13-7-22-13-27-6-6-14-9-25-9-8 0-15 3-23 7-7 5-12 11-16 19V13h-44v282h37l5-19h1c3 7 8 12 15 16s15 6 23 6c15 0 27-7 34-21s10-36 10-66v-31c0-22-1-40-4-52zm-41 81l-1 34-6 17c-3 4-7 6-12 6-3 0-7-1-10-3s-6-4-8-8V143c2-6 5-10 8-14 4-3 8-5 12-5 5 0 8 2 11 5 2 4 4 10 5 18l1 36v26z"/></svg>
+                </a>
+            </div>
+        </div>
+        <div class="text-gray-200 text-sm mb-4 lg:mb-0 leading-normal opacity-50 pt-8 md:hidden">
+            Copyright &copy; 2008 - 2025 Notification Sounds. All rights reserved.
+        </div>
+    </div>
+</footer>
+
+    <svg style="position: absolute; left: -500px;">
+    <defs>
+        <filter id="shadow" y="-40%" height="180%">
+            <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="black" flood-opacity="0.4"/>
+        </filter>
+        <filter id="btn-shadow" y="-40%" height="180%">
+            <feDropShadow dx="0" dy="1" stdDeviation="0" flood-color="black" flood-opacity="0.2"/>
+        </filter>
+    </defs>
+</svg>
+<svg class="player-button-template" width="57" height="56" viewBox="0 0 56 56">
+    <circle cx="28" cy="28" r="28" fill="transparent"/>
+    <g class="btn-shape-pause">
+        <path d="M31 21C31 19.8954 31.8954 19 33 19C34.1046 19 35 19.8954 35 21V35C35 36.1046 34.1046 37 33 37C31.8954 37 31 36.1046 31 35V21Z"/>
+        <path d="M22 21C22 19.8954 22.8954 19 24 19C25.1046 19 26 19.8954 26 21V35C26 36.1046 25.1046 37 24 37C22.8954 37 22 36.1046 22 35V21Z"/>
+    </g>
+    <path class="btn-shape-play" d="M38 26.268C39.3333 27.0378 39.3333 28.9623 38 29.7321L23 38.3923C21.6667 39.1621 20 38.1999 20 36.6603L20 19.3398C20 17.8002 21.6667 16.8379 23 17.6077L38 26.268Z"/>
+</svg>
+
+    
+
+    <script>window.app={players:[],};var Player=function(element){this.element=element;this.svg_element=null;this.waveform_element=null;this.waveform_outline_element=null;this.playhead_line_element=null;this.over_playhead_element=null;this.bounding_box_element=null;this.play_button_element=null;this.audio=null;this.pollingInterval=null;this.error=!1;this.audio_context=new AudioContext();this.source_node=null;this.started_at=0;this.paused_at=0;this.playing=!1;this.buffer=null;this.init=function(){var audio_tag=this.element.getElementsByTagName('audio')[0];var url=audio_tag.querySelector("source[type='audio/mpeg']").getAttribute('src');if(audio_tag.canPlayType('audio/ogg')){url=audio_tag.querySelector("source[type='audio/ogg']").getAttribute('src')}
+window.fetch(url).then(response=>response.arrayBuffer()).then(buffer=>this.audio_context.decodeAudioData(buffer,buffer=>this.setup(buffer),error=>console.log(error)),error=>console.log(error)).catch((error)=>console.log(error))}.bind(this);this.setup=function(buffer){this.buffer=buffer;let o=this.element.getElementsByTagName('object')[0];o.parentNode.replaceChild(o.contentDocument.documentElement,o)
+this.svg_element=this.element.getElementsByTagName('svg')[0];this.svg_element.setAttribute('class','player-body');let that=this;this.addNodes();this.addPlayButton();this.play_button_element.onclick=function(e){this.isPaused()?this.play():this.pause()}.bind(this);this.svg_element.onclick=function(e){var is_first_interaction=typeof that.element.dataset.fi==='undefined';if(that.isPaused()&&is_first_interaction){that.play();that.element.dataset.fi=!1;return}
+that.element.dataset.fi=!1;var bounding_rect=this.getClientRects()[0];var x=e.clientX-bounding_rect.left;var new_current_time=x*that.getDuration()/bounding_rect.width;that.seek(new_current_time)}}.bind(this);this.createNewSourceNode=function(){this.source_node=this.audio_context.createBufferSource();this.source_node.connect(this.audio_context.destination);this.source_node.buffer=this.buffer;this.source_node.addEventListener('ended',function(){if(this.getCurrentTime()>=this.getDuration()){this.stop()}}.bind(this))}
+this.snStart=function(offset){this.createNewSourceNode();this.source_node.start(0,offset);this.started_at=this.audio_context.currentTime-offset;this.paused_at=0;this.playing=!0}
+this.snPause=function(){let elapsed=this.audio_context.currentTime-this.started_at;if(this.source_node){this.source_node.disconnect();this.source_node.stop(0);this.source_node=null}
+this.paused_at=elapsed;this.playing=!1};this.snStop=function(){if(this.source_node){this.source_node.disconnect();this.source_node.stop(0);this.source_node=null}
+this.paused_at=0;this.started_at=0;this.playing=!1};this.play=function(){this.element.dispatchEvent(new Event('stopall'));this.snStart(this.paused_at);this.playhead_line_element.style.visibility='visible';this.element.dataset.playing=this.playing;this.startPolling();this.forceRedrawForSafari()}.bind(this);this.pause=function(){this.snPause();this.stopPolling();this.adjustPlayheadPosition();this.element.dataset.playing=this.playing;this.forceRedrawForSafari()}.bind(this);this.seek=function(new_current_time){this.snStop();this.snStart(this.started_at+new_current_time);this.playhead_line_element.style.visibility='visible';this.element.dataset.playing=this.playing;this.startPolling();this.forceRedrawForSafari()}.bind(this);this.stop=function(){this.snStop();this.stopPolling();this.adjustPlayheadPosition();this.element.dataset.playing=this.playing;this.forceRedrawForSafari()}.bind(this);this.isPlaying=function(){return this.playing}.bind(this);this.isPaused=function(){return!this.isPlaying()}.bind(this);this.getDuration=function(){if(!this.buffer){return 0}
+return this.buffer.duration}.bind(this);this.getCurrentTime=function(){if(this.paused_at){return this.paused_at}
+if(this.playing||this.started_at){return this.audio_context.currentTime-this.started_at}
+return 0};this.startPolling=function(){this.stopPolling();this.pollingInterval=setInterval(this.poll.bind(this),10)}
+this.stopPolling=function(){clearInterval(this.pollingInterval);this.pollingInterval=null}
+this.poll=function(){if(this.error){this.stopPolling()
+this.playing=!1;this.element.dataset.playing=this.playing;return}
+this.adjustPlayheadPosition()}.bind(this);this.adjustPlayheadPosition=function(){let percentage=this.getCurrentTime()*100/this.getDuration();this.playhead_line_element.x1.baseVal.valueInSpecifiedUnits=percentage;this.playhead_line_element.x2.baseVal.valueInSpecifiedUnits=percentage;this.over_playhead_element.width.baseVal.valueInSpecifiedUnits=percentage}.bind(this);this.addNodes=function(){var waveform=this.svg_element.getElementsByTagName('path')[0];waveform.setAttribute('class','waveform');this.waveform_element=waveform;var waveform_outline=waveform.cloneNode(!1);waveform_outline.setAttribute('class','waveform-outline');this.svg_element.appendChild(waveform_outline);this.waveform_outline_element=waveform_outline;var playhead_line=document.createElementNS('http://www.w3.org/2000/svg','line');playhead_line.setAttribute('class','playhead-line');playhead_line.setAttribute('x1','0%');playhead_line.setAttribute('y1','0');playhead_line.setAttribute('x2','0%');playhead_line.setAttribute('y2','100%');this.svg_element.insertBefore(playhead_line,waveform);this.playhead_line_element=playhead_line;var over_playhead=document.createElementNS('http://www.w3.org/2000/svg','rect');over_playhead.setAttribute('class','over-playhead');over_playhead.setAttribute('x','0');over_playhead.setAttribute('y','0');over_playhead.setAttribute('height','100%');over_playhead.setAttribute('width','0%');this.svg_element.insertBefore(over_playhead,waveform_outline);this.over_playhead_element=over_playhead;var bounding_box=document.createElementNS('http://www.w3.org/2000/svg','rect');bounding_box.setAttribute('class','bounding-box');bounding_box.setAttribute('x','0');bounding_box.setAttribute('y','0');bounding_box.setAttribute('height','100%');bounding_box.setAttribute('width','100%');this.svg_element.appendChild(bounding_box);this.bounding_box_element=bounding_box}.bind(this);this.addPlayButton=function(){var btn_template=document.getElementsByClassName('player-button-template')[0];var play_button=btn_template.cloneNode(!0);play_button.setAttribute('class','player-button');this.element.appendChild(play_button);this.play_button_element=play_button}.bind(this);this.forceRedrawForSafari=function(){if(navigator.userAgent.indexOf('Safari')!==-1&&navigator.userAgent.indexOf('Chrome')===-1){this.element.style.display='none';this.element.offsetHeight;this.element.style.display=''}}.bind(this);this.getElement=function(){return this.element}.bind(this);this.init(element)}
+function i(o){let selector=o.closest('.player');let p=new Player(selector);selector.classList.add('loaded');window.app.players.push(p);selector.addEventListener('stopall',function(e){for(var j=0;j<window.app.players.length;j++){var player_instance=window.app.players[j];if(!player_instance.isPaused()){player_instance.stop()}}})}
+document.addEventListener("DOMContentLoaded",function(){var mobile_menu=document.querySelector('#mobile-menu');var burger=document.querySelector('#burger');var burger_default=document.querySelector('#burger-default');var burger_x=document.querySelector('#burger-x');var burger_text=document.querySelector('#burger-text');burger.addEventListener('click',function(){if(mobile_menu.classList.contains('invisible')){mobile_menu.classList.remove('invisible');mobile_menu.classList.add('opacity-100');burger_default.classList.add('hidden');burger_x.classList.remove('hidden');burger_text.classList.add('hidden')}else{mobile_menu.classList.add('invisible');mobile_menu.classList.remove('opacity-100');burger_x.classList.add('hidden');burger_default.classList.remove('hidden');burger_text.classList.remove('hidden')}});var btn_categories=document.querySelector('#btn-categories');var menu_categories=document.querySelector('#menu-categories');var menu_categories_backdrop=document.querySelector('#menu-categories-backdrop');btn_categories.addEventListener('click',function(){if(menu_categories.classList.contains('md:block')){menu_categories.classList.remove('md:block');menu_categories.classList.remove('md:visible');menu_categories.classList.remove('md:opacity-100');menu_categories.classList.add('hidden');menu_categories_backdrop.classList.add('hidden')}else{menu_categories.classList.add('md:block');menu_categories.classList.add('md:visible');menu_categories.classList.add('md:opacity-100');menu_categories.classList.remove('hidden');menu_categories_backdrop.classList.remove('hidden')}});menu_categories_backdrop.addEventListener('click',function(){menu_categories.classList.remove('md:block');menu_categories.classList.remove('md:visible');menu_categories.classList.remove('md:opacity-100');menu_categories_backdrop.classList.add('hidden')})})</script>
+
+    </body>
+</html>

@@ -680,10 +680,10 @@ function App() {
 
     // Map alert level to sound file
     const soundFiles = {
-      critical: '/sounds/alert-critical.wav',
-      high: '/sounds/alert-high.wav',
-      medium: '/sounds/alert-medium.wav',
-      low: '/sounds/alert-low.wav'
+      critical: '/sounds/alert-critical.mp3',
+      high: '/sounds/alert-high.mp3',
+      medium: '/sounds/alert-medium.mp3',
+      low: '/sounds/alert-low.mp3'
     };
 
     const soundFile = soundFiles[level as keyof typeof soundFiles] || soundFiles.medium;
