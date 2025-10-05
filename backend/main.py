@@ -73,13 +73,33 @@ async def background_cache_warmer():
         await asyncio.sleep(60)
 
 
+async def funding_rate_alert_checker_task():
+    """Background task to check funding rate alerts."""
+    from app.api.dex import check_funding_rate_alerts
+
+    # Wait a bit before starting to let the app fully initialize
+    await asyncio.sleep(10)
+
+    print("✓ Funding rate alert checker started")
+
+    while True:
+        try:
+            await check_funding_rate_alerts()
+        except Exception as e:
+            print(f"⚠ Error in funding rate alert checker: {e}")
+
+        # Check every 60 seconds
+        await asyncio.sleep(60)
+
+
 @app.on_event("startup")
 async def startup_event():
     """Initialize database on startup."""
     create_tables()
 
-    # Start background cache warmer task
+    # Start background tasks
     asyncio.create_task(background_cache_warmer())
+    asyncio.create_task(funding_rate_alert_checker_task())
 
     # Remove formula column if it exists (SQLite migration)
     import sqlite3

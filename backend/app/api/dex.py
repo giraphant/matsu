@@ -687,7 +687,7 @@ async def check_funding_rate_alerts():
                             user_key=pushover_config.user_key,
                             message=message,
                             title="Funding Rate Alert",
-                            level='high',
+                            level='medium',
                             api_token=pushover_config.api_token
                         )
                         # Update last triggered time
