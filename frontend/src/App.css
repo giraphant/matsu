@@ -1351,28 +1351,52 @@ header p {
 
 /* Mobile Responsive Styles */
 @media (max-width: 768px) {
-  /* Header adjustments */
+  /* Header adjustments - compact mobile layout */
   header {
-    padding: 16px;
+    padding: 12px 16px;
   }
 
   header h1 {
-    font-size: 20px;
+    font-size: 18px;
+    margin-bottom: 0;
   }
 
   header p {
-    font-size: 12px;
+    display: none; /* Hide subtitle on mobile */
   }
 
-  .header-controls {
-    flex-direction: column;
-    gap: 8px !important;
-    align-items: stretch !important;
+  /* Make buttons smaller and horizontal */
+  header > div {
+    flex-direction: row;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
   }
 
-  .header-controls > div {
-    width: 100%;
-    justify-content: center;
+  header > div > div {
+    display: flex;
+    gap: 4px;
+  }
+
+  header button {
+    padding: 6px !important;
+    min-width: 36px;
+    min-height: 36px;
+  }
+
+  header button svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  /* Hide button text, show only icons */
+  header .btn-secondary:not(:has(svg)) {
+    font-size: 0;
+    min-width: 36px;
+  }
+
+  header .btn-secondary:not(:has(svg))::before {
+    font-size: 14px;
   }
 
   /* Dashboard layout - stack on mobile */
@@ -1561,11 +1585,16 @@ header p {
     min-height: 48px;
   }
 
-  /* Bell icon button for alerts */
+  /* Bell icon button for alerts - smaller on mobile */
   .threshold-btn {
-    min-width: 44px !important;
-    min-height: 44px !important;
-    padding: 12px !important;
+    min-width: 32px !important;
+    min-height: 32px !important;
+    padding: 6px !important;
+  }
+
+  .threshold-btn svg {
+    width: 16px !important;
+    height: 16px !important;
   }
 
   /* FAB for adding constants */

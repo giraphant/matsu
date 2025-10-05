@@ -960,6 +960,9 @@ function App() {
           <code>POST /webhook/distill</code>
         </div>
       ) : viewMode === 'overview' ? (
+        (() => {
+          const sortedItems = getSortedItemsForMobile();
+          return (
         <div className="bento-container">
           <GridLayout
             className="bento-grid"
@@ -973,7 +976,7 @@ function App() {
             compactType={null}
             preventCollision={false}
           >
-            {getSortedItemsForMobile().monitors.map((monitor) => {
+            {sortedItems.monitors.map((monitor) => {
               const displayName = monitorNames.get(monitor.monitor_id) || monitor.monitor_name || monitor.monitor_id;
               const tags = monitorTags.get(monitor.monitor_id) || [];
               const layout = gridLayout.find(l => l.i === monitor.monitor_id) ||
@@ -1156,7 +1159,7 @@ function App() {
             })}
 
             {/* Constant Cards */}
-            {getSortedItemsForMobile().constants.map((constant) => (
+            {sortedItems.constants.map((constant) => (
               <div key={`const-${constant.id}`} className="bento-item" style={{ borderLeft: `4px solid ${constant.color}` }}>
                 <div className="bento-header">
                   <div className="bento-title-section">
@@ -1230,6 +1233,8 @@ function App() {
             </button>
           )}
         </div>
+          );
+        })()
       ) : viewMode === 'dex' ? (
         <DexRates />
       ) : (
