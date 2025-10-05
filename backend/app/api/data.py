@@ -164,9 +164,24 @@ async def get_chart_data(
                 }
             }
 
+        # Downsample data to max 500 points for performance
+        MAX_POINTS = 500
+        if len(records) > MAX_POINTS:
+            # Calculate sampling interval
+            interval = len(records) // MAX_POINTS
+            sampled_records = []
+            for i in range(0, len(records), interval):
+                sampled_records.append(records[i])
+            # Always include the last point
+            if records[-1] not in sampled_records:
+                sampled_records.append(records[-1])
+            records_to_chart = sampled_records
+        else:
+            records_to_chart = records
+
         # Format data for charting
         chart_data = []
-        for record in records:
+        for record in records_to_chart:
             chart_data.append({
                 "timestamp": record.timestamp.isoformat(),
                 "value": record.value,
@@ -175,10 +190,11 @@ async def get_chart_data(
                 "url": record.url
             })
 
-        # Calculate summary statistics
+        # Calculate summary statistics (use all records, not just sampled)
         values = [r.value for r in records if r.value is not None]
         summary = {
             "total_points": len(records),
+            "displayed_points": len(records_to_chart),
             "date_range": f"{start_date.date()} to {end_date.date()}",
             "value_range": {
                 "min": min(values) if values else None,
