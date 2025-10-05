@@ -625,12 +625,12 @@ async def check_funding_rate_alerts():
         # Get current funding rates
         rates, last_updated = await get_cached_rates(force_refresh=False)
 
-        # Group rates by symbol
+        # Group rates by symbol, keep full rate objects to access has_binance_spot
         grouped_rates = {}
         for rate in rates:
             if rate.symbol not in grouped_rates:
                 grouped_rates[rate.symbol] = {}
-            grouped_rates[rate.symbol][rate.exchange] = rate.rate
+            grouped_rates[rate.symbol][rate.exchange] = rate
 
         # Get all enabled alerts
         alerts = db.query(FundingRateAlert).filter(FundingRateAlert.enabled == True).all()
@@ -640,27 +640,40 @@ async def check_funding_rate_alerts():
             triggered = False
             message = ""
 
+            # Check if we should skip based on last_triggered_at (10 min cooldown)
+            if alert.last_triggered_at:
+                time_since_last = datetime.utcnow() - alert.last_triggered_at
+                if time_since_last.total_seconds() < 600:  # 10 minutes
+                    continue
+
             if alert.alert_type == 'single':
-                # Check single exchange funding rates
-                for symbol, exchange_rates in grouped_rates.items():
+                # Check single exchange funding rates (期现套利 - needs Binance spot)
+                for symbol, exchange_rate_objs in grouped_rates.items():
+                    # Check if this symbol has Binance spot
+                    has_spot = any(r.has_binance_spot for r in exchange_rate_objs.values() if r.has_binance_spot)
+                    if not has_spot:
+                        continue  # Skip symbols without Binance spot
+
                     for exchange in exchanges:
-                        if exchange in exchange_rates and exchange_rates[exchange] is not None:
-                            rate = exchange_rates[exchange]
-                            if rate >= alert.threshold:
+                        if exchange in exchange_rate_objs:
+                            rate_obj = exchange_rate_objs[exchange]
+                            if rate_obj.rate is not None and rate_obj.rate >= alert.threshold:
                                 triggered = True
-                                message = f"🎯 {alert.name}\n{symbol} on {exchange.upper()}: {rate*100:.4f}% (threshold: {alert.threshold*100:.2f}%)"
+                                message = f"🎯 {alert.name}\n{symbol} on {exchange.upper()}: {rate_obj.rate*100:.4f}% (threshold: {alert.threshold*100:.2f}%)"
                                 break
                     if triggered:
                         break
 
             elif alert.alert_type == 'spread':
                 # Check spread between exchanges
-                for symbol, exchange_rates in grouped_rates.items():
+                for symbol, exchange_rate_objs in grouped_rates.items():
                     # Get rates for selected exchanges
                     selected_rates = []
                     for exchange in exchanges:
-                        if exchange in exchange_rates and exchange_rates[exchange] is not None:
-                            selected_rates.append((exchange, exchange_rates[exchange]))
+                        if exchange in exchange_rate_objs:
+                            rate_obj = exchange_rate_objs[exchange]
+                            if rate_obj.rate is not None:
+                                selected_rates.append((exchange, rate_obj.rate))
 
                     if len(selected_rates) >= 2:
                         rates_only = [r[1] for r in selected_rates]
