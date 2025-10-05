@@ -14,7 +14,6 @@ from collections import defaultdict
 import json
 
 from app.models.database import get_db, FundingRateAlert
-from app.api.alerts import send_pushover_notification
 
 router = APIRouter()
 
@@ -678,16 +677,25 @@ async def check_funding_rate_alerts():
             if triggered:
                 # Send notification
                 try:
-                    await send_pushover_notification(
-                        title="Funding Rate Alert",
-                        message=message,
-                        priority=1,
-                        db=db
-                    )
-                    # Update last triggered time
-                    alert.last_triggered_at = datetime.utcnow()
-                    db.commit()
-                    print(f"Alert triggered: {alert.name}")
+                    from app.services.pushover import send_pushover_notification
+                    from app.models.database import PushoverConfig
+
+                    # Get pushover config
+                    pushover_config = db.query(PushoverConfig).first()
+                    if pushover_config:
+                        send_pushover_notification(
+                            user_key=pushover_config.user_key,
+                            message=message,
+                            title="Funding Rate Alert",
+                            level='high',
+                            api_token=pushover_config.api_token
+                        )
+                        # Update last triggered time
+                        alert.last_triggered_at = datetime.utcnow()
+                        db.commit()
+                        print(f"Alert triggered: {alert.name}")
+                    else:
+                        print("No Pushover config found, skipping notification")
                 except Exception as e:
                     print(f"Failed to send alert notification: {e}")
 
