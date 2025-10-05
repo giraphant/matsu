@@ -1349,60 +1349,80 @@ header p {
   margin-top: 24px;
 }
 
-/* Mobile Menu Styles */
+/* Mobile Menu Styles - inspired by shadcn/ui */
 .mobile-menu-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(2px);
   z-index: 9999;
-  animation: fadeIn 0.2s ease-out;
+  animation: overlayShow 0.15s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+@keyframes overlayShow {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .mobile-menu {
   position: fixed;
   top: 0;
   right: 0;
-  width: 280px;
-  max-width: 80vw;
+  width: 320px;
+  max-width: 85vw;
   height: 100vh;
   background: var(--card);
-  box-shadow: -4px 0 12px rgba(0, 0, 0, 0.15);
+  border-left: 1px solid var(--border);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
   display: flex;
   flex-direction: column;
-  padding: 60px 0 20px 0;
-  animation: slideIn 0.3s ease-out;
+  padding: 20px 0;
+  animation: slideInFromRight 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow-y: auto;
 }
 
-@keyframes slideIn {
-  from { transform: translateX(100%); }
-  to { transform: translateX(0); }
+@keyframes slideInFromRight {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
 }
 
 .mobile-menu-item {
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 16px 24px;
+  gap: 12px;
+  padding: 12px 20px;
+  margin: 2px 12px;
   background: none;
   border: none;
+  border-radius: 6px;
   color: var(--foreground);
-  font-size: 16px;
+  font-size: 15px;
+  font-weight: 500;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
   text-align: left;
-  width: 100%;
+  width: calc(100% - 24px);
+  position: relative;
 }
 
 .mobile-menu-item:hover {
   background: var(--muted);
+  color: var(--foreground);
+}
+
+.mobile-menu-item:active {
+  transform: scale(0.98);
 }
 
 .mobile-menu-item.active {
@@ -1410,13 +1430,35 @@ header p {
   color: white;
 }
 
+.mobile-menu-item.active:hover {
+  background: var(--primary);
+  opacity: 0.9;
+}
+
 .mobile-menu-item svg {
   flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  opacity: 0.9;
+}
+
+.mobile-menu-item span {
+  flex: 1;
 }
 
 .mobile-menu-btn {
   min-width: 44px !important;
   min-height: 44px !important;
+  border-radius: 8px;
+  transition: all 0.15s ease;
+}
+
+.mobile-menu-btn:hover {
+  background: var(--muted);
+}
+
+.mobile-menu-btn:active {
+  transform: scale(0.95);
 }
 
 /* Mobile Responsive Styles */
