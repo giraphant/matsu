@@ -461,8 +461,11 @@ function App() {
   };
 
   // Sort items by layout order on mobile
-  const getSortedItemsForMobile = () => {
-    if (!isMobile) return { monitors: visibleMonitors, constants };
+  const getSortedItemsForMobile = (): Array<{ type: 'monitor', data: MonitorSummary } | { type: 'constant', data: ConstantCard }> => {
+    if (!isMobile) return [
+      ...visibleMonitors.map(m => ({ type: 'monitor' as const, data: m })),
+      ...constants.map(c => ({ type: 'constant' as const, data: c }))
+    ];
 
     // Create a map of layout items by id
     const layoutMap = new Map(gridLayout.map(l => [l.i, l]));
@@ -470,13 +473,13 @@ function App() {
     // Combine monitors and constants with their layout info
     const allItems = [
       ...visibleMonitors.map(m => ({
-        type: 'monitor',
+        type: 'monitor' as const,
         id: m.monitor_id,
         data: m,
         layout: layoutMap.get(m.monitor_id) || { y: 999, x: 0 }
       })),
       ...constants.map(c => ({
-        type: 'constant',
+        type: 'constant' as const,
         id: `const-${c.id}`,
         data: c,
         layout: layoutMap.get(`const-${c.id}`) || { y: 999, x: 0 }
@@ -495,16 +498,8 @@ function App() {
       y: item.layout.y
     })));
 
-    // Split back into monitors and constants, maintaining order
-    const sortedMonitors = allItems
-      .filter(item => item.type === 'monitor')
-      .map(item => item.data as MonitorSummary);
-
-    const sortedConstants = allItems
-      .filter(item => item.type === 'constant')
-      .map(item => item.data as ConstantCard);
-
-    return { monitors: sortedMonitors, constants: sortedConstants };
+    // Return mixed array maintaining sort order
+    return allItems;
   };
 
   const toggleHideMonitor = (monitorId: string) => {
@@ -984,18 +979,20 @@ function App() {
             compactType={null}
             preventCollision={false}
           >
-            {sortedItems.monitors.map((monitor) => {
-              const displayName = monitorNames.get(monitor.monitor_id) || monitor.monitor_name || monitor.monitor_id;
-              const tags = monitorTags.get(monitor.monitor_id) || [];
-              const layout = gridLayout.find(l => l.i === monitor.monitor_id) ||
-                            generateDefaultLayout([monitor])[0];
-              const showChart = layout.h >= 2;
-              const chartPoints = miniChartData.get(monitor.monitor_id) || [];
-              const isAlert = isValueOutOfRange(monitor.latest_value, monitor.monitor_id);
-              const threshold = thresholds.get(monitor.monitor_id);
+            {sortedItems.map((item) => {
+              if (item.type === 'monitor') {
+                const monitor = item.data;
+                const displayName = monitorNames.get(monitor.monitor_id) || monitor.monitor_name || monitor.monitor_id;
+                const tags = monitorTags.get(monitor.monitor_id) || [];
+                const layout = gridLayout.find(l => l.i === monitor.monitor_id) ||
+                              generateDefaultLayout([monitor])[0];
+                const showChart = layout.h >= 2;
+                const chartPoints = miniChartData.get(monitor.monitor_id) || [];
+                const isAlert = isValueOutOfRange(monitor.latest_value, monitor.monitor_id);
+                const threshold = thresholds.get(monitor.monitor_id);
 
-              return (
-                <div key={monitor.monitor_id} className={`bento-item ${isAlert ? 'alert' : ''}`}>
+                return (
+                  <div key={monitor.monitor_id} className={`bento-item ${isAlert ? 'alert' : ''}`}>
                   <div className="bento-header">
                     <div className="bento-title-section">
                       <h3>{displayName}</h3>
@@ -1162,13 +1159,13 @@ function App() {
                       <span className="value">{formatValue(monitor.max_value, monitor.unit)}</span>
                     </div>
                   </div>
-                </div>
-              );
-            })}
-
-            {/* Constant Cards */}
-            {sortedItems.constants.map((constant) => (
-              <div key={`const-${constant.id}`} className="bento-item" style={{ borderLeft: `4px solid ${constant.color}` }}>
+                  </div>
+                );
+              } else {
+                // item.type === 'constant'
+                const constant = item.data;
+                return (
+                  <div key={`const-${constant.id}`} className="bento-item" style={{ borderLeft: `4px solid ${constant.color}` }}>
                 <div className="bento-header">
                   <div className="bento-title-section">
                     <h3>{constant.name}</h3>
@@ -1222,9 +1219,11 @@ function App() {
                     <span className="label">Type</span>
                     <span className="value">Constant</span>
                   </div>
-                </div>
-              </div>
-            ))}
+                  </div>
+                  </div>
+                );
+              }
+            })}
           </GridLayout>
 
           {/* Floating Action Button for Adding Constants */}
