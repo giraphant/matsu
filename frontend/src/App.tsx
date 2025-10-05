@@ -98,6 +98,7 @@ function App() {
   const [constants, setConstants] = useState<ConstantCard[]>([]);
   const [showConstantModal, setShowConstantModal] = useState(false);
   const [editingConstant, setEditingConstant] = useState<ConstantCard | null>(null);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
   const [showMobileLayoutEditor, setShowMobileLayoutEditor] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
@@ -281,6 +282,8 @@ function App() {
       const response = await fetch('/api/constants');
       const data = await response.json();
       setConstants(data);
+      // Mark initial load as complete after constants are loaded
+      setIsInitialLoad(false);
     } catch (error) {
       console.error('Failed to load constants:', error);
     }
@@ -475,8 +478,17 @@ function App() {
 
     console.log('[Layout] onLayoutChange called, saving layout with', layout.length, 'items');
     console.log('[Layout] New layout constant IDs:', layout.filter(l => l.i.startsWith('const-')).map(l => l.i));
+    console.log('[Layout] isInitialLoad:', isInitialLoad);
 
+    // Update state immediately for user interactions
     setGridLayout(layout);
+
+    // Don't save to localStorage during initial load to prevent overwriting saved layout before constants load
+    if (isInitialLoad) {
+      console.log('[Layout] Skipping localStorage save during initial load');
+      return;
+    }
+
     localStorage.setItem('gridLayout', JSON.stringify(layout));
   };
 
