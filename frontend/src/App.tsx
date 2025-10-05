@@ -460,6 +460,45 @@ function App() {
     localStorage.setItem('gridLayout', JSON.stringify(layout));
   };
 
+  // Sort items by layout order on mobile
+  const getSortedItemsForMobile = () => {
+    if (!isMobile) return { monitors: visibleMonitors, constants };
+
+    // Create a map of layout items by id
+    const layoutMap = new Map(gridLayout.map(l => [l.i, l]));
+
+    // Combine monitors and constants with their layout info
+    const allItems = [
+      ...visibleMonitors.map(m => ({
+        type: 'monitor',
+        data: m,
+        layout: layoutMap.get(m.monitor_id) || { y: 999, x: 0 }
+      })),
+      ...constants.map(c => ({
+        type: 'constant',
+        data: c,
+        layout: layoutMap.get(`const-${c.id}`) || { y: 999, x: 0 }
+      }))
+    ];
+
+    // Sort by y position, then x
+    allItems.sort((a, b) => {
+      if (a.layout.y !== b.layout.y) return a.layout.y - b.layout.y;
+      return a.layout.x - b.layout.x;
+    });
+
+    // Split back into monitors and constants, maintaining order
+    const sortedMonitors = allItems
+      .filter(item => item.type === 'monitor')
+      .map(item => item.data as MonitorSummary);
+
+    const sortedConstants = allItems
+      .filter(item => item.type === 'constant')
+      .map(item => item.data as ConstantCard);
+
+    return { monitors: sortedMonitors, constants: sortedConstants };
+  };
+
   const toggleHideMonitor = (monitorId: string) => {
     const newHidden = new Set(hiddenMonitors);
     if (newHidden.has(monitorId)) {
@@ -934,7 +973,7 @@ function App() {
             compactType={null}
             preventCollision={false}
           >
-            {visibleMonitors.map((monitor) => {
+            {getSortedItemsForMobile().monitors.map((monitor) => {
               const displayName = monitorNames.get(monitor.monitor_id) || monitor.monitor_name || monitor.monitor_id;
               const tags = monitorTags.get(monitor.monitor_id) || [];
               const layout = gridLayout.find(l => l.i === monitor.monitor_id) ||
@@ -1117,7 +1156,7 @@ function App() {
             })}
 
             {/* Constant Cards */}
-            {constants.map((constant) => (
+            {getSortedItemsForMobile().constants.map((constant) => (
               <div key={`const-${constant.id}`} className="bento-item" style={{ borderLeft: `4px solid ${constant.color}` }}>
                 <div className="bento-header">
                   <div className="bento-title-section">

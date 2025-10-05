@@ -57,17 +57,18 @@ export default function MobileLayoutEditor({
   const handleSave = () => {
     // Recalculate y positions based on order
     let currentY = 0;
-    const finalLayout = editedLayout.map((item, index) => ({
-      ...item,
-      x: 0,
-      y: currentY,
-      w: 1, // Mobile is always 1 column
-    })).map(item => {
-      const result = { ...item };
-      currentY += item.h;
-      return result;
+    const finalLayout = editedLayout.map((item) => {
+      const newItem = {
+        ...item,
+        x: 0,
+        y: currentY,
+        w: 1, // Mobile is always 1 column
+      };
+      currentY += item.h; // Increment after creating the item
+      return newItem;
     });
 
+    console.log('Saving layout:', finalLayout);
     onSave(finalLayout);
     onClose();
   };
