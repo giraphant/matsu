@@ -870,9 +870,15 @@ function App() {
 
   // Memoize the computed layout to prevent unnecessary recalculations
   const computedLayout = useMemo(() => {
-    return gridLayout.length > 0
+    const result = gridLayout.length > 0
       ? getMergedLayout(visibleMonitors, constants, gridLayout)
       : generateDefaultLayout(visibleMonitors, constants);
+
+    // Log constant card positions for debugging
+    const constantLayouts = result.filter(l => l.i.startsWith('const-'));
+    console.log('[Layout] Constant positions:', constantLayouts.map(l => ({ id: l.i, x: l.x, y: l.y })));
+
+    return result;
   }, [visibleMonitors, constants, gridLayout]);
 
   const currentMonitor = monitors.find(m => m.monitor_id === selectedMonitor);
@@ -1061,7 +1067,7 @@ function App() {
             isDraggable={!isMobile}
             isResizable={!isMobile}
             compactType={null}
-            preventCollision={false}
+            preventCollision={true}
           >
             {sortedItems.map((item) => {
               if (item.type === 'monitor') {
