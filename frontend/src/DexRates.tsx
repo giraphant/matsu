@@ -7,6 +7,7 @@ interface FundingRate {
   rate: number | null;
   next_funding_time: string | null;
   mark_price: number | null;
+  has_binance_spot: boolean | null;
 }
 
 interface FundingRatesResponse {
@@ -290,9 +291,24 @@ const DexRates: React.FC = () => {
 
                 const spread = enabledRates.length >= 2 ? Math.max(...enabledRates) - Math.min(...enabledRates) : null;
 
+                // Check if this symbol has Binance spot (any rate should have this info)
+                const hasBinanceSpot = symbolRates.some(r => r.has_binance_spot === true);
+
                 return (
                   <tr key={symbol}>
-                    <td className="symbol-cell"><strong>{symbol}</strong></td>
+                    <td className="symbol-cell">
+                      <strong>{symbol}</strong>
+                      {hasBinanceSpot && (
+                        <span style={{
+                          marginLeft: '6px',
+                          color: '#f97316',
+                          fontSize: '16px',
+                          verticalAlign: 'middle'
+                        }} title="Has Binance spot trading">
+                          ✓
+                        </span>
+                      )}
+                    </td>
                     {enabledExchanges.has('binance') && (
                       <td style={{ color: getRateColor(ratesByExchange.binance) }}>
                         {formatRate(ratesByExchange.binance)}

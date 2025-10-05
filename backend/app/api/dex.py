@@ -30,6 +30,7 @@ class FundingRate(BaseModel):
     rate: Optional[float]
     next_funding_time: Optional[str] = None
     mark_price: Optional[float] = None
+    has_binance_spot: Optional[bool] = None
 
 
 class FundingRatesResponse(BaseModel):
@@ -340,27 +341,60 @@ async def normalize_binance_rates(rates: List[FundingRate]) -> List[FundingRate]
     return normalized
 
 
+async def fetch_binance_spot_symbols() -> set:
+    """Fetch available Binance spot trading pairs."""
+    url = "https://api.binance.com/api/v3/exchangeInfo"
+
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.get(url)
+            response.raise_for_status()
+            data = response.json()
+
+            # Extract base assets from USDT pairs that are trading
+            spot_symbols = set()
+            for symbol_info in data.get("symbols", []):
+                if (symbol_info.get("status") == "TRADING" and
+                    symbol_info.get("quoteAsset") == "USDT"):
+                    base_asset = symbol_info.get("baseAsset", "").upper()
+                    if base_asset:
+                        spot_symbols.add(base_asset)
+
+            print(f"Found {len(spot_symbols)} Binance spot symbols")
+            return spot_symbols
+    except Exception as e:
+        print(f"Error fetching Binance spot symbols: {e}")
+        return set()
+
+
 async def fetch_all_funding_rates() -> List[FundingRate]:
     """Fetch funding rates from all DEXs and normalize them."""
     import time
     start_time = time.time()
 
-    # Fetch from all sources in parallel
-    lighter_rates, aster_rates, grvt_rates, backpack_rates = await asyncio.gather(
+    # Fetch from all sources in parallel, including Binance spot symbols
+    lighter_rates, aster_rates, grvt_rates, backpack_rates, binance_spot_symbols = await asyncio.gather(
         fetch_lighter_funding_rates(),
         fetch_aster_funding_rates(),
         fetch_grvt_funding_rates(),
-        fetch_backpack_funding_rates()
+        fetch_backpack_funding_rates(),
+        fetch_binance_spot_symbols()
     )
 
     # Normalize Binance rates to 8-hour periods
     normalized_lighter = await normalize_binance_rates(lighter_rates)
 
     elapsed = time.time() - start_time
-    print(f"Fetched all funding rates in {elapsed:.2f}s - Lighter: {len(normalized_lighter)}, ASTER: {len(aster_rates)}, GRVT: {len(grvt_rates)}, Backpack: {len(backpack_rates)}")
+    print(f"Fetched all funding rates in {elapsed:.2f}s - Lighter: {len(normalized_lighter)}, ASTER: {len(aster_rates)}, GRVT: {len(grvt_rates)}, Backpack: {len(backpack_rates)}, Binance spot: {len(binance_spot_symbols)}")
 
-    # Combine all rates
-    return normalized_lighter + aster_rates + grvt_rates + backpack_rates
+    # Combine all rates and mark which have Binance spot
+    all_rates = normalized_lighter + aster_rates + grvt_rates + backpack_rates
+
+    # Add has_binance_spot flag to each rate
+    for rate in all_rates:
+        rate.has_binance_spot = rate.symbol.upper() in binance_spot_symbols
+
+    return all_rates
 
 
 async def get_cached_rates(force_refresh: bool = False) -> Tuple[List[FundingRate], datetime]:
