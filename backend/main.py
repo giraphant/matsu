@@ -206,6 +206,19 @@ from fastapi.responses import FileResponse
 if os.path.exists("static/static"):
     app.mount("/static", StaticFiles(directory="static/static"), name="static")
 
+# Mount sounds directory
+if os.path.exists("static/sounds"):
+    app.mount("/sounds", StaticFiles(directory="static/sounds"), name="sounds")
+
+# Serve favicon
+@app.get("/favicon.ico")
+async def serve_favicon():
+    """Serve favicon."""
+    favicon_path = "static/favicon.ico"
+    if os.path.exists(favicon_path):
+        return FileResponse(favicon_path)
+    return HTMLResponse(content="", status_code=404)
+
 # Serve React app for specific frontend routes only
 @app.get("/", response_class=HTMLResponse)
 async def serve_home():
