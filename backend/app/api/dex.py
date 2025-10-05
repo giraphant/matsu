@@ -11,8 +11,9 @@ from datetime import datetime, timedelta
 import httpx
 import asyncio
 from collections import defaultdict
+import json
 
-from app.models.database import get_db
+from app.models.database import get_db, FundingRateAlert
 
 router = APIRouter()
 
@@ -38,6 +39,28 @@ class FundingRatesResponse(BaseModel):
     rates: List[FundingRate]
     last_updated: datetime
     error: Optional[str] = None
+
+
+class FundingRateAlertCreate(BaseModel):
+    """Request model for creating funding rate alert."""
+    name: str
+    alert_type: str  # 'single' or 'spread'
+    exchanges: List[str]
+    threshold: float  # In percentage (e.g., 0.01 for 1%)
+    enabled: bool = True
+
+
+class FundingRateAlertResponse(BaseModel):
+    """Response model for funding rate alert."""
+    id: int
+    name: str
+    alert_type: str
+    exchanges: List[str]
+    threshold: float
+    enabled: bool
+    created_at: datetime
+    updated_at: datetime
+    last_triggered_at: Optional[datetime]
 
 
 async def fetch_lighter_funding_rates() -> List[FundingRate]:
@@ -486,3 +509,105 @@ async def get_funding_rates_by_symbol(
             last_updated=datetime.utcnow(),
             error=str(e)
         )
+
+
+# Funding Rate Alert Endpoints
+
+@router.post("/dex/funding-rate-alerts", response_model=FundingRateAlertResponse)
+async def create_funding_rate_alert(
+    alert: FundingRateAlertCreate,
+    db: Session = Depends(get_db)
+):
+    """Create a new funding rate alert rule."""
+    db_alert = FundingRateAlert(
+        name=alert.name,
+        alert_type=alert.alert_type,
+        exchanges=json.dumps(alert.exchanges),
+        threshold=alert.threshold,
+        enabled=alert.enabled
+    )
+    db.add(db_alert)
+    db.commit()
+    db.refresh(db_alert)
+
+    return FundingRateAlertResponse(
+        id=db_alert.id,
+        name=db_alert.name,
+        alert_type=db_alert.alert_type,
+        exchanges=json.loads(db_alert.exchanges),
+        threshold=db_alert.threshold,
+        enabled=db_alert.enabled,
+        created_at=db_alert.created_at,
+        updated_at=db_alert.updated_at,
+        last_triggered_at=db_alert.last_triggered_at
+    )
+
+
+@router.get("/dex/funding-rate-alerts", response_model=List[FundingRateAlertResponse])
+async def get_funding_rate_alerts(db: Session = Depends(get_db)):
+    """Get all funding rate alert rules."""
+    alerts = db.query(FundingRateAlert).all()
+    return [
+        FundingRateAlertResponse(
+            id=alert.id,
+            name=alert.name,
+            alert_type=alert.alert_type,
+            exchanges=json.loads(alert.exchanges),
+            threshold=alert.threshold,
+            enabled=alert.enabled,
+            created_at=alert.created_at,
+            updated_at=alert.updated_at,
+            last_triggered_at=alert.last_triggered_at
+        )
+        for alert in alerts
+    ]
+
+
+@router.put("/dex/funding-rate-alerts/{alert_id}", response_model=FundingRateAlertResponse)
+async def update_funding_rate_alert(
+    alert_id: int,
+    alert: FundingRateAlertCreate,
+    db: Session = Depends(get_db)
+):
+    """Update a funding rate alert rule."""
+    db_alert = db.query(FundingRateAlert).filter(FundingRateAlert.id == alert_id).first()
+    if not db_alert:
+        raise HTTPException(status_code=404, detail="Alert not found")
+
+    db_alert.name = alert.name
+    db_alert.alert_type = alert.alert_type
+    db_alert.exchanges = json.dumps(alert.exchanges)
+    db_alert.threshold = alert.threshold
+    db_alert.enabled = alert.enabled
+    db_alert.updated_at = datetime.utcnow()
+
+    db.commit()
+    db.refresh(db_alert)
+
+    return FundingRateAlertResponse(
+        id=db_alert.id,
+        name=db_alert.name,
+        alert_type=db_alert.alert_type,
+        exchanges=json.loads(db_alert.exchanges),
+        threshold=db_alert.threshold,
+        enabled=db_alert.enabled,
+        created_at=db_alert.created_at,
+        updated_at=db_alert.updated_at,
+        last_triggered_at=db_alert.last_triggered_at
+    )
+
+
+@router.delete("/dex/funding-rate-alerts/{alert_id}")
+async def delete_funding_rate_alert(
+    alert_id: int,
+    db: Session = Depends(get_db)
+):
+    """Delete a funding rate alert rule."""
+    db_alert = db.query(FundingRateAlert).filter(FundingRateAlert.id == alert_id).first()
+    if not db_alert:
+        raise HTTPException(status_code=404, detail="Alert not found")
+
+    db.delete(db_alert)
+    db.commit()
+
+    return {"message": "Alert deleted successfully"}

@@ -119,6 +119,25 @@ class PushoverConfig(Base):
         return f"<PushoverConfig(user_key='***')>"
 
 
+class FundingRateAlert(Base):
+    """Database model for funding rate alert rules."""
+
+    __tablename__ = "funding_rate_alerts"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False)  # User-friendly name for this alert
+    alert_type = Column(String, nullable=False)  # 'single' or 'spread'
+    exchanges = Column(String, nullable=False)  # JSON array of exchange names
+    threshold = Column(Float, nullable=False)  # Threshold value (in percentage, e.g. 0.01 for 1%)
+    enabled = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    last_triggered_at = Column(DateTime, nullable=True)
+
+    def __repr__(self):
+        return f"<FundingRateAlert(name='{self.name}', type='{self.alert_type}', enabled={self.enabled})>"
+
+
 # Pydantic models for API
 class DistillWebhookPayload(BaseModel):
     """Expected payload from Distill webhook."""
