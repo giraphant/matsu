@@ -480,6 +480,55 @@ class ConstantUpdate(BaseModel):
     color: Optional[str] = None
 
 
+class ConstantCreate(BaseModel):
+    """Model for creating constant cards."""
+    name: str
+    value: float
+    unit: Optional[str] = None
+    description: Optional[str] = None
+    color: Optional[str] = '#3b82f6'
+
+
+@router.post("/constant")
+async def create_constant(constant: ConstantCreate):
+    """Create a new constant card."""
+    import uuid
+
+    db = get_db_session()
+    try:
+        # Generate unique monitor_id
+        monitor_id = f"const-{uuid.uuid4()}"
+
+        # Create new constant as monitoring_data entry
+        new_constant = MonitoringData(
+            monitor_id=monitor_id,
+            monitor_name=constant.name,
+            monitor_type='constant',
+            url='',
+            value=constant.value,
+            unit=constant.unit,
+            description=constant.description,
+            color=constant.color,
+            status='active',
+            timestamp=datetime.utcnow(),
+            webhook_received_at=datetime.utcnow()
+        )
+
+        db.add(new_constant)
+        db.commit()
+
+        return {
+            "success": True,
+            "message": "Constant created",
+            "monitor_id": monitor_id
+        }
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to create constant: {str(e)}")
+    finally:
+        db.close()
+
+
 @router.put("/constant/{monitor_id}")
 async def update_constant(monitor_id: str, update: ConstantUpdate):
     """Update a constant card (monitor with type='constant')."""

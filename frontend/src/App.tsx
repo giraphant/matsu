@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { Settings, Moon, Sun, LayoutGrid, LineChart as LineChartIcon, Bell, TrendingUp, Menu, X } from 'lucide-react';
+import { Settings, Moon, Sun, LayoutGrid, LineChart as LineChartIcon, Bell, TrendingUp, Menu, X, Plus, Pencil, Trash2 } from 'lucide-react';
 import GridLayout from 'react-grid-layout';
 import ManageMonitorItem from './ManageMonitorItem';
+import ConstantCardModal from './ConstantCardModal';
 import DexRates from './DexRates';
 import MobileLayoutEditor from './MobileLayoutEditor';
 import './App.css';
@@ -88,6 +89,8 @@ function App() {
   const [alertStates, setAlertStates] = useState<Map<string, {lastNotified: number, isActive: boolean}>>(new Map());
   const [monitorFormulas, setMonitorFormulas] = useState<Map<string, string>>(new Map());
   const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const [showConstantModal, setShowConstantModal] = useState(false);
+  const [editingConstant, setEditingConstant] = useState<MonitorSummary | null>(null);
   const [isMobile, setIsMobile] = useState(false);
   const [showMobileLayoutEditor, setShowMobileLayoutEditor] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
@@ -530,31 +533,51 @@ function App() {
   };
 
   // Constant management functions
-  const updateConstant = async (monitorId: string, updates: Partial<MonitorSummary>) => {
+  const saveConstant = async (constantData: any) => {
     try {
-      const response = await fetch(`/api/constant/${monitorId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updates)
-      });
-      if (response.ok) {
-        await loadMonitors(); // Reload to get updated data
+      if (editingConstant) {
+        // Update existing constant
+        const response = await fetch(`/api/constant/${editingConstant.monitor_id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(constantData)
+        });
+        if (response.ok) {
+          await loadMonitors();
+          setShowConstantModal(false);
+          setEditingConstant(null);
+        } else {
+          alert('Failed to update constant');
+        }
       } else {
-        alert('Failed to update constant');
+        // Create new constant
+        const response = await fetch('/api/constant', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(constantData)
+        });
+        if (response.ok) {
+          await loadMonitors();
+          setShowConstantModal(false);
+        } else {
+          alert('Failed to create constant');
+        }
       }
     } catch (error) {
-      console.error('Failed to update constant:', error);
-      alert('Failed to update constant');
+      console.error('Failed to save constant:', error);
+      alert('Failed to save constant');
     }
   };
 
   const deleteConstant = async (monitorId: string) => {
+    if (!window.confirm('Are you sure you want to delete this constant card?')) return;
+
     try {
       const response = await fetch(`/api/constant/${monitorId}`, {
         method: 'DELETE'
       });
       if (response.ok) {
-        await loadMonitors(); // Reload to remove deleted constant
+        await loadMonitors();
       } else {
         alert('Failed to delete constant');
       }
@@ -562,27 +585,6 @@ function App() {
       console.error('Failed to delete constant:', error);
       alert('Failed to delete constant');
     }
-  };
-
-  const editConstant = (monitor: MonitorSummary) => {
-    const name = prompt('Constant name:', monitor.monitor_name || '');
-    if (name === null) return;
-
-    const valueStr = prompt('Value:', monitor.latest_value?.toString() || '');
-    if (valueStr === null) return;
-    const value = parseFloat(valueStr);
-
-    const unit = prompt('Unit (optional):', monitor.unit || '');
-    const description = prompt('Description (optional):', monitor.description || '');
-    const color = prompt('Color (hex):', monitor.color || '#3b82f6');
-
-    updateConstant(monitor.monitor_id, {
-      monitor_name: name,
-      latest_value: value,
-      unit: unit || null,
-      description: description || null,
-      color: color || '#3b82f6'
-    } as any); // Use 'as any' since we're passing to API with different field names
   };
 
   const updateThreshold = async (monitorId: string, upper?: number, lower?: number, level?: string) => {
@@ -1041,12 +1043,13 @@ function App() {
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
-                            editConstant(monitor);
+                            setEditingConstant(monitor);
+                            setShowConstantModal(true);
                           }}
                           title="Edit constant"
                           style={{ pointerEvents: 'auto' }}
                         >
-                          <Settings size={14} />
+                          <Pencil size={14} />
                         </button>
                         <button
                           className="threshold-btn"
@@ -1054,14 +1057,12 @@ function App() {
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
-                            if (window.confirm('Are you sure you want to delete this constant card?')) {
-                              deleteConstant(monitor.monitor_id);
-                            }
+                            deleteConstant(monitor.monitor_id);
                           }}
                           title="Delete constant"
                           style={{ color: 'var(--destructive)', pointerEvents: 'auto' }}
                         >
-                          ✕
+                          <Trash2 size={14} />
                         </button>
                       </div>
                     </div>
@@ -1258,6 +1259,20 @@ function App() {
 
             })}
           </GridLayout>
+
+          {/* Floating Action Button for Adding Constants */}
+          {!isMobile && (
+            <button
+              className="fab"
+              onClick={() => {
+                setEditingConstant(null);
+                setShowConstantModal(true);
+              }}
+              title="Add constant card"
+            >
+              <Plus size={20} />
+            </button>
+          )}
         </div>
           );
         })()
@@ -1618,6 +1633,17 @@ function App() {
           </div>
         </div>
       )}
+
+      {/* Constant Card Modal */}
+      <ConstantCardModal
+        show={showConstantModal}
+        onClose={() => {
+          setShowConstantModal(false);
+          setEditingConstant(null);
+        }}
+        onSave={saveConstant}
+        editingConstant={editingConstant}
+      />
 
       <MobileLayoutEditor
         show={showMobileLayoutEditor}

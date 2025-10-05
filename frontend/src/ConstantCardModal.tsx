@@ -1,20 +1,18 @@
 import React, { useState, useEffect } from 'react';
 
 interface ConstantCard {
-  id: string;
-  name: string;
-  value: number;
-  unit: string | null;
-  description: string | null;
-  color: string;
-  created_at: string;
-  updated_at: string;
+  monitor_id?: string;
+  monitor_name?: string | null;
+  latest_value?: number | null;
+  unit?: string | null;
+  description?: string | null;
+  color?: string | null;
 }
 
 interface ConstantCardModalProps {
   show: boolean;
   onClose: () => void;
-  onSave: (constant: Partial<ConstantCard>) => void;
+  onSave: (constant: any) => void;
   editingConstant: ConstantCard | null;
 }
 
@@ -27,11 +25,11 @@ export default function ConstantCardModal({ show, onClose, onSave, editingConsta
 
   useEffect(() => {
     if (editingConstant) {
-      setName(editingConstant.name);
-      setValue(String(editingConstant.value));
+      setName(editingConstant.monitor_name || '');
+      setValue(String(editingConstant.latest_value || ''));
       setUnit(editingConstant.unit || '');
       setDescription(editingConstant.description || '');
-      setColor(editingConstant.color);
+      setColor(editingConstant.color || '#3b82f6');
     } else {
       setName('');
       setValue('');
