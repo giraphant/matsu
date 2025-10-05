@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { Settings, Moon, Sun, LayoutGrid, LineChart as LineChartIcon, Bell, Plus, Pencil, Trash2, TrendingUp, Lock, Unlock } from 'lucide-react';
+import { Settings, Moon, Sun, LayoutGrid, LineChart as LineChartIcon, Bell, Plus, Pencil, Trash2, TrendingUp } from 'lucide-react';
 import GridLayout from 'react-grid-layout';
 import ManageMonitorItem from './ManageMonitorItem';
 import ConstantCardModal from './ConstantCardModal';
 import DexRates from './DexRates';
+import MobileLayoutEditor from './MobileLayoutEditor';
 import './App.css';
 import 'react-grid-layout/css/styles.css';
 
@@ -98,7 +99,7 @@ function App() {
   const [showConstantModal, setShowConstantModal] = useState(false);
   const [editingConstant, setEditingConstant] = useState<ConstantCard | null>(null);
   const [isMobile, setIsMobile] = useState(false);
-  const [isEditMode, setIsEditMode] = useState(false);
+  const [showMobileLayoutEditor, setShowMobileLayoutEditor] = useState(false);
 
   // Detect mobile device
   useEffect(() => {
@@ -452,10 +453,8 @@ function App() {
   };
 
   const onLayoutChange = (layout: any[]) => {
-    // Only save layout changes when:
-    // 1. Desktop mode (always editable), OR
-    // 2. Mobile in edit mode
-    if (isMobile && !isEditMode) return;
+    // Don't save layout changes on mobile (use dedicated editor instead)
+    if (isMobile) return;
 
     setGridLayout(layout);
     localStorage.setItem('gridLayout', JSON.stringify(layout));
@@ -892,12 +891,12 @@ function App() {
             </button>
             {isMobile && viewMode === 'overview' && (
               <button
-                className={`btn-secondary ${isEditMode ? 'active' : ''}`}
-                onClick={() => setIsEditMode(!isEditMode)}
-                title={isEditMode ? 'Lock cards' : 'Edit cards'}
+                className="btn-secondary"
+                onClick={() => setShowMobileLayoutEditor(true)}
+                title="Edit layout"
                 style={{ padding: '8px 12px' }}
               >
-                {isEditMode ? <Unlock size={18} /> : <Lock size={18} />}
+                <Settings size={18} />
               </button>
             )}
             <button
@@ -922,7 +921,7 @@ function App() {
           <code>POST /webhook/distill</code>
         </div>
       ) : viewMode === 'overview' ? (
-        <div className={`bento-container ${isMobile && isEditMode ? 'edit-mode' : ''}`}>
+        <div className="bento-container">
           <GridLayout
             className="bento-grid"
             layout={gridLayout.length > 0 ? getMergedLayout(visibleMonitors, constants, gridLayout) : generateDefaultLayout(visibleMonitors)}
@@ -930,8 +929,8 @@ function App() {
             rowHeight={200}
             width={1600}
             onLayoutChange={onLayoutChange}
-            isDraggable={isMobile ? isEditMode : true}
-            isResizable={isMobile ? isEditMode : true}
+            isDraggable={!isMobile}
+            isResizable={!isMobile}
             compactType={null}
             preventCollision={false}
           >
@@ -1129,37 +1128,35 @@ function App() {
                       </p>
                     )}
                   </div>
-                  {(!isMobile || isEditMode) && (
-                    <div style={{ display: 'flex', gap: '4px', position: 'relative', zIndex: 100 }}>
-                      <button
-                        className="threshold-btn"
-                        onMouseDown={(e) => e.stopPropagation()}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setEditingConstant(constant);
-                          setShowConstantModal(true);
-                        }}
-                        title="Edit constant"
-                        style={{ pointerEvents: 'auto' }}
-                      >
-                        <Pencil size={14} />
-                      </button>
-                      <button
-                        className="threshold-btn"
-                        onMouseDown={(e) => e.stopPropagation()}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          deleteConstant(constant.id);
-                        }}
-                        title="Delete constant"
-                        style={{ color: 'var(--destructive)', pointerEvents: 'auto' }}
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                  )}
+                  <div style={{ display: 'flex', gap: '4px', position: 'relative', zIndex: 100 }}>
+                    <button
+                      className="threshold-btn"
+                      onMouseDown={(e) => e.stopPropagation()}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setEditingConstant(constant);
+                        setShowConstantModal(true);
+                      }}
+                      title="Edit constant"
+                      style={{ pointerEvents: 'auto' }}
+                    >
+                      <Pencil size={14} />
+                    </button>
+                    <button
+                      className="threshold-btn"
+                      onMouseDown={(e) => e.stopPropagation()}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        deleteConstant(constant.id);
+                      }}
+                      title="Delete constant"
+                      style={{ color: 'var(--destructive)', pointerEvents: 'auto' }}
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
                 </div>
 
                 <div className="bento-value constant-value" style={{ color: constant.color }}>
@@ -1180,8 +1177,8 @@ function App() {
             ))}
           </GridLayout>
 
-          {/* Floating Action Button for Adding Constants - only show in edit mode on mobile */}
-          {(!isMobile || isEditMode) && (
+          {/* Floating Action Button for Adding Constants */}
+          {!isMobile && (
             <button
               className="fab"
               onClick={() => {
@@ -1561,6 +1558,17 @@ function App() {
         }}
         onSave={saveConstant}
         editingConstant={editingConstant}
+      />
+
+      <MobileLayoutEditor
+        show={showMobileLayoutEditor}
+        onClose={() => setShowMobileLayoutEditor(false)}
+        layout={gridLayout}
+        onSave={(newLayout) => {
+          setGridLayout(newLayout);
+          localStorage.setItem('gridLayout', JSON.stringify(newLayout));
+        }}
+        monitorNames={monitorNames}
       />
     </div>
   );
