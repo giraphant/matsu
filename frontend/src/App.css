@@ -121,6 +121,30 @@ header p {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  max-height: calc(100vh - 280px);
+  overflow-y: auto;
+  padding-right: 4px;
+  overscroll-behavior: contain;
+}
+
+/* Custom scrollbar for monitor list */
+.monitor-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.monitor-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.monitor-list::-webkit-scrollbar-thumb {
+  background: var(--muted-foreground);
+  border-radius: 3px;
+  opacity: 0.3;
+}
+
+.monitor-list::-webkit-scrollbar-thumb:hover {
+  background: var(--foreground);
+  opacity: 0.5;
 }
 
 .monitor-item {
