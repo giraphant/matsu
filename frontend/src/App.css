@@ -1535,9 +1535,15 @@ header p {
 
 
   .bento-header {
-    flex-direction: column;
+    flex-direction: row;
     align-items: flex-start;
+    justify-content: space-between;
     gap: 8px;
+  }
+
+  .bento-title-section {
+    flex: 1;
+    min-width: 0;
   }
 
   .bento-value {
