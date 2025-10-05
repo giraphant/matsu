@@ -61,7 +61,7 @@ class MonitoringData(Base):
     text_value = Column(Text, nullable=True)
     unit = Column(String, nullable=True)  # Unit for display (%, $, ETH, etc.)
     status = Column(String, nullable=False)
-    timestamp = Column(DateTime, nullable=False)
+    timestamp = Column(DateTime, nullable=False, index=True)
     webhook_received_at = Column(DateTime, default=datetime.utcnow)
     is_change = Column(Boolean, default=False)
     change_type = Column(String, nullable=True)
