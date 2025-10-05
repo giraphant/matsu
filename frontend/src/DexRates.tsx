@@ -189,9 +189,13 @@ const DexRates: React.FC = () => {
           )}
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
-          <button onClick={() => setShowAlertManager(true)} className="btn-secondary" style={{ padding: '8px 12px' }}>
+          <button
+            onClick={() => setShowAlertManager(true)}
+            className="btn-secondary"
+            style={{ padding: '8px 12px', display: 'flex', alignItems: 'center', gap: '6px' }}
+          >
             <Bell size={16} />
-            管理提醒
+            <span>管理提醒</span>
           </button>
           <button onClick={() => fetchRates(true)} className="refresh-btn" disabled={loading}>
             <RefreshCw size={16} className={loading ? 'spinning' : ''} />
