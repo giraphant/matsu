@@ -86,16 +86,44 @@ const DexRates: React.FC = () => {
     return validRates.length >= 2 ? Math.max(...validRates) - Math.min(...validRates) : null;
   };
 
+  // Helper function to check if symbol has all enabled exchanges with data
+  const hasAllEnabledExchanges = (symbol: string): boolean => {
+    const symbolRates = groupedRates[symbol];
+    const ratesByExchange = symbolRates.reduce((acc, r) => {
+      acc[r.exchange] = r.rate;
+      return acc;
+    }, {} as Record<string, number | null | undefined>);
+
+    // Check if all enabled exchanges have non-null rates
+    const enabledArray = Array.from(enabledExchanges);
+    for (const exchange of enabledArray) {
+      const rate = ratesByExchange[exchange];
+      if (rate === null || rate === undefined) {
+        return false;
+      }
+    }
+    return true;
+  };
+
   // Sort symbols
   const sortedSymbols = [...filteredSymbols].sort((a, b) => {
     if (sortBy === 'symbol') {
       return sortOrder === 'asc' ? a.localeCompare(b) : b.localeCompare(a);
     } else if (sortBy === 'spread') {
-      // Sort by spread - only include enabled exchanges
+      // When sorting by spread, prioritize symbols with all enabled exchanges
+      const aHasAll = hasAllEnabledExchanges(a);
+      const bHasAll = hasAllEnabledExchanges(b);
+
+      // Symbols with incomplete data go to the end
+      if (aHasAll && !bHasAll) return -1;
+      if (!aHasAll && bHasAll) return 1;
+      if (!aHasAll && !bHasAll) return 0; // Both incomplete, keep original order
+
+      // Both have all data, sort by spread
       const spreadA = calculateSpread(a);
       const spreadB = calculateSpread(b);
 
-      // Put N/A (null) values at the end always
+      // This shouldn't happen if hasAllEnabledExchanges works correctly, but just in case
       if (spreadA === null && spreadB === null) return 0;
       if (spreadA === null) return 1;
       if (spreadB === null) return -1;
