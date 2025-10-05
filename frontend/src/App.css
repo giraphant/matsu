@@ -1353,24 +1353,28 @@ header p {
     cursor: default !important;
   }
 
-  /* Re-enable dragging in edit mode */
-  .bento-container.edit-mode .bento-item {
+  /* Re-enable dragging in edit mode - restore grid layout behavior */
+  .bento-container.edit-mode .bento-grid {
+    display: block !important;
     position: relative !important;
-    touch-action: none !important;
-    cursor: move !important;
+    min-height: 1200px;
+    width: 100% !important;
   }
 
   .bento-container.edit-mode .react-grid-item {
     position: absolute !important;
     touch-action: none !important;
+    transform: none !important;
+    transition: none !important;
   }
 
-  /* Keep grid layout working in edit mode */
-  .bento-container.edit-mode .bento-grid {
-    display: block !important;
-    position: relative !important;
-    height: auto !important;
-    min-height: 800px;
+  .bento-container.edit-mode .bento-item {
+    touch-action: none !important;
+    cursor: move !important;
+    position: static !important;
+    width: 100% !important;
+    height: 100% !important;
+    margin: 0 !important;
   }
 
   .bento-header {
