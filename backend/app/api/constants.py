@@ -56,8 +56,8 @@ def get_db():
 
 @router.get("/constants", response_model=List[ConstantCardResponse])
 def get_constants(db: Session = Depends(get_db)):
-    """Get all constant cards."""
-    constants = db.query(ConstantCard).all()
+    """Get all constant cards, ordered by creation time."""
+    constants = db.query(ConstantCard).order_by(ConstantCard.created_at).all()
     return constants
 
 
