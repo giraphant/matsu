@@ -668,10 +668,11 @@ async def check_funding_rate_alerts():
 
                         if spread >= alert.threshold:
                             triggered = True
-                            # Find which exchanges have max/min
-                            max_exchange = [e for e, r in selected_rates if r == max(rates_only)][0]
-                            min_exchange = [e for e, r in selected_rates if r == min(rates_only)][0]
-                            message = f"📊 {alert.name}\n{symbol} spread: {spread*100:.4f}%\n{max_exchange.upper()}: {max(rates_only)*100:.4f}% | {min_exchange.upper()}: {min(rates_only)*100:.4f}%\n(threshold: {alert.threshold*100:.2f}%)"
+                            # Sort by rate descending to show highest first
+                            selected_rates.sort(key=lambda x: x[1], reverse=True)
+                            # Build message with all exchanges
+                            rates_str = "\n".join([f"{ex.upper()}: {rate*100:.4f}%" for ex, rate in selected_rates])
+                            message = f"📊 {alert.name}\n{symbol} - Spread: {spread*100:.4f}%\n{rates_str}\n(threshold: {alert.threshold*100:.2f}%)"
                             break
 
             if triggered:
