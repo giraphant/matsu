@@ -1349,56 +1349,87 @@ header p {
   margin-top: 24px;
 }
 
+/* Mobile Menu Styles */
+.mobile-menu-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 9999;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.mobile-menu {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 280px;
+  max-width: 80vw;
+  height: 100vh;
+  background: var(--card);
+  box-shadow: -4px 0 12px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  padding: 60px 0 20px 0;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+.mobile-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 24px;
+  background: none;
+  border: none;
+  color: var(--foreground);
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.2s;
+  text-align: left;
+  width: 100%;
+}
+
+.mobile-menu-item:hover {
+  background: var(--muted);
+}
+
+.mobile-menu-item.active {
+  background: var(--primary);
+  color: white;
+}
+
+.mobile-menu-item svg {
+  flex-shrink: 0;
+}
+
+.mobile-menu-btn {
+  min-width: 44px !important;
+  min-height: 44px !important;
+}
+
 /* Mobile Responsive Styles */
 @media (max-width: 768px) {
   /* Header adjustments - compact mobile layout */
   header {
-    padding: 10px 12px;
-    position: relative;
-  }
-
-  header > div {
+    padding: 12px 16px;
     position: relative;
   }
 
   header h1 {
-    font-size: 16px;
+    font-size: 18px;
     margin-bottom: 0;
-    padding-right: 180px; /* Space for buttons */
-  }
-
-  header p {
-    display: none; /* Hide subtitle on mobile */
-  }
-
-  /* Move buttons to top right corner, absolutely positioned */
-  header > div > div:last-child {
-    position: absolute !important;
-    top: 0;
-    right: 0;
-    display: flex !important;
-    gap: 4px !important;
-    z-index: 100;
-    flex-direction: row !important;
-    align-items: center !important;
-  }
-
-  header button {
-    padding: 6px !important;
-    min-width: 32px !important;
-    min-height: 32px !important;
-  }
-
-  header button svg {
-    width: 16px !important;
-    height: 16px !important;
-  }
-
-  /* Logout button compact */
-  header .btn-secondary:not(:has(svg)) {
-    padding: 6px 10px !important;
-    font-size: 11px !important;
-    min-width: auto !important;
   }
 
   /* Dashboard layout - stack on mobile */

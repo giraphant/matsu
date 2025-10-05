@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { Settings, Moon, Sun, LayoutGrid, LineChart as LineChartIcon, Bell, Plus, Pencil, Trash2, TrendingUp } from 'lucide-react';
+import { Settings, Moon, Sun, LayoutGrid, LineChart as LineChartIcon, Bell, Plus, Pencil, Trash2, TrendingUp, Menu, X } from 'lucide-react';
 import GridLayout from 'react-grid-layout';
 import ManageMonitorItem from './ManageMonitorItem';
 import ConstantCardModal from './ConstantCardModal';
@@ -100,6 +100,7 @@ function App() {
   const [editingConstant, setEditingConstant] = useState<ConstantCard | null>(null);
   const [isMobile, setIsMobile] = useState(false);
   const [showMobileLayoutEditor, setShowMobileLayoutEditor] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
 
   // Detect mobile device
   useEffect(() => {
@@ -904,55 +905,108 @@ function App() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <h1>Distill Webhook Visualiser</h1>
-            <p>Monitor your web data in real-time</p>
+            {!isMobile && <p>Monitor your web data in real-time</p>}
           </div>
-          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-            <button
-              className={`btn-secondary ${viewMode === 'overview' ? 'active' : ''}`}
-              onClick={() => setViewMode('overview')}
-              title="Overview"
-              style={{ padding: '8px 12px' }}
-            >
-              <LayoutGrid size={18} />
-            </button>
-            <button
-              className={`btn-secondary ${viewMode === 'detail' ? 'active' : ''}`}
-              onClick={() => setViewMode('detail')}
-              title="Detail view"
-              style={{ padding: '8px 12px' }}
-            >
-              <LineChartIcon size={18} />
-            </button>
-            <button
-              className={`btn-secondary ${viewMode === 'dex' ? 'active' : ''}`}
-              onClick={() => setViewMode('dex')}
-              title="DEX Rates"
-              style={{ padding: '8px 12px' }}
-            >
-              <TrendingUp size={18} />
-            </button>
-            {isMobile && viewMode === 'overview' && (
+
+          {isMobile ? (
+            <>
               <button
-                className="btn-secondary"
-                onClick={() => setShowMobileLayoutEditor(true)}
-                title="Edit layout"
+                className="btn-secondary mobile-menu-btn"
+                onClick={() => setShowMobileMenu(!showMobileMenu)}
+                style={{ padding: '8px' }}
+              >
+                {showMobileMenu ? <X size={20} /> : <Menu size={20} />}
+              </button>
+
+              {showMobileMenu && (
+                <div className="mobile-menu-overlay" onClick={() => setShowMobileMenu(false)}>
+                  <div className="mobile-menu" onClick={(e) => e.stopPropagation()}>
+                    <button
+                      className={`mobile-menu-item ${viewMode === 'overview' ? 'active' : ''}`}
+                      onClick={() => { setViewMode('overview'); setShowMobileMenu(false); }}
+                    >
+                      <LayoutGrid size={20} />
+                      <span>Overview</span>
+                    </button>
+                    <button
+                      className={`mobile-menu-item ${viewMode === 'detail' ? 'active' : ''}`}
+                      onClick={() => { setViewMode('detail'); setShowMobileMenu(false); }}
+                    >
+                      <LineChartIcon size={20} />
+                      <span>Detail View</span>
+                    </button>
+                    <button
+                      className={`mobile-menu-item ${viewMode === 'dex' ? 'active' : ''}`}
+                      onClick={() => { setViewMode('dex'); setShowMobileMenu(false); }}
+                    >
+                      <TrendingUp size={20} />
+                      <span>DEX Rates</span>
+                    </button>
+                    {viewMode === 'overview' && (
+                      <button
+                        className="mobile-menu-item"
+                        onClick={() => { setShowMobileLayoutEditor(true); setShowMobileMenu(false); }}
+                      >
+                        <Settings size={20} />
+                        <span>Edit Layout</span>
+                      </button>
+                    )}
+                    <button
+                      className="mobile-menu-item"
+                      onClick={() => { toggleDarkMode(); setShowMobileMenu(false); }}
+                    >
+                      {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
+                      <span>{isDarkMode ? 'Light Mode' : 'Dark Mode'}</span>
+                    </button>
+                    <button
+                      className="mobile-menu-item"
+                      onClick={() => { handleLogout(); setShowMobileMenu(false); }}
+                    >
+                      <span>Logout</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
+          ) : (
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+              <button
+                className={`btn-secondary ${viewMode === 'overview' ? 'active' : ''}`}
+                onClick={() => setViewMode('overview')}
+                title="Overview"
                 style={{ padding: '8px 12px' }}
               >
-                <Settings size={18} />
+                <LayoutGrid size={18} />
               </button>
-            )}
-            <button
-              className="btn-secondary"
-              onClick={toggleDarkMode}
-              title={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
-              style={{ padding: '8px 12px' }}
-            >
-              {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
-            </button>
-            <button className="btn-secondary" onClick={handleLogout}>
-              Logout
-            </button>
-          </div>
+              <button
+                className={`btn-secondary ${viewMode === 'detail' ? 'active' : ''}`}
+                onClick={() => setViewMode('detail')}
+                title="Detail view"
+                style={{ padding: '8px 12px' }}
+              >
+                <LineChartIcon size={18} />
+              </button>
+              <button
+                className={`btn-secondary ${viewMode === 'dex' ? 'active' : ''}`}
+                onClick={() => setViewMode('dex')}
+                title="DEX Rates"
+                style={{ padding: '8px 12px' }}
+              >
+                <TrendingUp size={18} />
+              </button>
+              <button
+                className="btn-secondary"
+                onClick={toggleDarkMode}
+                title={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+                style={{ padding: '8px 12px' }}
+              >
+                {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
+              </button>
+              <button className="btn-secondary" onClick={handleLogout}>
+                Logout
+              </button>
+            </div>
+          )}
         </div>
       </header>
 
