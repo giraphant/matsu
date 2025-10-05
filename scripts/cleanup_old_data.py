@@ -9,8 +9,10 @@ import sys
 from datetime import datetime, timedelta
 from sqlalchemy import func
 
-# Add parent directory to path for imports
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+# Add backend directory to path for imports
+script_dir = os.path.dirname(os.path.abspath(__file__))
+backend_dir = os.path.join(script_dir, '..', 'backend')
+sys.path.insert(0, backend_dir)
 
 from app.models.database import SessionLocal, MonitoringData
 

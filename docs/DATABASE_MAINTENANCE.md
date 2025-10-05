@@ -22,13 +22,12 @@ The Matsu monitoring system uses SQLite for data storage. While SQLite is highly
 
 ### Usage
 
-The `cleanup_old_data.py` script helps maintain database health by removing old records.
+The `cleanup_old_data.py` script (located in `scripts/` folder) helps maintain database health by removing old records.
 
 #### View Database Statistics
 
 ```bash
-cd backend
-python cleanup_old_data.py --stats
+python scripts/cleanup_old_data.py --stats
 ```
 
 Output example:
@@ -50,7 +49,7 @@ Records per monitor:
 See what would be deleted without actually deleting:
 
 ```bash
-python cleanup_old_data.py --days 90 --dry-run
+python scripts/cleanup_old_data.py --days 90 --dry-run
 ```
 
 Output example:
@@ -71,17 +70,17 @@ Run without --dry-run flag to actually delete the data
 Delete records older than 90 days (default):
 
 ```bash
-python cleanup_old_data.py
+python scripts/cleanup_old_data.py
 ```
 
 Or specify custom retention period:
 
 ```bash
 # Keep only last 30 days
-python cleanup_old_data.py --days 30
+python scripts/cleanup_old_data.py --days 30
 
 # Keep last 180 days (6 months)
-python cleanup_old_data.py --days 180
+python scripts/cleanup_old_data.py --days 180
 ```
 
 The script will:
@@ -107,7 +106,7 @@ Add to crontab to run monthly cleanup:
 crontab -e
 
 # Add this line to cleanup data older than 90 days on 1st of each month at 2 AM
-0 2 1 * * cd /home/distill-webhook-visualizer/backend && python cleanup_old_data.py --days 90 > /home/distill-webhook-visualizer/logs/cleanup.log 2>&1
+0 2 1 * * cd /home/distill-webhook-visualizer && python scripts/cleanup_old_data.py --days 90 > logs/cleanup.log 2>&1
 ```
 
 ### Manual Schedule
@@ -156,5 +155,5 @@ SELECT * FROM monitoring_data WHERE timestamp < datetime('now', '-90 days');
 EOF
 
 # Then run cleanup
-python cleanup_old_data.py --days 90
+python scripts/cleanup_old_data.py --days 90
 ```
