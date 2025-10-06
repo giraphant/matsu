@@ -147,10 +147,16 @@ function App() {
     if (isAuthenticated) {
       loadMonitors();
       loadAlertConfigs();
-      const interval = setInterval(() => {
+      const monitorInterval = setInterval(() => {
         loadMonitors();
       }, 30000);
-      return () => clearInterval(interval);
+      const alertConfigInterval = setInterval(() => {
+        loadAlertConfigs();
+      }, 60000); // Sync alert configs every 60 seconds
+      return () => {
+        clearInterval(monitorInterval);
+        clearInterval(alertConfigInterval);
+      };
     }
   }, [isAuthenticated]);
 
