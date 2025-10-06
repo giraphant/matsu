@@ -248,6 +248,13 @@ function App() {
     }
   };
 
+  // Downsample data points for performance - keep only every Nth point
+  const downsampleData = (data: any[], maxPoints: number = 50): any[] => {
+    if (data.length <= maxPoints) return data;
+    const step = Math.ceil(data.length / maxPoints);
+    return data.filter((_, index) => index % step === 0 || index === data.length - 1);
+  };
+
   const loadMiniChartData = async (monitorList: MonitorSummary[]) => {
     const newMiniData = new Map();
     await Promise.all(
@@ -260,7 +267,9 @@ function App() {
             ...point,
             timestamp: new Date(point.timestamp).getTime()
           }));
-          newMiniData.set(monitor.monitor_id, chartData);
+          // Downsample to max 50 points for mini charts
+          const sampledData = downsampleData(chartData, 50);
+          newMiniData.set(monitor.monitor_id, sampledData);
         } catch (error) {
           console.error(`Failed to load mini chart for ${monitor.monitor_id}:`, error);
         }
