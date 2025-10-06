@@ -136,10 +136,7 @@ function App() {
     if (savedLayout) {
       setGridLayout(JSON.parse(savedLayout));
     }
-    const savedThresholds = localStorage.getItem('thresholds');
-    if (savedThresholds) {
-      setThresholds(new Map(Object.entries(JSON.parse(savedThresholds))));
-    }
+    // Don't load thresholds from localStorage anymore - will load from backend
     const savedFormulas = localStorage.getItem('monitorFormulas');
     if (savedFormulas) {
       setMonitorFormulas(new Map(Object.entries(JSON.parse(savedFormulas))));
@@ -149,6 +146,7 @@ function App() {
   useEffect(() => {
     if (isAuthenticated) {
       loadMonitors();
+      loadAlertConfigs();
       const interval = setInterval(() => {
         loadMonitors();
       }, 30000);
@@ -253,6 +251,24 @@ function App() {
     if (data.length <= maxPoints) return data;
     const step = Math.ceil(data.length / maxPoints);
     return data.filter((_, index) => index % step === 0 || index === data.length - 1);
+  };
+
+  const loadAlertConfigs = async () => {
+    try {
+      const response = await fetch('/api/alerts/configs');
+      const configs = await response.json();
+      const newThresholds = new Map();
+      configs.forEach((config: any) => {
+        newThresholds.set(config.monitor_id, {
+          upper: config.upper_threshold,
+          lower: config.lower_threshold,
+          level: config.alert_level
+        });
+      });
+      setThresholds(newThresholds);
+    } catch (error) {
+      console.error('Failed to load alert configs:', error);
+    }
   };
 
   const loadMiniChartData = async (monitorList: MonitorSummary[]) => {
@@ -635,7 +651,7 @@ function App() {
       }
     }
     setThresholds(newThresholds);
-    localStorage.setItem('thresholds', JSON.stringify(Object.fromEntries(newThresholds)));
+    // No longer save to localStorage - backend is source of truth
   };
 
   const isValueOutOfRange = (value: number | null, monitorId: string): boolean => {
