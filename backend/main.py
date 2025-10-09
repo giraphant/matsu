@@ -101,6 +101,11 @@ async def startup_event():
     asyncio.create_task(background_cache_warmer())
     asyncio.create_task(funding_rate_alert_checker_task())
 
+    # Start Lighter funding rate monitor
+    from app.services.lighter_monitor import lighter_monitor_loop
+    asyncio.create_task(lighter_monitor_loop())
+    print("✓ Lighter funding rate monitor started")
+
     # Remove formula column if it exists (SQLite migration)
     import sqlite3
     try:
