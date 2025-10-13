@@ -6,28 +6,27 @@ interface MonitorSummary {
   monitor_name: string | null;
   url: string;
   unit: string | null;
+  decimal_places?: number;
   latest_value: number | null;
 }
 
 interface ManageMonitorItemProps {
   monitor: MonitorSummary;
   customName: string;
-  formula: string;
   tags: string[];
   isHidden: boolean;
-  formatValue: (value: number | null, unit: string | null) => string;
+  formatValue: (value: number | null, unit: string | null, decimalPlaces?: number) => string;
   onToggleHide: () => void;
   onDelete: () => void;
   onAddTag: (tag: string) => void;
   onRemoveTag: (tag: string) => void;
   onUpdateName: (name: string) => void;
-  onUpdateFormula: (formula: string) => void;
+  onUpdateDecimalPlaces: (decimalPlaces: number) => void;
 }
 
 export default function ManageMonitorItem({
   monitor,
   customName,
-  formula,
   tags,
   isHidden,
   formatValue,
@@ -36,21 +35,21 @@ export default function ManageMonitorItem({
   onAddTag,
   onRemoveTag,
   onUpdateName,
-  onUpdateFormula,
+  onUpdateDecimalPlaces,
 }: ManageMonitorItemProps) {
   const [newTag, setNewTag] = useState('');
   const [editingName, setEditingName] = useState(false);
   const [nameInput, setNameInput] = useState(customName);
-  const [editingFormula, setEditingFormula] = useState(false);
-  const [formulaInput, setFormulaInput] = useState(formula);
+  const [editingDecimalPlaces, setEditingDecimalPlaces] = useState(false);
+  const [decimalPlacesInput, setDecimalPlacesInput] = useState(monitor.decimal_places ?? 2);
 
   useEffect(() => {
     setNameInput(customName);
   }, [customName]);
 
   useEffect(() => {
-    setFormulaInput(formula);
-  }, [formula]);
+    setDecimalPlacesInput(monitor.decimal_places ?? 2);
+  }, [monitor.decimal_places]);
 
   const handleAddTag = () => {
     if (newTag.trim()) {
@@ -64,9 +63,9 @@ export default function ManageMonitorItem({
     setEditingName(false);
   };
 
-  const handleSaveFormula = () => {
-    onUpdateFormula(formulaInput);
-    setEditingFormula(false);
+  const handleSaveDecimalPlaces = () => {
+    onUpdateDecimalPlaces(decimalPlacesInput);
+    setEditingDecimalPlaces(false);
   };
 
   const displayName = customName || monitor.monitor_name || monitor.monitor_id;
@@ -112,7 +111,7 @@ export default function ManageMonitorItem({
             </div>
           )}
           <div style={{ fontSize: '12px', color: 'var(--muted-foreground)', marginTop: '4px' }}>
-            {formatValue(monitor.latest_value, monitor.unit)}
+            {formatValue(monitor.latest_value, monitor.unit, monitor.decimal_places)}
           </div>
           {!customName && monitor.monitor_name && (
             <div style={{ fontSize: '11px', color: 'var(--muted-foreground)', marginTop: '2px' }}>
@@ -164,40 +163,41 @@ export default function ManageMonitorItem({
         />
       </div>
 
-      <div className="manage-item-formula" style={{ marginTop: '8px', fontSize: '12px' }}>
-        {editingFormula ? (
+      <div className="manage-item-decimals" style={{ marginTop: '8px', fontSize: '12px' }}>
+        {editingDecimalPlaces ? (
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-            <span style={{ color: 'var(--muted-foreground)' }}>Formula:</span>
+            <span style={{ color: 'var(--muted-foreground)' }}>Decimal Places:</span>
             <input
-              type="text"
-              value={formulaInput}
-              onChange={(e) => setFormulaInput(e.target.value)}
+              type="number"
+              min="0"
+              max="10"
+              value={decimalPlacesInput}
+              onChange={(e) => setDecimalPlacesInput(parseInt(e.target.value) || 0)}
               onKeyPress={(e) => {
                 if (e.key === 'Enter') {
-                  handleSaveFormula();
+                  handleSaveDecimalPlaces();
                 }
               }}
-              placeholder="e.g. x * 365"
               className="tag-input"
-              style={{ width: '150px' }}
+              style={{ width: '80px' }}
               autoFocus
             />
-            <button className="btn-icon" onClick={handleSaveFormula} title="Save">
+            <button className="btn-icon" onClick={handleSaveDecimalPlaces} title="Save">
               ✓
             </button>
-            <button className="btn-icon" onClick={() => { setEditingFormula(false); setFormulaInput(formula); }} title="Cancel">
+            <button className="btn-icon" onClick={() => { setEditingDecimalPlaces(false); setDecimalPlacesInput(monitor.decimal_places ?? 2); }} title="Cancel">
               ✕
             </button>
           </div>
         ) : (
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
             <span style={{ color: 'var(--muted-foreground)' }}>
-              Formula: {formula || 'none'}
+              Decimal Places: {monitor.decimal_places ?? 2}
             </span>
             <button
               className="btn-icon"
-              onClick={() => setEditingFormula(true)}
-              title="Edit formula"
+              onClick={() => setEditingDecimalPlaces(true)}
+              title="Edit decimal places"
               style={{ fontSize: '12px', padding: '2px 6px' }}
             >
               <Pencil size={12} />

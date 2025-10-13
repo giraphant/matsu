@@ -15,6 +15,7 @@ interface MonitorSummary {
   monitor_type?: string;  // 'monitor' or 'constant'
   url: string;
   unit: string | null;
+  decimal_places?: number;  // Number of decimal places to display
   color?: string | null;  // For constant cards
   description?: string | null;  // For constant cards
   total_records: number;
@@ -87,8 +88,8 @@ function App() {
   const [thresholds, setThresholds] = useState<Map<string, {upper?: number, lower?: number, level?: string}>>(new Map());
   const [showThresholdPopover, setShowThresholdPopover] = useState<string | null>(null);
   const [alertStates, setAlertStates] = useState<Map<string, {lastNotified: number, isActive: boolean}>>(new Map());
-  const [monitorFormulas, setMonitorFormulas] = useState<Map<string, string>>(new Map());
   const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const [monitorSearchQuery, setMonitorSearchQuery] = useState('');
   const [showConstantModal, setShowConstantModal] = useState(false);
   const [editingConstant, setEditingConstant] = useState<MonitorSummary | null>(null);
   const [isMobile, setIsMobile] = useState(false);
@@ -137,10 +138,6 @@ function App() {
       setGridLayout(JSON.parse(savedLayout));
     }
     // Don't load thresholds from localStorage anymore - will load from backend
-    const savedFormulas = localStorage.getItem('monitorFormulas');
-    if (savedFormulas) {
-      setMonitorFormulas(new Map(Object.entries(JSON.parse(savedFormulas))));
-    }
   }, []);
 
   useEffect(() => {
@@ -311,11 +308,13 @@ function App() {
     }
   };
 
-  const formatValue = (value: number | null, unit: string | null) => {
+  const formatValue = (value: number | null, unit: string | null, decimalPlaces?: number) => {
     if (value === null) return 'N/A';
+    // Use ?? to properly handle 0 decimal places (|| would treat 0 as falsy)
+    const places = decimalPlaces ?? 2;
     const formatted = value.toLocaleString(undefined, {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
+      minimumFractionDigits: places,
+      maximumFractionDigits: places
     });
     return unit ? `${formatted} ${unit}` : formatted;
   };
@@ -530,36 +529,19 @@ function App() {
     localStorage.setItem('monitorNames', JSON.stringify(Object.fromEntries(newNames)));
   };
 
-  const updateMonitorFormula = async (monitorId: string, formula: string) => {
-    // Save formula to backend AlertConfig
+  const updateMonitorDecimalPlaces = async (monitorId: string, decimalPlaces: number) => {
     try {
-      const response = await fetch('/api/alerts/config', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          monitor_id: monitorId,
-          formula: formula.trim() || null,
-          alert_level: thresholds.get(monitorId)?.level || 'medium',
-          upper_threshold: thresholds.get(monitorId)?.upper,
-          lower_threshold: thresholds.get(monitorId)?.lower
-        })
+      const response = await fetch(`/api/monitors/${monitorId}/decimal-places?decimal_places=${decimalPlaces}`, {
+        method: 'PATCH',
       });
 
       if (response.ok) {
-        // Update local state for UI display
-        const newFormulas = new Map(monitorFormulas);
-        if (formula.trim()) {
-          newFormulas.set(monitorId, formula.trim());
-        } else {
-          newFormulas.delete(monitorId);
-        }
-        setMonitorFormulas(newFormulas);
-        localStorage.setItem('monitorFormulas', JSON.stringify(Object.fromEntries(newFormulas)));
+        await loadMonitors();
       } else {
-        console.error('Failed to save formula to backend');
+        console.error('Failed to update decimal places');
       }
     } catch (error) {
-      console.error('Failed to save formula:', error);
+      console.error('Failed to update decimal places:', error);
     }
   };
 
@@ -1242,7 +1224,7 @@ function App() {
                   )}
 
                   <div className={`bento-value ${isAlert ? 'alert' : ''}`}>
-                    {formatValue(monitor.latest_value, monitor.unit)}
+                    {formatValue(monitor.latest_value, monitor.unit, monitor.decimal_places)}
                     <div className="last-updated" title={new Date((monitor.latest_timestamp.endsWith('Z') ? monitor.latest_timestamp : monitor.latest_timestamp + 'Z')).toLocaleString()}>
                       {formatTimeSince(monitor.latest_timestamp)}
                     </div>
@@ -1274,15 +1256,15 @@ function App() {
                   <div className="bento-stats">
                     <div className="bento-stat">
                       <span className="label">Min</span>
-                      <span className="value">{formatValue(monitor.min_value, monitor.unit)}</span>
+                      <span className="value">{formatValue(monitor.min_value, monitor.unit, monitor.decimal_places)}</span>
                     </div>
                     <div className="bento-stat">
                       <span className="label">Avg</span>
-                      <span className="value">{formatValue(monitor.avg_value, monitor.unit)}</span>
+                      <span className="value">{formatValue(monitor.avg_value, monitor.unit, monitor.decimal_places)}</span>
                     </div>
                     <div className="bento-stat">
                       <span className="label">Max</span>
-                      <span className="value">{formatValue(monitor.max_value, monitor.unit)}</span>
+                      <span className="value">{formatValue(monitor.max_value, monitor.unit, monitor.decimal_places)}</span>
                     </div>
                   </div>
                   </div>
@@ -1352,7 +1334,7 @@ function App() {
                     {monitorNames.get(monitor.monitor_id) || monitor.monitor_name || monitor.monitor_id}
                   </div>
                   <div className="monitor-value">
-                    {formatValue(monitor.latest_value, monitor.unit)}
+                    {formatValue(monitor.latest_value, monitor.unit, monitor.decimal_places)}
                   </div>
                   {monitorTags.get(monitor.monitor_id) && monitorTags.get(monitor.monitor_id)!.length > 0 && (
                     <div className="monitor-tags">
@@ -1375,19 +1357,19 @@ function App() {
                   <div className="stat-card">
                     <div className="stat-label">Latest Value</div>
                     <div className="stat-value">
-                      {formatValue(currentMonitor.latest_value, currentMonitor.unit)}
+                      {formatValue(currentMonitor.latest_value, currentMonitor.unit, currentMonitor.decimal_places)}
                     </div>
                   </div>
                   <div className="stat-card">
                     <div className="stat-label">Average</div>
                     <div className="stat-value">
-                      {formatValue(currentMonitor.avg_value, currentMonitor.unit)}
+                      {formatValue(currentMonitor.avg_value, currentMonitor.unit, currentMonitor.decimal_places)}
                     </div>
                   </div>
                   <div className="stat-card">
                     <div className="stat-label">Min / Max</div>
                     <div className="stat-value small">
-                      {formatValue(currentMonitor.min_value, currentMonitor.unit)} / {formatValue(currentMonitor.max_value, currentMonitor.unit)}
+                      {formatValue(currentMonitor.min_value, currentMonitor.unit, currentMonitor.decimal_places)} / {formatValue(currentMonitor.max_value, currentMonitor.unit, currentMonitor.decimal_places)}
                     </div>
                   </div>
                   <div className="stat-card">
@@ -1582,25 +1564,72 @@ function App() {
             {settingsTab === 'monitors' && (
               <>
                 <p className="modal-description">Hide, tag, or delete your monitors</p>
-                <div className="manage-list">
-                  {monitors.map(monitor => (
-                    <ManageMonitorItem
-                      key={monitor.monitor_id}
-                      monitor={monitor}
-                      customName={monitorNames.get(monitor.monitor_id) || ''}
-                      formula={monitorFormulas.get(monitor.monitor_id) || ''}
-                      tags={monitorTags.get(monitor.monitor_id) || []}
-                      isHidden={hiddenMonitors.has(monitor.monitor_id)}
-                      formatValue={formatValue}
-                      onToggleHide={() => toggleHideMonitor(monitor.monitor_id)}
-                      onDelete={() => deleteMonitor(monitor.monitor_id)}
-                      onAddTag={(tag) => addTagToMonitor(monitor.monitor_id, tag)}
-                      onRemoveTag={(tag) => removeTagFromMonitor(monitor.monitor_id, tag)}
-                      onUpdateName={(name: string) => updateMonitorName(monitor.monitor_id, name)}
-                      onUpdateFormula={(formula: string) => updateMonitorFormula(monitor.monitor_id, formula)}
-                    />
-                  ))}
+
+                {/* Search Bar */}
+                <div style={{ marginBottom: '16px' }}>
+                  <input
+                    type="text"
+                    placeholder="Search monitors..."
+                    value={monitorSearchQuery}
+                    onChange={(e) => setMonitorSearchQuery(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '8px 12px',
+                      fontSize: '14px',
+                      border: '1px solid var(--border)',
+                      borderRadius: '6px',
+                      backgroundColor: 'var(--background)',
+                      color: 'var(--foreground)'
+                    }}
+                  />
                 </div>
+
+                <div className="manage-list">
+                  {monitors
+                    .filter(monitor => {
+                      if (!monitorSearchQuery) return true;
+                      const searchLower = monitorSearchQuery.toLowerCase();
+                      const displayName = monitorNames.get(monitor.monitor_id) || monitor.monitor_name || monitor.monitor_id;
+                      const tags = monitorTags.get(monitor.monitor_id) || [];
+                      return (
+                        displayName?.toLowerCase().includes(searchLower) ||
+                        monitor.monitor_id.toLowerCase().includes(searchLower) ||
+                        tags.some(tag => tag.toLowerCase().includes(searchLower))
+                      );
+                    })
+                    .map(monitor => (
+                      <ManageMonitorItem
+                        key={monitor.monitor_id}
+                        monitor={monitor}
+                        customName={monitorNames.get(monitor.monitor_id) || ''}
+                        tags={monitorTags.get(monitor.monitor_id) || []}
+                        isHidden={hiddenMonitors.has(monitor.monitor_id)}
+                        formatValue={formatValue}
+                        onToggleHide={() => toggleHideMonitor(monitor.monitor_id)}
+                        onDelete={() => deleteMonitor(monitor.monitor_id)}
+                        onAddTag={(tag) => addTagToMonitor(monitor.monitor_id, tag)}
+                        onRemoveTag={(tag) => removeTagFromMonitor(monitor.monitor_id, tag)}
+                        onUpdateName={(name: string) => updateMonitorName(monitor.monitor_id, name)}
+                        onUpdateDecimalPlaces={(decimalPlaces: number) => updateMonitorDecimalPlaces(monitor.monitor_id, decimalPlaces)}
+                      />
+                    ))}
+                </div>
+
+                {monitors.filter(monitor => {
+                  if (!monitorSearchQuery) return true;
+                  const searchLower = monitorSearchQuery.toLowerCase();
+                  const displayName = monitorNames.get(monitor.monitor_id) || monitor.monitor_name || monitor.monitor_id;
+                  const tags = monitorTags.get(monitor.monitor_id) || [];
+                  return (
+                    displayName?.toLowerCase().includes(searchLower) ||
+                    monitor.monitor_id.toLowerCase().includes(searchLower) ||
+                    tags.some(tag => tag.toLowerCase().includes(searchLower))
+                  );
+                }).length === 0 && (
+                  <div style={{ textAlign: 'center', padding: '20px', color: 'var(--muted-foreground)' }}>
+                    No monitors found matching "{monitorSearchQuery}"
+                  </div>
+                )}
               </>
             )}
 

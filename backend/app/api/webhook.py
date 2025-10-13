@@ -148,14 +148,28 @@ def save_monitoring_data(payload: DistillWebhookPayload) -> MonitoringData:
         # Default status for Distill data
         status = payload.status or "monitored"
 
+        # Get existing monitor settings (decimal_places, monitor_type, etc.) to preserve them
+        existing_record = db.query(MonitoringData).filter(
+            MonitoringData.monitor_id == monitor_id
+        ).order_by(MonitoringData.timestamp.desc()).first()
+
+        decimal_places = existing_record.decimal_places if existing_record else 2
+        monitor_type = existing_record.monitor_type if existing_record else 'monitor'
+        color = existing_record.color if existing_record else None
+        description = existing_record.description if existing_record else None
+
         # Create database record
         db_record = MonitoringData(
             monitor_id=monitor_id,
             monitor_name=monitor_name,
+            monitor_type=monitor_type,
             url=url,
             value=value,
             text_value=text_value,
             unit=unit,
+            decimal_places=decimal_places,
+            color=color,
+            description=description,
             status=status,
             timestamp=timestamp,
             webhook_received_at=datetime.utcnow(),

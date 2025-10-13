@@ -88,18 +88,18 @@ async def get_monitor_summaries() -> List[MonitorSummary]:
     db = get_db_session()
 
     try:
-        # Get unique monitors first
-        unique_monitors = db.query(
-            MonitoringData.monitor_id,
-            MonitoringData.monitor_name,
-            MonitoringData.url
+        # Get unique monitor IDs first (only by monitor_id, not url)
+        unique_monitor_ids = db.query(
+            MonitoringData.monitor_id
         ).distinct().all()
 
         result = []
-        for monitor in unique_monitors:
-            # Get stats for this monitor
+        for monitor_tuple in unique_monitor_ids:
+            monitor_id = monitor_tuple[0]
+
+            # Get all records for this monitor
             monitor_records = db.query(MonitoringData).filter(
-                MonitoringData.monitor_id == monitor.monitor_id
+                MonitoringData.monitor_id == monitor_id
             ).all()
 
             if not monitor_records:
@@ -112,11 +112,12 @@ async def get_monitor_summaries() -> List[MonitorSummary]:
             latest_record = max(monitor_records, key=lambda r: r.timestamp)
 
             result.append(MonitorSummary(
-                monitor_id=monitor.monitor_id,
-                monitor_name=monitor.monitor_name,
+                monitor_id=monitor_id,
+                monitor_name=latest_record.monitor_name,
                 monitor_type=latest_record.monitor_type or 'monitor',
-                url=monitor.url,
+                url=latest_record.url,
                 unit=latest_record.unit,
+                decimal_places=latest_record.decimal_places if hasattr(latest_record, 'decimal_places') else 2,
                 color=latest_record.color,
                 description=latest_record.description,
                 total_records=total_records,
@@ -273,6 +274,34 @@ async def update_monitor_unit(monitor_id: str, unit: str = None) -> Dict[str, An
             "message": f"Updated unit to '{unit}' for {updated_count} records",
             "monitor_id": monitor_id,
             "unit": unit
+        }
+
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+    finally:
+        db.close()
+
+
+@router.patch("/monitors/{monitor_id}/decimal-places")
+async def update_monitor_decimal_places(monitor_id: str, decimal_places: int = Query(..., ge=0, le=10)) -> Dict[str, Any]:
+    """
+    Update the number of decimal places to display for a specific monitor.
+    """
+    db = get_db_session()
+
+    try:
+        updated_count = db.query(MonitoringData).filter(
+            MonitoringData.monitor_id == monitor_id
+        ).update({"decimal_places": decimal_places})
+
+        db.commit()
+
+        return {
+            "status": "success",
+            "message": f"Updated decimal places to {decimal_places} for {updated_count} records",
+            "monitor_id": monitor_id,
+            "decimal_places": decimal_places
         }
 
     except Exception as e:

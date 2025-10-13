@@ -61,6 +61,7 @@ class MonitoringData(Base):
     value = Column(Float, nullable=True)
     text_value = Column(Text, nullable=True)
     unit = Column(String, nullable=True)  # Unit for display (%, $, ETH, etc.)
+    decimal_places = Column(Integer, nullable=True, default=2)  # Number of decimal places to display
     color = Column(String, nullable=True)  # For constant cards
     description = Column(Text, nullable=True)  # For constant cards
     status = Column(String, nullable=False, default='active')
@@ -189,6 +190,7 @@ class MonitorSummary(BaseModel):
     monitor_type: Optional[str] = 'monitor'  # 'monitor' or 'constant'
     url: str
     unit: Optional[str]
+    decimal_places: Optional[int] = 2  # Number of decimal places to display
     color: Optional[str] = None  # For constant cards
     description: Optional[str] = None  # For constant cards
     total_records: int
