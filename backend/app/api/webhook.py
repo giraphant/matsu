@@ -153,7 +153,8 @@ def save_monitoring_data(payload: DistillWebhookPayload) -> MonitoringData:
             MonitoringData.monitor_id == monitor_id
         ).order_by(MonitoringData.timestamp.desc()).first()
 
-        decimal_places = existing_record.decimal_places if existing_record else 2
+        # Use 'is not None' checks to properly handle 0 values for decimal_places
+        decimal_places = existing_record.decimal_places if (existing_record and existing_record.decimal_places is not None) else 2
         monitor_type = existing_record.monitor_type if existing_record else 'monitor'
         color = existing_record.color if existing_record else None
         description = existing_record.description if existing_record else None
