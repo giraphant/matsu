@@ -4,7 +4,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { monitorApi } from '../api/monitors';
-import { MonitorSummary, ChartData } from '../types/monitor';
+import { MonitorSummary } from '../types/monitor';
 
 export function useMonitors(autoRefresh: boolean = true) {
   const [monitors, setMonitors] = useState<MonitorSummary[]>([]);
@@ -72,37 +72,4 @@ export function useMonitors(autoRefresh: boolean = true) {
     updateDecimalPlaces,
     deleteMonitor
   };
-}
-
-/**
- * Hook for loading chart data for a specific monitor
- */
-export function useChartData(monitorId: string | null, days: number) {
-  const [chartData, setChartData] = useState<ChartData | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!monitorId) {
-      setChartData(null);
-      return;
-    }
-
-    const loadChartData = async () => {
-      try {
-        setLoading(true);
-        const data = await monitorApi.getChartData(monitorId, days);
-        setChartData(data);
-        setError(null);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load chart data');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadChartData();
-  }, [monitorId, days]);
-
-  return { chartData, loading, error };
 }
