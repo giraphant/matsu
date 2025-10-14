@@ -1081,11 +1081,7 @@ function App() {
                     </div>
 
                     <div className="bento-value constant-value" style={{ color: monitor.color || '#3b82f6' }}>
-                      {monitor.latest_value !== null ? monitor.latest_value.toLocaleString(undefined, {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2
-                      }) : 'N/A'}
-                      {monitor.unit && <span className="unit-text">{monitor.unit}</span>}
+                      {formatValue(monitor.latest_value, monitor.unit, monitor.decimal_places)}
                     </div>
 
                     <div className="bento-stats" style={{ opacity: 0.5 }}>
