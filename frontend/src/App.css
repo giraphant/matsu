@@ -97,6 +97,8 @@ header p {
   padding: 24px;
   max-width: 1400px;
   margin: 0 auto;
+  background: var(--background);
+  min-height: 100vh;
 }
 
 /* Sidebar */
@@ -862,6 +864,8 @@ header p {
   max-width: 1600px;
   margin: 0 auto;
   -webkit-overflow-scrolling: touch;
+  background: var(--background);
+  min-height: 100vh;
 }
 
 
@@ -1912,6 +1916,8 @@ header p {
   padding: 24px 32px;
   max-width: 1600px;
   margin: 0 auto;
+  background: var(--background);
+  min-height: 100vh;
 }
 
 .dex-rates-header {
