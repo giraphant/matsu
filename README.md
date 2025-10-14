@@ -1,10 +1,10 @@
-# Distill Webhook Visualiser
+# Matsu
 
-A powerful, production-ready web application for receiving, storing, and visualizing data from Distill Web Monitor webhooks in real-time.
+A powerful, production-ready web application for receiving, storing, and visualizing monitoring data from webhooks in real-time.
 
 ## ✨ Features
 
-- 📡 **Real-time Webhook Processing**: Accept and process Distill monitoring data instantly
+- 📡 **Real-time Webhook Processing**: Accept and process monitoring data instantly
 - 💾 **Persistent Data Storage**: SQLite database with comprehensive data models
 - 📊 **Interactive Visualizations**: Time-series charts and data analysis
 - 🌐 **Modern Web Interface**: Responsive design with real-time updates
@@ -17,8 +17,8 @@ A powerful, production-ready web application for receiving, storing, and visuali
 ### Docker (Recommended)
 
 ```bash
-git clone https://github.com/giraphant/distill-webhook-visualiser.git
-cd distill-webhook-visualiser
+git clone https://github.com/giraphant/matsu.git
+cd matsu
 
 # Start with Docker Compose
 docker-compose up --build -d
@@ -82,16 +82,16 @@ curl -X POST "http://localhost:8000/webhook/distill" \
 ## 📁 Project Structure
 
 ```
-distill-webhook-visualiser/
+matsu/
 ├── backend/              # FastAPI backend application
 │   ├── app/
 │   │   ├── api/         # API route handlers
 │   │   ├── models/      # Database models
-│   │   ├── services/    # External services (Pushover, etc.)
-│   │   └── visualization/  # Chart generation
+│   │   ├── services/    # Business logic services
+│   │   ├── repositories/ # Data access layer
+│   │   └── core/        # Core utilities
 │   ├── main.py          # Application entry point
-│   ├── requirements.txt # Python dependencies
-│   └── alert_daemon.py  # Background alert daemon
+│   └── requirements.txt # Python dependencies
 ├── frontend/            # React frontend application
 ├── scripts/             # Utility scripts and deployment tools
 ├── static/              # Static assets (sounds, images)

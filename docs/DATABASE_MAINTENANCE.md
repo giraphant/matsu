@@ -106,7 +106,7 @@ Add to crontab to run monthly cleanup:
 crontab -e
 
 # Add this line to cleanup data older than 90 days on 1st of each month at 2 AM
-0 2 1 * * cd /home/distill-webhook-visualizer && python scripts/cleanup_old_data.py --days 90 > logs/cleanup.log 2>&1
+0 2 1 * * cd /home/matsu && python scripts/cleanup_old_data.py --days 90 > logs/cleanup.log 2>&1
 ```
 
 ### Manual Schedule

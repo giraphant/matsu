@@ -32,7 +32,7 @@ QUASI_PASSWORD=your_secure_password_here
 If you need to reset all users and passwords, run:
 
 ```bash
-docker exec distill-webhook-visualizer_app_1 python -c "
+docker exec matsu_app_1 python -c "
 from app.models.database import SessionLocal, User
 db = SessionLocal()
 db.query(User).delete()

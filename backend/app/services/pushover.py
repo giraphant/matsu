@@ -1,11 +1,14 @@
 """
 Pushover notification service.
+Handles sending notifications via Pushover API.
 """
 
 import requests
 from typing import Optional
+from sqlalchemy.orm import Session
 
 from app.core.logger import get_logger
+from app.repositories.pushover import PushoverRepository
 
 logger = get_logger(__name__)
 
@@ -146,3 +149,63 @@ def format_alert_message(
         message += f"\nTags: {', '.join(tags)}"
 
     return message
+
+
+class PushoverService:
+    """
+    Service class for Pushover notifications.
+    Encapsulates business logic for sending notifications.
+    """
+
+    def __init__(self, db: Session):
+        """
+        Initialize Pushover service.
+
+        Args:
+            db: Database session
+        """
+        self.db = db
+        self.pushover_repo = PushoverRepository(db)
+
+    def send_alert(
+        self,
+        message: str,
+        title: str = "Monitor Alert",
+        level: str = 'medium',
+        url: Optional[str] = None
+    ) -> bool:
+        """
+        Send an alert notification using configured Pushover settings.
+
+        Args:
+            message: Notification message
+            title: Notification title
+            level: Alert level (critical, high, medium, low)
+            url: Optional URL to include
+
+        Returns:
+            True if sent successfully, False otherwise
+        """
+        config = self.pushover_repo.get_config()
+
+        if not config:
+            logger.warning("Pushover not configured, skipping notification")
+            return False
+
+        return send_pushover_notification(
+            user_key=config.user_key,
+            message=message,
+            title=title,
+            level=level,
+            api_token=config.api_token,
+            url=url
+        )
+
+    def is_configured(self) -> bool:
+        """
+        Check if Pushover is configured.
+
+        Returns:
+            True if configured, False otherwise
+        """
+        return self.pushover_repo.is_configured()

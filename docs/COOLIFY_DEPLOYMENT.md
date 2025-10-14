@@ -12,7 +12,7 @@
 2. 点击 **+ New Resource** → **Application**
 3. 选择 **Docker Compose** 类型
 4. 填写基本信息：
-   - **Name**: `distill-webhook-visualizer`
+   - **Name**: `matsu`
    - **Git Repository**: `https://github.com/giraphant/distill-webhook-visualiser.git`
    - **Branch**: `main`
 

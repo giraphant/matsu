@@ -1,22 +1,22 @@
 """
 Webhook API endpoints for receiving Distill monitoring data.
+Uses Service layer for business logic.
 """
 
 from datetime import datetime
-from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks, Request, Query
+from fastapi import APIRouter, HTTPException, BackgroundTasks, Request, Query
 from sqlalchemy.orm import Session
-from sqlalchemy.exc import SQLAlchemyError
 from typing import Dict, Any, Optional
-import logging
 import json
 import os
 
 from app.models.database import MonitoringData, get_db_session
 from app.schemas.monitoring import DistillWebhookPayload
+from app.services.monitoring import MonitoringService
+from app.repositories.monitoring import MonitoringRepository
+from app.core.logger import get_logger
 
-# Setup logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 router = APIRouter()
 
@@ -61,134 +61,6 @@ def verify_webhook_token(token: Optional[str] = None) -> bool:
     return True
 
 
-def parse_timestamp(timestamp_str: str) -> datetime:
-    """Parse timestamp from various formats."""
-    formats = [
-        "%Y-%m-%dT%H:%M:%S.%fZ",  # ISO format with microseconds
-        "%Y-%m-%dT%H:%M:%SZ",     # ISO format without microseconds
-        "%Y-%m-%dT%H:%M:%S",      # ISO format without Z
-        "%Y-%m-%d %H:%M:%S",      # Simple format
-    ]
-
-    for fmt in formats:
-        try:
-            return datetime.strptime(timestamp_str, fmt)
-        except ValueError:
-            continue
-
-    # If all formats fail, use current time
-    logger.warning(f"Could not parse timestamp: {timestamp_str}, using current time")
-    return datetime.utcnow()
-
-
-def save_monitoring_data(payload: DistillWebhookPayload) -> MonitoringData:
-    """Save monitoring data to database."""
-    db = get_db_session()
-
-    try:
-        # Map Distill fields to our database fields
-        monitor_id = payload.id or payload.monitor_id
-        monitor_name = payload.name or payload.monitor_name
-        url = payload.uri or payload.url
-        text_value = payload.text or payload.text_value
-
-        # Try to parse numeric value from text and detect unit
-        value = None
-        unit = None
-        if text_value:
-            try:
-                # Detect unit from text
-                if '%' in text_value:
-                    unit = '%'
-                elif '$' in text_value:
-                    unit = '$'
-                elif '€' in text_value:
-                    unit = '€'
-                elif '£' in text_value:
-                    unit = '£'
-                # Detect common crypto units
-                elif 'SOL' in text_value:
-                    unit = 'SOL'
-                elif 'ETH' in text_value:
-                    unit = 'ETH'
-                elif 'BTC' in text_value:
-                    unit = 'BTC'
-
-                # Remove commas, percentage signs, currency symbols, and crypto units
-                clean_text = text_value.replace(',', '').replace('%', '').replace('$', '').replace('€', '').replace('£', '')
-                clean_text = clean_text.replace('SOL', '').replace('ETH', '').replace('BTC', '').strip()
-
-                # Handle k (thousands) and m (millions) suffixes
-                multiplier = 1
-                if clean_text.lower().endswith('k'):
-                    multiplier = 1000
-                    clean_text = clean_text[:-1].strip()
-                elif clean_text.lower().endswith('m'):
-                    multiplier = 1000000
-                    clean_text = clean_text[:-1].strip()
-                elif clean_text.lower().endswith('b'):
-                    multiplier = 1000000000
-                    clean_text = clean_text[:-1].strip()
-
-                # Parse as float (handles both positive and negative numbers)
-                value = float(clean_text) * multiplier
-            except ValueError:
-                # If it's not a number, keep it as text only
-                logger.debug(f"Could not parse numeric value from: {text_value}")
-                value = payload.value
-
-        # Use current timestamp if not provided
-        timestamp = datetime.utcnow()
-        if payload.timestamp:
-            timestamp = parse_timestamp(payload.timestamp)
-
-        # Default status for Distill data
-        status = payload.status or "monitored"
-
-        # Get existing monitor settings (decimal_places, monitor_type, etc.) to preserve them
-        existing_record = db.query(MonitoringData).filter(
-            MonitoringData.monitor_id == monitor_id
-        ).order_by(MonitoringData.timestamp.desc()).first()
-
-        # Use 'is not None' checks to properly handle 0 values for decimal_places
-        decimal_places = existing_record.decimal_places if (existing_record and existing_record.decimal_places is not None) else 2
-        monitor_type = existing_record.monitor_type if existing_record else 'monitor'
-        color = existing_record.color if existing_record else None
-        description = existing_record.description if existing_record else None
-
-        # Create database record
-        db_record = MonitoringData(
-            monitor_id=monitor_id,
-            monitor_name=monitor_name,
-            monitor_type=monitor_type,
-            url=url,
-            value=value,
-            text_value=text_value,
-            unit=unit,
-            decimal_places=decimal_places,
-            color=color,
-            description=description,
-            status=status,
-            timestamp=timestamp,
-            webhook_received_at=datetime.utcnow(),
-            is_change=payload.is_change or False,
-            change_type=payload.change_type,
-            previous_value=payload.previous_value
-        )
-
-        db.add(db_record)
-        db.commit()
-        db.refresh(db_record)
-
-        logger.info(f"Saved monitoring data: monitor_id={monitor_id}, value={value}, text={text_value}")
-        return db_record
-
-    except SQLAlchemyError as e:
-        db.rollback()
-        logger.error(f"Database error saving monitoring data: {e}")
-        raise HTTPException(status_code=500, detail="Database error")
-    finally:
-        db.close()
 
 
 @router.post("/distill-debug")
@@ -241,13 +113,16 @@ async def receive_distill_webhook(
     Receive webhook data from Distill Web Monitor.
 
     This endpoint accepts monitoring data from Distill and stores it in the database.
-    The data is processed in the background to ensure fast response times.
+    Uses MonitoringService for business logic (parsing, saving, alert checking).
 
     **Authentication:**
     Requires ?token=xxx query parameter with the configured secret token.
     """
     # Verify token first
     verify_webhook_token(token)
+
+    db = get_db_session()
+
     try:
         # Get raw body first for debugging
         body = await request.body()
@@ -288,8 +163,9 @@ async def receive_distill_webhook(
         if not text:
             raise HTTPException(status_code=400, detail="text or text_value is required")
 
-        # Save data synchronously (for now)
-        saved_record = save_monitoring_data(payload)
+        # Use service layer to process webhook (all business logic)
+        monitoring_service = MonitoringService(db)
+        saved_record = monitoring_service.process_webhook(payload)
 
         return {
             "status": "success",
@@ -305,8 +181,10 @@ async def receive_distill_webhook(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error processing webhook: {e}")
+        logger.error(f"Error processing webhook: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Internal server error")
+    finally:
+        db.close()
 
 
 @router.post("/test")
@@ -329,18 +207,27 @@ async def test_webhook(data: Dict[str, Any]) -> Dict[str, Any]:
 async def webhook_status() -> Dict[str, Any]:
     """
     Get webhook service status and statistics.
+    Uses MonitoringRepository for data access.
     """
     db = get_db_session()
 
     try:
-        # Get basic statistics
-        total_records = db.query(MonitoringData).count()
-        unique_monitors = db.query(MonitoringData.monitor_id).distinct().count()
+        # Use repository for data access
+        monitoring_repo = MonitoringRepository(db)
 
-        # Get latest record
-        latest_record = db.query(MonitoringData).order_by(
-            MonitoringData.webhook_received_at.desc()
-        ).first()
+        # Get all monitors summary
+        summaries = monitoring_repo.get_all_monitors_summary()
+
+        # Calculate totals
+        total_records = sum(s['total_records'] for s in summaries)
+        unique_monitors = len(summaries)
+
+        # Get latest timestamp across all monitors
+        latest_timestamp = None
+        for s in summaries:
+            if s['latest_timestamp']:
+                if not latest_timestamp or s['latest_timestamp'] > latest_timestamp:
+                    latest_timestamp = s['latest_timestamp']
 
         return {
             "status": "operational",
@@ -348,7 +235,7 @@ async def webhook_status() -> Dict[str, Any]:
             "statistics": {
                 "total_records": total_records,
                 "unique_monitors": unique_monitors,
-                "latest_record": latest_record.webhook_received_at.isoformat() if latest_record else None
+                "latest_record": latest_timestamp.isoformat() if latest_timestamp else None
             }
         }
 

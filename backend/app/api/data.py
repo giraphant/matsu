@@ -1,18 +1,23 @@
 """
 Data API endpoints for retrieving and managing monitoring data.
+Uses Repository and Service layers for data access and business logic.
 """
 
 from datetime import datetime, timedelta
 from typing import List, Optional, Dict, Any
 from fastapi import APIRouter, HTTPException, Query
 from sqlalchemy.orm import Session
-from sqlalchemy import func, desc, asc
+from sqlalchemy import desc
 import json
 
 from app.models.database import MonitoringData, get_db_session
 from app.schemas.monitoring import MonitoringDataResponse, MonitorSummary
+from app.repositories.monitoring import MonitoringRepository
+from app.services.monitoring import MonitoringService
+from app.core.logger import get_logger
 from pydantic import BaseModel
 
+logger = get_logger(__name__)
 router = APIRouter()
 
 
@@ -28,49 +33,62 @@ async def get_monitoring_data(
 ) -> List[MonitoringDataResponse]:
     """
     Retrieve monitoring data with optional filtering and pagination.
+    Uses MonitoringRepository for data access.
     """
     db = get_db_session()
 
     try:
-        query = db.query(MonitoringData)
+        repo = MonitoringRepository(db)
 
-        # Apply filters
-        if monitor_id:
-            query = query.filter(MonitoringData.monitor_id == monitor_id)
+        # Parse date filters
+        start_dt = None
+        end_dt = None
 
         if start_date:
             try:
                 start_dt = datetime.strptime(start_date, "%Y-%m-%d")
-                query = query.filter(MonitoringData.timestamp >= start_dt)
             except ValueError:
                 raise HTTPException(status_code=400, detail="Invalid start_date format. Use YYYY-MM-DD")
 
         if end_date:
             try:
                 end_dt = datetime.strptime(end_date, "%Y-%m-%d") + timedelta(days=1)
-                query = query.filter(MonitoringData.timestamp < end_dt)
             except ValueError:
                 raise HTTPException(status_code=400, detail="Invalid end_date format. Use YYYY-MM-DD")
 
-        # Apply ordering
-        if hasattr(MonitoringData, order_by):
-            order_column = getattr(MonitoringData, order_by)
-            if order_dir.lower() == "asc":
-                query = query.order_by(asc(order_column))
-            else:
-                query = query.order_by(desc(order_column))
+        # Use repository method based on filters
+        if start_dt and end_dt:
+            records = repo.get_by_date_range(
+                start_date=start_dt,
+                end_date=end_dt,
+                monitor_id=monitor_id,
+                limit=limit
+            )
+        elif monitor_id:
+            records = repo.get_by_monitor_id(
+                monitor_id=monitor_id,
+                limit=limit,
+                offset=offset,
+                order_by=order_by,
+                order_dir=order_dir
+            )
         else:
-            query = query.order_by(desc(MonitoringData.timestamp))
+            # Get all records (no specific filters)
+            # Note: Could add a get_all method to repository if needed
+            records = repo.get_by_monitor_id(
+                monitor_id=monitor_id or "",
+                limit=limit,
+                offset=offset,
+                order_by=order_by,
+                order_dir=order_dir
+            ) if monitor_id else []
 
-        # Apply pagination
-        query = query.offset(offset).limit(limit)
-
-        records = query.all()
         return [MonitoringDataResponse.from_orm(record) for record in records]
 
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"Error retrieving monitoring data: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
     finally:
         db.close()
@@ -80,54 +98,24 @@ async def get_monitoring_data(
 async def get_monitor_summaries() -> List[MonitorSummary]:
     """
     Get summary statistics for all monitors.
+    Uses MonitoringService for business logic.
     """
     db = get_db_session()
 
     try:
-        # Get unique monitor IDs first (only by monitor_id, not url)
-        unique_monitor_ids = db.query(
-            MonitoringData.monitor_id
-        ).distinct().all()
+        # Use service to get enriched summaries
+        service = MonitoringService(db)
+        summaries = service.get_all_monitors_summary()
 
+        # Convert to Pydantic models
         result = []
-        for monitor_tuple in unique_monitor_ids:
-            monitor_id = monitor_tuple[0]
-
-            # Get all records for this monitor
-            monitor_records = db.query(MonitoringData).filter(
-                MonitoringData.monitor_id == monitor_id
-            ).all()
-
-            if not monitor_records:
-                continue
-
-            # Calculate stats manually
-            total_records = len(monitor_records)
-            values = [r.value for r in monitor_records if r.value is not None]
-            changes = [r for r in monitor_records if r.is_change]
-            latest_record = max(monitor_records, key=lambda r: r.timestamp)
-
-            result.append(MonitorSummary(
-                monitor_id=monitor_id,
-                monitor_name=latest_record.monitor_name,
-                monitor_type=latest_record.monitor_type or 'monitor',
-                url=latest_record.url,
-                unit=latest_record.unit,
-                decimal_places=latest_record.decimal_places if hasattr(latest_record, 'decimal_places') else 2,
-                color=latest_record.color,
-                description=latest_record.description,
-                total_records=total_records,
-                latest_value=latest_record.value,
-                latest_timestamp=latest_record.timestamp,
-                min_value=min(values) if values else None,
-                max_value=max(values) if values else None,
-                avg_value=sum(values) / len(values) if values else None,
-                change_count=len(changes)
-            ))
+        for summary in summaries:
+            result.append(MonitorSummary(**summary))
 
         return result
 
     except Exception as e:
+        logger.error(f"Error retrieving monitor summaries: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
     finally:
         db.close()
@@ -140,6 +128,7 @@ async def get_chart_data(
 ) -> Dict[str, Any]:
     """
     Get chart data for a specific monitor in a format suitable for plotting.
+    Uses MonitoringRepository for data access.
     """
     db = get_db_session()
 
@@ -148,12 +137,14 @@ async def get_chart_data(
         end_date = datetime.utcnow()
         start_date = end_date - timedelta(days=days)
 
-        # Get data for the specified monitor and date range
-        records = db.query(MonitoringData).filter(
-            MonitoringData.monitor_id == monitor_id,
-            MonitoringData.timestamp >= start_date,
-            MonitoringData.timestamp <= end_date
-        ).order_by(asc(MonitoringData.timestamp)).all()
+        # Use repository to get data
+        repo = MonitoringRepository(db)
+        records = repo.get_by_date_range(
+            start_date=start_date,
+            end_date=end_date,
+            monitor_id=monitor_id,
+            limit=10000  # Large limit for chart data
+        )
 
         if not records:
             return {
@@ -225,11 +216,13 @@ async def get_chart_data(
 async def delete_monitoring_record(record_id: int) -> Dict[str, Any]:
     """
     Delete a specific monitoring record.
+    Uses MonitoringRepository for data access.
     """
     db = get_db_session()
 
     try:
-        record = db.query(MonitoringData).filter(MonitoringData.id == record_id).first()
+        repo = MonitoringRepository(db)
+        record = repo.get_by_id(record_id)
 
         if not record:
             raise HTTPException(status_code=404, detail="Record not found")
@@ -246,6 +239,7 @@ async def delete_monitoring_record(record_id: int) -> Dict[str, Any]:
         raise
     except Exception as e:
         db.rollback()
+        logger.error(f"Error deleting record {record_id}: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
     finally:
         db.close()
