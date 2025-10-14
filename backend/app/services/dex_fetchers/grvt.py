@@ -4,7 +4,10 @@ import httpx
 import asyncio
 from typing import List
 
+from app.core.logger import get_logger
 from .models import FundingRate
+
+logger = get_logger(__name__)
 
 
 async def fetch_grvt_funding_rates() -> List[FundingRate]:
@@ -83,5 +86,5 @@ async def fetch_grvt_funding_rates() -> List[FundingRate]:
             rates = [r for r in results if r is not None]
             return rates
     except Exception as e:
-        print(f"Error fetching GRVT rates: {e}")
+        logger.error(f"Error fetching GRVT rates: {e}")
         return []

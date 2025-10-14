@@ -8,8 +8,11 @@ import sqlite3
 from typing import List
 
 from app.core.config import settings
+from app.core.logger import get_logger
 from app.models.database import create_tables, get_db_session, User
 from app.monitors.base import BaseMonitor
+
+logger = get_logger(__name__)
 
 
 class StartupManager:
@@ -73,11 +76,11 @@ class StartupManager:
                 cursor.execute("DROP TABLE alert_configs")
                 cursor.execute("ALTER TABLE alert_configs_new RENAME TO alert_configs")
                 conn.commit()
-                print("✓ Removed formula column from alert_configs")
+                logger.info("Removed formula column from alert_configs")
 
             conn.close()
         except Exception as e:
-            print(f"Migration note: {e}")
+            logger.debug(f"Migration note: {e}")
 
     def _create_initial_users(self) -> None:
         """Create initial users if no users exist."""
@@ -100,7 +103,7 @@ class StartupManager:
                     db.add(user)
 
                 db.commit()
-                print("👤 Created initial users: ramu, ligigy, quasi")
+                logger.info("Created initial users: ramu, ligigy, quasi")
         finally:
             db.close()
 
@@ -125,20 +128,20 @@ class StartupManager:
 
     async def shutdown(self) -> None:
         """Shutdown all background services gracefully."""
-        print("\n🛑 Shutting down background services...")
+        logger.info("Shutting down background services...")
 
         # Stop all monitors
         for monitor in self.monitors:
             await monitor.stop()
 
-        print("✓ All background services stopped")
+        logger.info("All background services stopped")
 
     def _print_startup_info(self) -> None:
         """Print startup information."""
-        print("🚀 Distill Webhook Visualiser started successfully!")
-        print(f"📡 Webhook endpoint: {settings.BASE_URL}/webhook/distill")
-        print(f"🌐 Dashboard: {settings.BASE_URL}/")
-        print(f"📚 API Docs: {settings.BASE_URL}/docs")
+        logger.info("Distill Webhook Visualiser started successfully!")
+        logger.info(f"Webhook endpoint: {settings.BASE_URL}/webhook/distill")
+        logger.info(f"Dashboard: {settings.BASE_URL}/")
+        logger.info(f"API Docs: {settings.BASE_URL}/docs")
 
 
 # Global startup manager instance

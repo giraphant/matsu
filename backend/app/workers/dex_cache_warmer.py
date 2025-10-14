@@ -3,7 +3,10 @@ DEX funding rates cache warmer worker.
 Periodically refreshes the cached DEX funding rates to ensure fresh data.
 """
 
+from app.core.logger import get_logger
 from app.monitors.base import BaseMonitor
+
+logger = get_logger(__name__)
 
 
 class DexCacheWarmer(BaseMonitor):
@@ -24,7 +27,7 @@ class DexCacheWarmer(BaseMonitor):
 
         try:
             await get_cached_rates(force_refresh=True)
-            print(f"[{self.name}] DEX funding rates cache refreshed")
+            logger.debug(f"DEX funding rates cache refreshed")
         except Exception as e:
-            print(f"[{self.name}] Failed to refresh DEX cache: {e}")
+            logger.error(f"Failed to refresh DEX cache: {e}")
             raise

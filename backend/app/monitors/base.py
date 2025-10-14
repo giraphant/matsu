@@ -7,6 +7,10 @@ import asyncio
 from abc import ABC, abstractmethod
 from typing import Optional
 
+from app.core.logger import get_logger
+
+logger = get_logger(__name__)
+
 
 class BaseMonitor(ABC):
     """
@@ -34,12 +38,12 @@ class BaseMonitor(ABC):
     async def start(self) -> None:
         """Start the monitor as a background task."""
         if self._running:
-            print(f"⚠ Monitor '{self.name}' is already running")
+            logger.warning(f"Monitor '{self.name}' is already running")
             return
 
         self._running = True
         self._task = asyncio.create_task(self._run_loop())
-        print(f"✓ Monitor '{self.name}' started (interval: {self.interval}s)")
+        logger.info(f"Monitor '{self.name}' started (interval: {self.interval}s)")
 
     async def stop(self) -> None:
         """Stop the monitor gracefully."""
@@ -53,7 +57,7 @@ class BaseMonitor(ABC):
                 await self._task
             except asyncio.CancelledError:
                 pass
-        print(f"✓ Monitor '{self.name}' stopped")
+        logger.info(f"Monitor '{self.name}' stopped")
 
     async def _run_loop(self) -> None:
         """
@@ -67,7 +71,7 @@ class BaseMonitor(ABC):
             try:
                 await self.run()
             except Exception as e:
-                print(f"⚠ Error in monitor '{self.name}': {e}")
+                logger.error(f"Error in monitor '{self.name}': {e}", exc_info=True)
                 # Continue running despite errors
 
             # Wait for next iteration

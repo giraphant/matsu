@@ -5,6 +5,10 @@ Pushover notification service.
 import requests
 from typing import Optional
 
+from app.core.logger import get_logger
+
+logger = get_logger(__name__)
+
 
 DEFAULT_API_TOKEN = "azGDORePK8gMaC0QOYAMyEEuzJnyUi"  # Default app token
 
@@ -53,7 +57,7 @@ def send_pushover_notification(
         True if notification was sent successfully, False otherwise
     """
     if not user_key:
-        print("[Pushover] No user key configured")
+        logger.warning("No user key configured")
         return False
 
     token = api_token or DEFAULT_API_TOKEN
@@ -86,14 +90,14 @@ def send_pushover_notification(
         )
 
         if response.status_code == 200:
-            print(f"[Pushover] Notification sent successfully: {title}")
+            logger.info(f"Notification sent successfully: {title}")
             return True
         else:
-            print(f"[Pushover] Failed to send notification: {response.status_code} - {response.text}")
+            logger.error(f"Failed to send notification: {response.status_code} - {response.text}")
             return False
 
     except Exception as e:
-        print(f"[Pushover] Error sending notification: {e}")
+        logger.error(f"Error sending notification: {e}")
         return False
 
 

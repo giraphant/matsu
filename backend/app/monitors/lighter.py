@@ -7,8 +7,11 @@ from datetime import datetime
 from typing import List, Dict, Any
 import httpx
 
+from app.core.logger import get_logger
 from app.models.database import MonitoringData, get_db_session
 from app.monitors.base import BaseMonitor
+
+logger = get_logger(__name__)
 
 
 # Target symbols to monitor
@@ -25,16 +28,16 @@ class LighterMonitor(BaseMonitor):
 
     async def run(self) -> None:
         """Fetch and store funding rates for one iteration."""
-        print(f"[{self.name}] Fetching funding rates...")
+        logger.debug(f"Fetching funding rates...")
 
         rates = await self._fetch_funding_rates()
 
         if not rates:
-            print(f"[{self.name}] No rates fetched")
+            logger.warning(f"No rates fetched")
             return
 
         stored_count = await self._store_rates(rates)
-        print(f"[{self.name}] Stored {stored_count} funding rates")
+        logger.info(f"Stored {stored_count} funding rates")
 
     async def _fetch_funding_rates(self) -> List[Dict[str, Any]]:
         """Fetch funding rates from Lighter API."""
@@ -52,7 +55,7 @@ class LighterMonitor(BaseMonitor):
                 return data.get("funding_rates", [])
 
         except Exception as e:
-            print(f"[{self.name}] Error fetching rates: {e}")
+            logger.error(f"Error fetching rates: {e}")
             return []
 
     async def _store_rates(self, rates: List[Dict[str, Any]]) -> int:
@@ -104,7 +107,7 @@ class LighterMonitor(BaseMonitor):
             return stored_count
 
         except Exception as e:
-            print(f"[{self.name}] Error storing rates: {e}")
+            logger.error(f"Error storing rates: {e}")
             db.rollback()
             return 0
 

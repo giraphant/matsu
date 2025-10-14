@@ -3,7 +3,10 @@
 import httpx
 from typing import List, Dict, Set
 
+from app.core.logger import get_logger
 from .models import FundingRate
+
+logger = get_logger(__name__)
 
 
 async def fetch_binance_funding_info() -> Dict[str, int]:
@@ -23,7 +26,7 @@ async def fetch_binance_funding_info() -> Dict[str, int]:
 
             return interval_map
     except Exception as e:
-        print(f"Error fetching Binance funding info: {e}")
+        logger.error(f"Error fetching Binance funding info: {e}")
         return {}
 
 
@@ -71,8 +74,8 @@ async def fetch_binance_spot_symbols() -> Set[str]:
                     if base_asset:
                         spot_symbols.add(base_asset)
 
-            print(f"Found {len(spot_symbols)} Binance spot symbols")
+            logger.debug(f"Found {len(spot_symbols)} Binance spot symbols")
             return spot_symbols
     except Exception as e:
-        print(f"Error fetching Binance spot symbols: {e}")
+        logger.error(f"Error fetching Binance spot symbols: {e}")
         return set()

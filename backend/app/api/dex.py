@@ -12,6 +12,7 @@ import asyncio
 import json
 import time
 
+from app.core.logger import get_logger
 from app.models.database import get_db, FundingRateAlert
 from app.services.dex_fetchers import (
     FundingRate,
@@ -24,6 +25,7 @@ from app.services.dex_fetchers import (
 )
 
 router = APIRouter()
+logger = get_logger(__name__)
 
 # Global cache for funding rates
 _funding_rates_cache: Optional[List[FundingRate]] = None
@@ -78,7 +80,7 @@ async def fetch_all_funding_rates() -> List[FundingRate]:
     normalized_lighter = await normalize_binance_rates(lighter_rates)
 
     elapsed = time.time() - start_time
-    print(f"Fetched all funding rates in {elapsed:.2f}s - Lighter: {len(normalized_lighter)}, ASTER: {len(aster_rates)}, GRVT: {len(grvt_rates)}, Backpack: {len(backpack_rates)}, Binance spot: {len(binance_spot_symbols)}")
+    logger.info(f"Fetched all funding rates in {elapsed:.2f}s - Lighter: {len(normalized_lighter)}, ASTER: {len(aster_rates)}, GRVT: {len(grvt_rates)}, Backpack: {len(backpack_rates)}, Binance spot: {len(binance_spot_symbols)}")
 
     # Combine all rates and mark which have Binance spot
     all_rates = normalized_lighter + aster_rates + grvt_rates + backpack_rates
@@ -112,10 +114,10 @@ async def get_cached_rates(force_refresh: bool = False) -> Tuple[List[FundingRat
 
         if force_refresh or cache_is_stale:
             # Fetch fresh data
-            print(f"Fetching fresh funding rates data (force_refresh={force_refresh}, cache_is_stale={cache_is_stale})...")
+            logger.debug(f"Fetching fresh funding rates data (force_refresh={force_refresh}, cache_is_stale={cache_is_stale})...")
             _funding_rates_cache = await fetch_all_funding_rates()
             _cache_last_updated = now
-            print(f"Fetched {len(_funding_rates_cache)} funding rates")
+            logger.debug(f"Fetched {len(_funding_rates_cache)} funding rates")
 
         return _funding_rates_cache, _cache_last_updated
 
@@ -132,14 +134,14 @@ async def get_funding_rates(force_refresh: bool = Query(False, description="Forc
     try:
         rates, last_updated = await get_cached_rates(force_refresh=force_refresh)
 
-        print(f"Returning {len(rates)} rates to frontend, last_updated: {last_updated}")
+        logger.debug(f"Returning {len(rates)} rates to frontend, last_updated: {last_updated}")
 
         return FundingRatesResponse(
             rates=rates,
             last_updated=last_updated
         )
     except Exception as e:
-        print(f"Error in get_funding_rates: {e}")
+        logger.error(f"Error in get_funding_rates: {e}")
         return FundingRatesResponse(
             rates=[],
             last_updated=datetime.utcnow(),
@@ -374,13 +376,13 @@ async def check_funding_rate_alerts():
                         # Update last triggered time
                         alert.last_triggered_at = datetime.utcnow()
                         db.commit()
-                        print(f"Alert triggered: {alert.name}")
+                        logger.info(f"Alert triggered: {alert.name}")
                     else:
-                        print("No Pushover config found, skipping notification")
+                        logger.warning("No Pushover config found, skipping notification")
                 except Exception as e:
-                    print(f"Failed to send alert notification: {e}")
+                    logger.error(f"Failed to send alert notification: {e}")
 
     except Exception as e:
-        print(f"Error checking funding rate alerts: {e}")
+        logger.error(f"Error checking funding rate alerts: {e}")
     finally:
         db.close()

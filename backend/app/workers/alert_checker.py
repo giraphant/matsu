@@ -3,7 +3,10 @@ Funding rate alert checker worker.
 Periodically checks funding rates against alert thresholds and triggers notifications.
 """
 
+from app.core.logger import get_logger
 from app.monitors.base import BaseMonitor
+
+logger = get_logger(__name__)
 
 
 class AlertChecker(BaseMonitor):
@@ -25,5 +28,5 @@ class AlertChecker(BaseMonitor):
         try:
             await check_funding_rate_alerts()
         except Exception as e:
-            print(f"[{self.name}] Error checking alerts: {e}")
+            logger.error(f"Error checking alerts: {e}")
             raise

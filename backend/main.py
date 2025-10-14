@@ -12,13 +12,16 @@ from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.core import settings, startup_manager
+from app.core import settings, startup_manager, get_logger
+from app.core.middleware import ErrorHandlerMiddleware
 from app.api.webhook import router as webhook_router
 from app.api.data import router as data_router
 from app.api.alerts import router as alerts_router
 from app.api.constants import router as constants_router
 from app.api.auth import router as auth_router
 from app.api.dex import router as dex_router
+
+logger = get_logger(__name__)
 
 
 # Initialize FastAPI app
@@ -29,6 +32,9 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc"
 )
+
+# Add error handling middleware (first, to catch all errors)
+app.add_middleware(ErrorHandlerMiddleware)
 
 # Add CORS middleware for frontend access
 app.add_middleware(
