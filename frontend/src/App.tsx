@@ -28,7 +28,16 @@ function App() {
   const { isDarkMode, toggleTheme } = useTheme();
 
   // Monitors Data
-  const { monitors, loading: monitorsLoading, loadMonitors, updateUnit: updateMonitorUnit, updateDecimalPlaces: updateMonitorDecimalPlaces, deleteMonitor } = useMonitors(isAuthenticated);
+  const {
+    monitors,
+    loading: monitorsLoading,
+    loadMonitors,
+    updateUnit: updateMonitorUnit,
+    updateDecimalPlaces: updateMonitorDecimalPlaces,
+    deleteMonitor,
+    updateMonitorOptimistic,
+    addMonitorOptimistic
+  } = useMonitors(isAuthenticated);
 
   // Alerts
   const { thresholds, updateThreshold, isValueOutOfRange } = useAlerts();
@@ -84,7 +93,7 @@ function App() {
     deleteConstant,
     openConstantModal,
     closeConstantModal
-  } = useConstants(loadMonitors);
+  } = useConstants(loadMonitors, updateMonitorOptimistic, addMonitorOptimistic);
 
   // UI State
   const [viewMode, setViewMode] = useState<ViewMode>('overview');

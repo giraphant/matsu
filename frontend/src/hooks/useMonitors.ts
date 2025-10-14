@@ -53,6 +53,18 @@ export function useMonitors(autoRefresh: boolean = true) {
     }
   }, [loadMonitors]);
 
+  // Optimistic update for constant cards (avoids full reload)
+  const updateMonitorOptimistic = useCallback((monitorId: string, updates: Partial<MonitorSummary>) => {
+    setMonitors(prev => prev.map(m =>
+      m.monitor_id === monitorId ? { ...m, ...updates } : m
+    ));
+  }, []);
+
+  // Add a new constant card optimistically
+  const addMonitorOptimistic = useCallback((newMonitor: MonitorSummary) => {
+    setMonitors(prev => [...prev, newMonitor]);
+  }, []);
+
   useEffect(() => {
     loadMonitors();
 
@@ -70,6 +82,8 @@ export function useMonitors(autoRefresh: boolean = true) {
     loadMonitors,
     updateUnit,
     updateDecimalPlaces,
-    deleteMonitor
+    deleteMonitor,
+    updateMonitorOptimistic,
+    addMonitorOptimistic
   };
 }

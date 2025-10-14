@@ -1,7 +1,11 @@
 import { useState } from 'react';
 import { MonitorSummary } from '../types';
 
-export function useConstants(loadMonitors: () => Promise<void>) {
+export function useConstants(
+  loadMonitors: () => Promise<void>,
+  updateMonitorOptimistic: (monitorId: string, updates: Partial<MonitorSummary>) => void,
+  addMonitorOptimistic: (newMonitor: MonitorSummary) => void
+) {
   const [showConstantModal, setShowConstantModal] = useState(false);
   const [editingConstant, setEditingConstant] = useState<MonitorSummary | null>(null);
 
@@ -9,17 +13,31 @@ export function useConstants(loadMonitors: () => Promise<void>) {
     try {
       if (editingConstant) {
         // Update existing constant
+
+        // Optimistic update - update UI immediately
+        updateMonitorOptimistic(editingConstant.monitor_id, {
+          monitor_name: constantData.name,
+          latest_value: constantData.value,
+          unit: constantData.unit,
+          description: constantData.description,
+          color: constantData.color
+        });
+
+        // Close modal immediately for better UX
+        setShowConstantModal(false);
+        setEditingConstant(null);
+
+        // Send update to server in background
         const response = await fetch(`/api/constant/${editingConstant.monitor_id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(constantData)
         });
-        if (response.ok) {
-          await loadMonitors();
-          setShowConstantModal(false);
-          setEditingConstant(null);
-        } else {
+
+        if (!response.ok) {
+          // If server update fails, reload to get correct state
           alert('Failed to update constant');
+          loadMonitors();
         }
       } else {
         // Create new constant
@@ -28,9 +46,34 @@ export function useConstants(loadMonitors: () => Promise<void>) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(constantData)
         });
+
         if (response.ok) {
-          await loadMonitors();
+          const createdConstant = await response.json();
+
+          // Optimistic add - add to UI immediately
+          addMonitorOptimistic({
+            monitor_id: createdConstant.id || `constant-${Date.now()}`,
+            monitor_name: constantData.name,
+            monitor_type: 'constant',
+            latest_value: constantData.value,
+            unit: constantData.unit,
+            description: constantData.description,
+            color: constantData.color,
+            total_records: 1,
+            latest_timestamp: new Date().toISOString(),
+            url: '',
+            decimal_places: 2,
+            min_value: constantData.value,
+            max_value: constantData.value,
+            avg_value: constantData.value,
+            change_count: 0
+          });
+
+          // Close modal immediately
           setShowConstantModal(false);
+
+          // Reload in background to get server-generated ID
+          loadMonitors();
         } else {
           alert('Failed to create constant');
         }
@@ -38,6 +81,8 @@ export function useConstants(loadMonitors: () => Promise<void>) {
     } catch (error) {
       console.error('Failed to save constant:', error);
       alert('Failed to save constant');
+      // Reload to sync with server state
+      loadMonitors();
     }
   };
 
