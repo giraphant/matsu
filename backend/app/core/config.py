@@ -18,6 +18,11 @@ class Settings:
     # Database settings
     DATABASE_PATH: str = os.getenv("DATABASE_PATH", "data/monitoring.db")
 
+    @property
+    def DATABASE_URL(self) -> str:
+        """Get database URL for SQLAlchemy."""
+        return os.getenv("DATABASE_URL", f"sqlite:///./{self.DATABASE_PATH}")
+
     # CORS settings
     @property
     def CORS_ORIGINS(self) -> List[str]:

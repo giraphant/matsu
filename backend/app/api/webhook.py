@@ -11,11 +11,8 @@ import logging
 import json
 import os
 
-from app.models.database import (
-    MonitoringData,
-    DistillWebhookPayload,
-    get_db_session
-)
+from app.models.database import MonitoringData, get_db_session
+from app.schemas.monitoring import DistillWebhookPayload
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)

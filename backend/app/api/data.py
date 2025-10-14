@@ -9,12 +9,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func, desc, asc
 import json
 
-from app.models.database import (
-    MonitoringData,
-    MonitoringDataResponse,
-    MonitorSummary,
-    get_db_session
-)
+from app.models.database import MonitoringData, get_db_session
+from app.schemas.monitoring import MonitoringDataResponse, MonitorSummary
 from pydantic import BaseModel
 
 router = APIRouter()
