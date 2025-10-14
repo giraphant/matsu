@@ -6,6 +6,7 @@ Main application entry point.
 
 import os
 import uvicorn
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -24,13 +25,27 @@ from app.api.dex import router as dex_router
 logger = get_logger(__name__)
 
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """
+    Lifespan event handler for application startup and shutdown.
+    Replaces deprecated on_event("startup") and on_event("shutdown").
+    """
+    # Startup
+    await startup_manager.initialize()
+    yield
+    # Shutdown
+    await startup_manager.shutdown()
+
+
 # Initialize FastAPI app
 app = FastAPI(
     title="Distill Webhook Visualiser",
     description="Receive, store, and visualise Distill Web Monitor data",
     version="1.0.0",
     docs_url="/docs",
-    redoc_url="/redoc"
+    redoc_url="/redoc",
+    lifespan=lifespan
 )
 
 # Add error handling middleware (first, to catch all errors)
@@ -55,18 +70,6 @@ app.include_router(data_router, prefix="/api", tags=["data"])
 app.include_router(alerts_router, prefix="/api", tags=["alerts"])
 app.include_router(constants_router, prefix="/api", tags=["constants"])
 app.include_router(dex_router, prefix="/api", tags=["dex"])
-
-
-@app.on_event("startup")
-async def startup_event():
-    """Initialize application on startup."""
-    await startup_manager.initialize()
-
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    """Cleanup on shutdown."""
-    await startup_manager.shutdown()
 
 
 # Old HTML template pages (kept for reference)

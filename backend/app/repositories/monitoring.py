@@ -6,7 +6,7 @@ Encapsulates all database queries for MonitoringData model.
 from datetime import datetime
 from typing import List, Optional, Dict, Any
 from sqlalchemy.orm import Session
-from sqlalchemy import func, desc, asc
+from sqlalchemy import func, desc, asc, Integer
 
 from app.models.database import MonitoringData
 from app.core.logger import get_logger
@@ -122,7 +122,7 @@ class MonitoringRepository:
             func.min(MonitoringData.value).label('min_value'),
             func.max(MonitoringData.value).label('max_value'),
             func.avg(MonitoringData.value).label('avg_value'),
-            func.sum(func.cast(MonitoringData.is_change, int)).label('change_count')
+            func.sum(func.cast(MonitoringData.is_change, Integer)).label('change_count')
         ).filter(
             MonitoringData.monitor_id == monitor_id
         ).first()
