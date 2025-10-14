@@ -1,76 +1,33 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { Settings, Moon, Sun, LayoutGrid, LineChart as LineChartIcon, Bell, TrendingUp, Menu, X, Plus, Pencil, Trash2 } from 'lucide-react';
+import { Settings, Plus, Pencil, Trash2, Bell } from 'lucide-react';
 import GridLayout from 'react-grid-layout';
 import ManageMonitorItem from './ManageMonitorItem';
 import ConstantCardModal from './ConstantCardModal';
 import DexRates from './DexRates';
 import MobileLayoutEditor from './MobileLayoutEditor';
+import { Loading, EmptyState } from './components/common';
+import { LoginForm } from './components/auth';
+import { Header, ViewMode } from './components/layout';
+import { useAuth, useTheme, useMonitors, useAlerts, useNotification } from './hooks';
+import { MonitorSummary, ChartData } from './types';
+import { formatValue, formatTimeSince } from './utils/format';
+import { ALERT_LEVELS } from './constants/alerts';
 import './App.css';
 import 'react-grid-layout/css/styles.css';
 
-interface MonitorSummary {
-  monitor_id: string;
-  monitor_name: string | null;
-  monitor_type?: string;  // 'monitor' or 'constant'
-  url: string;
-  unit: string | null;
-  decimal_places?: number;  // Number of decimal places to display
-  color?: string | null;  // For constant cards
-  description?: string | null;  // For constant cards
-  total_records: number;
-  latest_value: number | null;
-  latest_timestamp: string;
-  min_value: number | null;
-  max_value: number | null;
-  avg_value: number | null;
-  change_count: number;
-  hidden?: boolean;
-  tags?: string[];
-}
-
-
-interface ChartData {
-  monitor_id: string;
-  monitor_name: string;
-  url: string;
-  data: Array<{
-    timestamp: string;
-    value: number | null;
-    status: string;
-  }>;
-  summary: {
-    total_points: number;
-    date_range: string;
-    value_range: {
-      min: number | null;
-      max: number | null;
-      avg: number | null;
-    };
-    changes_detected: number;
-    latest_value: number | null;
-    latest_timestamp: string | null;
-  };
-}
-
-// Alert level configurations (outside component to avoid re-creation)
-const ALERT_LEVELS = {
-  critical: { interval: 30, volume: 0.8, requireInteraction: true },
-  high: { interval: 120, volume: 0.6, requireInteraction: false },
-  medium: { interval: 300, volume: 0.3, requireInteraction: false },
-  low: { interval: 900, volume: 0.1, requireInteraction: false }
-};
-
 function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [loginError, setLoginError] = useState('');
-  const [monitors, setMonitors] = useState<MonitorSummary[]>([]);
+  // Use custom hooks
+  const { isAuthenticated, loading: authLoading, login, logout } = useAuth();
+  const { isDarkMode, toggleTheme } = useTheme();
+  const { monitors, loading: monitorsLoading, loadMonitors, updateUnit: updateMonitorUnit, updateDecimalPlaces: updateMonitorDecimalPlaces, deleteMonitor } = useMonitors(isAuthenticated);
+  const { thresholds, updateThreshold, isValueOutOfRange } = useAlerts();
+  const { showDesktopNotification, requestNotificationPermission } = useNotification();
+
+  // Local state
   const [selectedMonitor, setSelectedMonitor] = useState<string | null>(null);
   const [chartData, setChartData] = useState<ChartData | null>(null);
   const [days, setDays] = useState(7);
-  const [loading, setLoading] = useState(true);
   const [showUnitModal, setShowUnitModal] = useState(false);
   const [editingUnit, setEditingUnit] = useState('');
   const [showManageModal, setShowManageModal] = useState(false);
@@ -81,11 +38,9 @@ function App() {
   const [monitorTags, setMonitorTags] = useState<Map<string, string[]>>(new Map());
   const [selectedTag, setSelectedTag] = useState<string>('all');
   const [monitorNames, setMonitorNames] = useState<Map<string, string>>(new Map());
-  const [isDarkMode, setIsDarkMode] = useState(false);
-  const [viewMode, setViewMode] = useState<'overview' | 'detail' | 'dex'>('overview');
+  const [viewMode, setViewMode] = useState<ViewMode>('overview');
   const [gridLayout, setGridLayout] = useState<any[]>([]);
   const [miniChartData, setMiniChartData] = useState<Map<string, any[]>>(new Map());
-  const [thresholds, setThresholds] = useState<Map<string, {upper?: number, lower?: number, level?: string}>>(new Map());
   const [showThresholdPopover, setShowThresholdPopover] = useState<string | null>(null);
   const [alertStates, setAlertStates] = useState<Map<string, {lastNotified: number, isActive: boolean}>>(new Map());
   const [isInitialLoad, setIsInitialLoad] = useState(true);
@@ -95,6 +50,8 @@ function App() {
   const [isMobile, setIsMobile] = useState(false);
   const [showMobileLayoutEditor, setShowMobileLayoutEditor] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+
+  const loading = authLoading || monitorsLoading;
 
   // Detect mobile device
   useEffect(() => {
@@ -106,16 +63,8 @@ function App() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Check if already logged in
+  // Load saved data from localStorage
   useEffect(() => {
-    const auth = localStorage.getItem('auth');
-    if (auth === 'authenticated') {
-      setIsAuthenticated(true);
-    } else {
-      setLoading(false);
-    }
-
-    // Load hidden monitors and tags from localStorage
     const savedHidden = localStorage.getItem('hiddenMonitors');
     if (savedHidden) {
       setHiddenMonitors(new Set(JSON.parse(savedHidden)));
@@ -128,34 +77,11 @@ function App() {
     if (savedNames) {
       setMonitorNames(new Map(Object.entries(JSON.parse(savedNames))));
     }
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'dark') {
-      setIsDarkMode(true);
-      document.documentElement.classList.add('dark');
-    }
     const savedLayout = localStorage.getItem('gridLayout');
     if (savedLayout) {
       setGridLayout(JSON.parse(savedLayout));
     }
-    // Don't load thresholds from localStorage anymore - will load from backend
   }, []);
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      loadMonitors();
-      loadAlertConfigs();
-      const monitorInterval = setInterval(() => {
-        loadMonitors();
-      }, 30000);
-      const alertConfigInterval = setInterval(() => {
-        loadAlertConfigs();
-      }, 60000); // Sync alert configs every 60 seconds
-      return () => {
-        clearInterval(monitorInterval);
-        clearInterval(alertConfigInterval);
-      };
-    }
-  }, [isAuthenticated]);
 
   useEffect(() => {
     if (selectedMonitor) {
@@ -163,10 +89,10 @@ function App() {
     }
   }, [selectedMonitor, days]);
 
-  // Request notification permission on mount
+  // Request notification permission on mount (handled by useNotification hook)
   useEffect(() => {
     requestNotificationPermission();
-  }, []);
+  }, [requestNotificationPermission]);
 
   // Load Pushover config when modal opens
   useEffect(() => {
@@ -197,7 +123,8 @@ function App() {
 
           if (shouldNotify) {
             if (('Notification' in window) && Notification.permission === 'granted') {
-              showDesktopNotification(monitor, level, monitor.latest_value);
+              const displayName = monitorNames.get(monitor.monitor_id) || monitor.monitor_name || monitor.monitor_id;
+              showDesktopNotification(monitor, level as any, monitor.latest_value, config, displayName);
             } else if ('Notification' in window) {
               requestNotificationPermission();
             }
@@ -230,24 +157,15 @@ function App() {
     return () => clearInterval(interval);
   }, [monitors, thresholds, alertStates, isAuthenticated]);
 
-  const loadMonitors = async () => {
-    try {
-      const response = await fetch('/api/monitors');
-      const data = await response.json();
-      setMonitors(data);
-      if (data.length > 0 && !selectedMonitor) {
-        setSelectedMonitor(data[0].monitor_id);
-      }
-      // Load mini chart data for each monitor (7 days)
-      loadMiniChartData(data);
-      setLoading(false);
-      // Mark initial load as complete after monitors are loaded
-      setIsInitialLoad(false);
-    } catch (error) {
-      console.error('Failed to load monitors:', error);
-      setLoading(false);
+  // Set initial selected monitor when monitors load
+  useEffect(() => {
+    if (monitors.length > 0 && !selectedMonitor) {
+      setSelectedMonitor(monitors[0].monitor_id);
     }
-  };
+    // Load mini chart data for each monitor
+    loadMiniChartData(monitors);
+    setIsInitialLoad(false);
+  }, [monitors, selectedMonitor]);
 
   // Downsample data points for performance - keep only every Nth point
   const downsampleData = (data: any[], maxPoints: number = 50): any[] => {
@@ -256,23 +174,6 @@ function App() {
     return data.filter((_, index) => index % step === 0 || index === data.length - 1);
   };
 
-  const loadAlertConfigs = async () => {
-    try {
-      const response = await fetch('/api/alerts/configs');
-      const configs = await response.json();
-      const newThresholds = new Map();
-      configs.forEach((config: any) => {
-        newThresholds.set(config.monitor_id, {
-          upper: config.upper_threshold,
-          lower: config.lower_threshold,
-          level: config.alert_level
-        });
-      });
-      setThresholds(newThresholds);
-    } catch (error) {
-      console.error('Failed to load alert configs:', error);
-    }
-  };
 
   const loadMiniChartData = async (monitorList: MonitorSummary[]) => {
     const newMiniData = new Map();
@@ -308,75 +209,11 @@ function App() {
     }
   };
 
-  const formatValue = (value: number | null, unit: string | null, decimalPlaces?: number) => {
-    if (value === null) return 'N/A';
-    // Use ?? to properly handle 0 decimal places (|| would treat 0 as falsy)
-    const places = decimalPlaces ?? 2;
-    const formatted = value.toLocaleString(undefined, {
-      minimumFractionDigits: places,
-      maximumFractionDigits: places
-    });
-    return unit ? `${formatted} ${unit}` : formatted;
-  };
-
-  const formatTimeSince = (timestamp: string) => {
-    const now = new Date();
-    // Database stores UTC time without 'Z' suffix, so we need to append it
-    const timestampUTC = timestamp.endsWith('Z') ? timestamp : timestamp + 'Z';
-    const then = new Date(timestampUTC);
-    const seconds = Math.floor((now.getTime() - then.getTime()) / 1000);
-
-    if (seconds < 60) return `${seconds}s ago`;
-    if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
-    if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
-    return `${Math.floor(seconds / 86400)}d ago`;
-  };
-
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoginError('');
-
-    try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        localStorage.setItem('auth', 'authenticated');
-        localStorage.setItem('username', username);
-        setIsAuthenticated(true);
-        setLoginError('');
-      } else {
-        setLoginError(data.message || 'Login failed');
-      }
-    } catch (error) {
-      console.error('Auth error:', error);
-      setLoginError('Failed to connect to server');
-    }
-  };
 
   const handleLogout = () => {
-    localStorage.removeItem('auth');
-    setIsAuthenticated(false);
-    setMonitors([]);
+    logout();
     setSelectedMonitor(null);
     setChartData(null);
-  };
-
-  const toggleDarkMode = () => {
-    const newMode = !isDarkMode;
-    setIsDarkMode(newMode);
-    if (newMode) {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-    }
   };
 
   const generateDefaultLayout = (monitors: MonitorSummary[]) => {
@@ -529,22 +366,6 @@ function App() {
     localStorage.setItem('monitorNames', JSON.stringify(Object.fromEntries(newNames)));
   };
 
-  const updateMonitorDecimalPlaces = async (monitorId: string, decimalPlaces: number) => {
-    try {
-      const response = await fetch(`/api/monitors/${monitorId}/decimal-places?decimal_places=${decimalPlaces}`, {
-        method: 'PATCH',
-      });
-
-      if (response.ok) {
-        await loadMonitors();
-      } else {
-        console.error('Failed to update decimal places');
-      }
-    } catch (error) {
-      console.error('Failed to update decimal places:', error);
-    }
-  };
-
   // Constant management functions
   const saveConstant = async (constantData: any) => {
     try {
@@ -600,127 +421,6 @@ function App() {
     }
   };
 
-  const updateThreshold = async (monitorId: string, upper?: number, lower?: number, level?: string) => {
-    const newThresholds = new Map(thresholds);
-    if (upper !== undefined || lower !== undefined) {
-      const existing = newThresholds.get(monitorId);
-      const thresholdData = {
-        upper,
-        lower,
-        level: level || existing?.level || 'medium'
-      };
-      newThresholds.set(monitorId, thresholdData);
-
-      // Save to backend
-      try {
-        await fetch('/api/alerts/config', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            monitor_id: monitorId,
-            upper_threshold: upper,
-            lower_threshold: lower,
-            alert_level: thresholdData.level
-          })
-        });
-      } catch (error) {
-        console.error('Failed to save threshold to backend:', error);
-      }
-    } else {
-      newThresholds.delete(monitorId);
-
-      // Delete from backend
-      try {
-        await fetch(`/api/alerts/config/${monitorId}`, {
-          method: 'DELETE'
-        });
-      } catch (error) {
-        console.error('Failed to delete threshold from backend:', error);
-      }
-    }
-    setThresholds(newThresholds);
-    // No longer save to localStorage - backend is source of truth
-  };
-
-  const isValueOutOfRange = (value: number | null, monitorId: string): boolean => {
-    if (value === null) return false;
-    const threshold = thresholds.get(monitorId);
-    if (!threshold) return false;
-    if (threshold.upper !== undefined && value > threshold.upper) return true;
-    if (threshold.lower !== undefined && value < threshold.lower) return true;
-    return false;
-  };
-
-  const playAlertSound = (level: string) => {
-    const config = ALERT_LEVELS[level as keyof typeof ALERT_LEVELS] || ALERT_LEVELS.medium;
-
-    // Map alert level to sound file
-    const soundFiles = {
-      critical: '/sounds/alert-critical.mp3',
-      high: '/sounds/alert-high.mp3',
-      medium: '/sounds/alert-medium.mp3',
-      low: '/sounds/alert-low.mp3'
-    };
-
-    const soundFile = soundFiles[level as keyof typeof soundFiles] || soundFiles.medium;
-
-    const audio = new Audio(soundFile);
-    audio.volume = config.volume;
-
-    audio.addEventListener('error', (e) => {
-      console.error(`[Alert Sound] Failed to load audio: ${soundFile}`, e);
-    });
-
-    audio.play()
-      .catch(e => console.error('[Alert Sound] Play failed:', e));
-  };
-
-  const requestNotificationPermission = async () => {
-    if (!('Notification' in window)) {
-      console.log('This browser does not support notifications');
-      return false;
-    }
-
-    if (Notification.permission === 'granted') {
-      return true;
-    }
-
-    if (Notification.permission !== 'denied') {
-      const permission = await Notification.requestPermission();
-      return permission === 'granted';
-    }
-
-    return false;
-  };
-
-  const showDesktopNotification = (monitor: MonitorSummary, level: string, value: number) => {
-    if (!('Notification' in window)) {
-      console.log('Desktop notifications not supported on this browser');
-      return;
-    }
-
-    const config = ALERT_LEVELS[level as keyof typeof ALERT_LEVELS] || ALERT_LEVELS.medium;
-    const threshold = thresholds.get(monitor.monitor_id);
-    const displayName = monitorNames.get(monitor.monitor_id) || monitor.monitor_name || monitor.monitor_id;
-
-    const icons = {
-      critical: '🔴',
-      high: '🟠',
-      medium: '🟡',
-      low: '🟢'
-    };
-
-    const icon = icons[level as keyof typeof icons] || '🟡';
-
-    new Notification(`${icon} ${displayName} Alert`, {
-      body: `Current: ${formatValue(value, monitor.unit)}\nThreshold: ${threshold?.upper ? `>${formatValue(threshold.upper, monitor.unit)}` : `<${formatValue(threshold?.lower || 0, monitor.unit)}`}`,
-      icon: '/favicon.ico',
-      tag: monitor.monitor_id,
-      requireInteraction: config.requireInteraction
-    });
-
-    playAlertSound(level);
-  };
 
   const loadPushoverConfig = async () => {
     try {
@@ -788,35 +488,18 @@ function App() {
     }
   };
 
-  const deleteMonitor = async (monitorId: string) => {
-    if (!window.confirm('Are you sure you want to delete this monitor? This cannot be undone.')) {
-      return;
-    }
-    try {
-      await fetch(`/api/monitors/${monitorId}`, {
-        method: 'DELETE',
-      });
-      await loadMonitors();
-      if (selectedMonitor === monitorId) {
-        setSelectedMonitor(null);
-      }
-    } catch (error) {
-      console.error('Failed to delete monitor:', error);
+  const handleDeleteMonitor = async (monitorId: string) => {
+    await deleteMonitor(monitorId);
+    if (selectedMonitor === monitorId) {
+      setSelectedMonitor(null);
     }
   };
 
-  const updateUnit = async (unit: string) => {
+  const handleUpdateUnit = async (unit: string) => {
     if (!selectedMonitor) return;
-    try {
-      await fetch(`/api/monitors/${selectedMonitor}/unit?unit=${encodeURIComponent(unit)}`, {
-        method: 'PATCH',
-      });
-      await loadMonitors();
-      setShowUnitModal(false);
-      setEditingUnit('');
-    } catch (error) {
-      console.error('Failed to update unit:', error);
-    }
+    await updateMonitorUnit(selectedMonitor, unit);
+    setShowUnitModal(false);
+    setEditingUnit('');
   };
 
   // Filter monitors
@@ -840,174 +523,33 @@ function App() {
   const currentMonitor = monitors.find(m => m.monitor_id === selectedMonitor);
 
   if (loading) {
-    return (
-      <div className="loading">
-        <div className="spinner"></div>
-        <p>Loading monitors...</p>
-      </div>
-    );
+    return <Loading message="Loading monitors..." />;
   }
 
   if (!isAuthenticated) {
-    return (
-      <div className="App">
-        <div className="login-container">
-          <div className="login-card">
-            <h1>Matsu</h1>
-            <p className="login-subtitle">Monitor your Distill data in real-time</p>
-
-            <form onSubmit={handleLogin}>
-              <div className="form-group">
-                <label>Username</label>
-                <input
-                  type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  placeholder="Enter username"
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label>Password</label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter password"
-                  required
-                />
-              </div>
-
-              {loginError && <div className="login-error">{loginError}</div>}
-
-              <button type="submit" className="login-btn">
-                Sign In
-              </button>
-            </form>
-          </div>
-        </div>
-      </div>
-    );
+    return <LoginForm onLogin={login} />;
   }
 
   return (
     <div className="App">
-      <header>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <h1>Matsu</h1>
-            {!isMobile && <p>Monitor your Distill data in real-time</p>}
-          </div>
-
-          {isMobile ? (
-            <>
-              <button
-                className="btn-secondary mobile-menu-btn"
-                onClick={() => setShowMobileMenu(!showMobileMenu)}
-                style={{ padding: '8px' }}
-              >
-                {showMobileMenu ? <X size={20} /> : <Menu size={20} />}
-              </button>
-
-              {showMobileMenu && (
-                <div className="mobile-menu-overlay" onClick={() => setShowMobileMenu(false)}>
-                  <div className="mobile-menu" onClick={(e) => e.stopPropagation()}>
-                    <button
-                      className={`mobile-menu-item ${viewMode === 'overview' ? 'active' : ''}`}
-                      onClick={() => { setViewMode('overview'); setShowMobileMenu(false); }}
-                    >
-                      <LayoutGrid size={20} />
-                      <span>Overview</span>
-                    </button>
-                    <button
-                      className={`mobile-menu-item ${viewMode === 'detail' ? 'active' : ''}`}
-                      onClick={() => { setViewMode('detail'); setShowMobileMenu(false); }}
-                    >
-                      <LineChartIcon size={20} />
-                      <span>Detail View</span>
-                    </button>
-                    <button
-                      className={`mobile-menu-item ${viewMode === 'dex' ? 'active' : ''}`}
-                      onClick={() => { setViewMode('dex'); setShowMobileMenu(false); }}
-                    >
-                      <TrendingUp size={20} />
-                      <span>DEX Rates</span>
-                    </button>
-                    {viewMode === 'overview' && (
-                      <button
-                        className="mobile-menu-item"
-                        onClick={() => { setShowMobileLayoutEditor(true); setShowMobileMenu(false); }}
-                      >
-                        <Settings size={20} />
-                        <span>Edit Layout</span>
-                      </button>
-                    )}
-                    <button
-                      className="mobile-menu-item"
-                      onClick={() => { toggleDarkMode(); setShowMobileMenu(false); }}
-                    >
-                      {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
-                      <span>{isDarkMode ? 'Light Mode' : 'Dark Mode'}</span>
-                    </button>
-                    <button
-                      className="mobile-menu-item"
-                      onClick={() => { handleLogout(); setShowMobileMenu(false); }}
-                    >
-                      <span>Logout</span>
-                    </button>
-                  </div>
-                </div>
-              )}
-            </>
-          ) : (
-            <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-              <button
-                className={`btn-secondary ${viewMode === 'overview' ? 'active' : ''}`}
-                onClick={() => setViewMode('overview')}
-                title="Overview"
-                style={{ padding: '8px 12px' }}
-              >
-                <LayoutGrid size={18} />
-              </button>
-              <button
-                className={`btn-secondary ${viewMode === 'detail' ? 'active' : ''}`}
-                onClick={() => setViewMode('detail')}
-                title="Detail view"
-                style={{ padding: '8px 12px' }}
-              >
-                <LineChartIcon size={18} />
-              </button>
-              <button
-                className={`btn-secondary ${viewMode === 'dex' ? 'active' : ''}`}
-                onClick={() => setViewMode('dex')}
-                title="DEX Rates"
-                style={{ padding: '8px 12px' }}
-              >
-                <TrendingUp size={18} />
-              </button>
-              <button
-                className="btn-secondary"
-                onClick={toggleDarkMode}
-                title={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
-                style={{ padding: '8px 12px' }}
-              >
-                {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
-              </button>
-              <button className="btn-secondary" onClick={handleLogout}>
-                Logout
-              </button>
-            </div>
-          )}
-        </div>
-      </header>
+      <Header
+        viewMode={viewMode}
+        isMobile={isMobile}
+        isDarkMode={isDarkMode}
+        showMobileMenu={showMobileMenu}
+        onViewModeChange={setViewMode}
+        onToggleDarkMode={toggleTheme}
+        onLogout={handleLogout}
+        onToggleMobileMenu={() => setShowMobileMenu(!showMobileMenu)}
+        onShowMobileLayoutEditor={() => setShowMobileLayoutEditor(true)}
+      />
 
       {monitors.length === 0 ? (
-        <div className="empty-state">
-          <h2>No Monitors Yet</h2>
-          <p>Start sending webhook data to see your monitors here.</p>
-          <code>POST /webhook/distill</code>
-        </div>
+        <EmptyState
+          title="No Monitors Yet"
+          message="Start sending webhook data to see your monitors here."
+          code="POST /webhook/distill"
+        />
       ) : viewMode === 'overview' ? (
         (() => {
           const sortedItems = getSortedItemsForMobile();
@@ -1526,7 +1068,7 @@ function App() {
               <button className="btn-secondary" onClick={() => setShowUnitModal(false)}>
                 Cancel
               </button>
-              <button className="btn-primary" onClick={() => updateUnit(editingUnit)}>
+              <button className="btn-primary" onClick={() => handleUpdateUnit(editingUnit)}>
                 Save
               </button>
             </div>
@@ -1602,7 +1144,7 @@ function App() {
                         isHidden={hiddenMonitors.has(monitor.monitor_id)}
                         formatValue={formatValue}
                         onToggleHide={() => toggleHideMonitor(monitor.monitor_id)}
-                        onDelete={() => deleteMonitor(monitor.monitor_id)}
+                        onDelete={() => handleDeleteMonitor(monitor.monitor_id)}
                         onAddTag={(tag) => addTagToMonitor(monitor.monitor_id, tag)}
                         onRemoveTag={(tag) => removeTagFromMonitor(monitor.monitor_id, tag)}
                         onUpdateName={(name: string) => updateMonitorName(monitor.monitor_id, name)}
