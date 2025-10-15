@@ -291,23 +291,20 @@ function App() {
           code="POST /webhook/distill"
         />
       ) : viewMode === 'overview' ? (
-        <OverviewView
-          visibleMonitors={visibleMonitors}
-          computedLayout={computedLayout}
-          miniChartData={miniChartData}
-          monitorNames={monitorNames}
-          monitorTags={monitorTags}
-          thresholds={thresholds}
-          showThresholdPopover={showThresholdPopover}
+        <Bento2View
+          displayedCards={displayedCards}
+          availableMonitors={availableBentoMonitors}
+          allMonitors={allBentoMonitors}
+          alertRules={alertRules}
+          computedLayout={bentoComputedLayout}
           isMobile={isMobile}
-          isValueOutOfRange={isValueOutOfRange}
-          onLayoutChange={(layout) => onLayoutChange(layout, isMobile)}
-          onThresholdClick={handleThresholdClick}
-          onThresholdUpdate={handleThresholdUpdate}
-          onEditConstant={openConstantModal}
-          onDeleteConstant={deleteConstant}
-          onAddConstant={() => openConstantModal(null)}
-          gridLayout={gridLayout}
+          onLayoutChange={(layout) => onBentoLayoutChange(layout, isMobile)}
+          onRemoveCard={removeCard}
+          onAddCard={addCard}
+          onSaveAlertRule={handleSaveAlertRule}
+          onDeleteAlertRule={handleDeleteAlertRule}
+          getAlertRuleForMonitor={getAlertRuleForMonitor}
+          gridLayout={bentoGridLayout}
         />
       ) : viewMode === 'dex' ? (
         <DexRates />

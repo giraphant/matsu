@@ -12,6 +12,7 @@ from app.schemas.monitoring import DistillWebhookPayload
 from app.repositories.monitoring import MonitoringRepository
 from app.repositories.alert import AlertRepository, AlertStateRepository
 from app.services.pushover import PushoverService, format_alert_message
+from app.services.monitor_service import MonitorService
 from app.core.logger import get_logger
 
 logger = get_logger(__name__)
@@ -35,6 +36,7 @@ class MonitoringService:
         self.alert_repo = AlertRepository(db)
         self.alert_state_repo = AlertStateRepository(db)
         self.pushover_service = PushoverService(db)
+        self.monitor_service = MonitorService(db)
 
     def process_webhook(self, payload: DistillWebhookPayload) -> MonitoringData:
         """
@@ -43,8 +45,9 @@ class MonitoringService:
         This method:
         1. Parses and validates webhook data
         2. Creates monitoring record
-        3. Checks for alerts
+        3. Checks for alerts (old system)
         4. Sends notifications if needed
+        5. Triggers Monitor System recomputation (new system)
 
         Args:
             payload: Webhook payload from Distill
@@ -55,8 +58,16 @@ class MonitoringService:
         # 1. Parse and create monitoring data
         data = self._create_monitoring_data(payload)
 
-        # 2. Check and trigger alerts
+        # 2. Check and trigger alerts (old system - AlertConfig)
         self._check_and_trigger_alerts(data)
+
+        # 3. Trigger Monitor System recomputation (new system - monitors with formulas)
+        try:
+            recomputed = self.monitor_service.trigger_recompute_on_webhook(data.monitor_id)
+            if recomputed:
+                logger.debug(f"Webhook {data.monitor_id} triggered recompute of {len(recomputed)} monitors")
+        except Exception as e:
+            logger.error(f"Error triggering monitor recompute: {e}")
 
         return data
 

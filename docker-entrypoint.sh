@@ -11,7 +11,7 @@ chmod 755 /app/data /app/logs /app/static 2>/dev/null || true
 
 # Start alert daemon in background
 echo "Starting alert daemon..."
-python alert_daemon.py &
+(cd backend && python -m app.workers.webhook_monitor_alert_checker &)
 DAEMON_PID=$!
 echo "Alert daemon started with PID $DAEMON_PID"
 

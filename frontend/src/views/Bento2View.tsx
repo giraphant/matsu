@@ -5,11 +5,11 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import GridLayout from 'react-grid-layout';
+import { LineChart, Line, XAxis, ResponsiveContainer } from 'recharts';
 import { Plus, Trash2, Bell } from 'lucide-react';
 import { NewMonitor, AlertRule } from '../api/newMonitors';
 import { formatValue, formatTimeSince } from '../utils/format';
 import AddCardModal from '../components/bento/AddCardModal';
-import AlertRuleModal from '../components/monitors/AlertRuleModal';
 import { useNotification } from '../hooks/useNotification';
 import { AlertLevel } from '../types/alert';
 import { ALERT_LEVELS } from '../constants/alerts';
@@ -46,11 +46,61 @@ export function Bento2View({
   gridLayout
 }: Bento2ViewProps) {
   const [showAddModal, setShowAddModal] = useState(false);
-  const [showAlertModal, setShowAlertModal] = useState(false);
-  const [editingMonitorId, setEditingMonitorId] = useState<string | null>(null);
+  const [showAlertPopover, setShowAlertPopover] = useState<string | null>(null);
   const [alertStates, setAlertStates] = useState<Map<string, {lastNotified: number, isActive: boolean}>>(new Map());
+  const [miniChartData, setMiniChartData] = useState<Map<string, any[]>>(new Map());
 
   const { playAlertSound, requestNotificationPermission } = useNotification();
+
+  // Helper function to parse alert rule into upper/lower limits
+  const parseAlertRule = (rule: AlertRule | undefined): { upper?: number; lower?: number; level?: string } => {
+    if (!rule) return {};
+
+    const upperMatch = rule.condition.match(/>\s*=?\s*(-?\d+\.?\d*)/);
+    const lowerMatch = rule.condition.match(/<\s*=?\s*(-?\d+\.?\d*)/);
+
+    return {
+      upper: upperMatch ? parseFloat(upperMatch[1]) : undefined,
+      lower: lowerMatch ? parseFloat(lowerMatch[1]) : undefined,
+      level: rule.level
+    };
+  };
+
+  // Handle alert threshold update
+  const handleAlertUpdate = async (monitorId: string, upper?: number, lower?: number, level?: string) => {
+    const existingRule = getAlertRuleForMonitor(monitorId);
+    const monitor = allMonitors.find(m => m.id === monitorId);
+
+    if (!monitor) return;
+
+    // Build condition from upper/lower
+    const parts: string[] = [];
+    const ref = `\${monitor:${monitorId}}`;
+
+    if (upper !== undefined && upper !== null) {
+      parts.push(`${ref} > ${upper}`);
+    }
+    if (lower !== undefined && lower !== null) {
+      parts.push(`${ref} < ${lower}`);
+    }
+
+    const condition = parts.length > 0 ? parts.join(' || ') : `${ref} > 0`;
+
+    const data: any = {
+      name: `${monitor.name} Alert`,
+      condition,
+      level: level || 'medium',
+      cooldown_seconds: ALERT_LEVELS[level as AlertLevel]?.interval || 300,
+      actions: ['pushover']
+    };
+
+    if (existingRule) {
+      data.id = existingRule.id;
+    }
+
+    await onSaveAlertRule(data);
+    setShowAlertPopover(null);
+  };
 
   // Helper function to evaluate alert condition
   const isMonitorInAlert = useCallback((monitor: NewMonitor, rule: AlertRule): boolean => {
@@ -133,6 +183,35 @@ export function Bento2View({
     requestNotificationPermission();
   }, [requestNotificationPermission]);
 
+  // Fetch chart data for displayed monitors
+  useEffect(() => {
+    const fetchChartData = async () => {
+      const newChartData = new Map<string, any[]>();
+
+      for (const monitor of displayedCards) {
+        try {
+          const response = await fetch(`/api/monitors/${monitor.id}/history?limit=50`);
+          if (response.ok) {
+            const data = await response.json();
+            newChartData.set(monitor.id, data);
+          }
+        } catch (error) {
+          console.error(`Failed to fetch chart data for ${monitor.id}:`, error);
+        }
+      }
+
+      setMiniChartData(newChartData);
+    };
+
+    if (displayedCards.length > 0) {
+      fetchChartData();
+
+      // Refresh chart data every 30 seconds
+      const interval = setInterval(fetchChartData, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [displayedCards]);
+
   // Sort items by layout order on mobile
   const getSortedItemsForMobile = () => {
     if (!isMobile) return displayedCards;
@@ -211,15 +290,26 @@ export function Bento2View({
         {sortedMonitors.map((monitor) => {
           const layout = gridLayout.find(l => l.i === monitor.id) || { h: 1 };
           const showChart = layout.h >= 2;
+          const chartPoints = miniChartData.get(monitor.id) || [];
           const alertRule = getAlertRuleForMonitor(monitor.id);
           const hasAlert = !!alertRule;
           const isAlert = alertRule ? isMonitorInAlert(monitor, alertRule) : false;
+
+          // Calculate min/avg/max from chart data
+          let minValue = null;
+          let avgValue = null;
+          let maxValue = null;
+          if (chartPoints.length > 0) {
+            const values = chartPoints.map(p => p.value);
+            minValue = Math.min(...values);
+            maxValue = Math.max(...values);
+            avgValue = values.reduce((sum, v) => sum + v, 0) / values.length;
+          }
 
           return (
             <div
               key={monitor.id}
               className={`bento-item ${isAlert ? 'alert' : ''}`}
-              style={{ borderLeft: `4px solid ${monitor.color || '#3b82f6'}` }}
             >
               <div className="bento-header">
                 <div className="bento-title-section">
@@ -241,18 +331,107 @@ export function Bento2View({
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
-                      setEditingMonitorId(monitor.id);
-                      setShowAlertModal(true);
+                      setShowAlertPopover(showAlertPopover === monitor.id ? null : monitor.id);
                     }}
                     title={hasAlert ? `Alert: ${alertRule.level}` : "Set alert"}
                     style={{
                       pointerEvents: 'auto',
-                      color: hasAlert ? 'var(--primary)' : undefined,
-                      fontWeight: hasAlert ? 'bold' : undefined
+                      color: 'white',
+                      opacity: hasAlert ? 1 : 0.7
                     }}
                   >
                     <Bell size={14} />
                   </button>
+                  {showAlertPopover === monitor.id && (
+                    <div
+                      className="threshold-popover"
+                      onMouseDown={(e) => e.stopPropagation()}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <h4>Alert Settings</h4>
+                      <div className="threshold-input-group">
+                        <label>Upper Limit</label>
+                        <input
+                          type="number"
+                          placeholder="Leave empty to disable"
+                          defaultValue={parseAlertRule(alertRule).upper}
+                          id={`upper-${monitor.id}`}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              const upperInput = document.getElementById(`upper-${monitor.id}`) as HTMLInputElement;
+                              const lowerInput = document.getElementById(`lower-${monitor.id}`) as HTMLInputElement;
+                              const levelSelect = document.getElementById(`level-${monitor.id}`) as HTMLSelectElement;
+                              const upper = upperInput.value ? parseFloat(upperInput.value) : undefined;
+                              const lower = lowerInput.value ? parseFloat(lowerInput.value) : undefined;
+                              const level = levelSelect.value;
+                              handleAlertUpdate(monitor.id, upper, lower, level);
+                            }
+                          }}
+                        />
+                      </div>
+                      <div className="threshold-input-group">
+                        <label>Lower Limit</label>
+                        <input
+                          type="number"
+                          placeholder="Leave empty to disable"
+                          defaultValue={parseAlertRule(alertRule).lower}
+                          id={`lower-${monitor.id}`}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              const upperInput = document.getElementById(`upper-${monitor.id}`) as HTMLInputElement;
+                              const lowerInput = document.getElementById(`lower-${monitor.id}`) as HTMLInputElement;
+                              const levelSelect = document.getElementById(`level-${monitor.id}`) as HTMLSelectElement;
+                              const upper = upperInput.value ? parseFloat(upperInput.value) : undefined;
+                              const lower = lowerInput.value ? parseFloat(lowerInput.value) : undefined;
+                              const level = levelSelect.value;
+                              handleAlertUpdate(monitor.id, upper, lower, level);
+                            }
+                          }}
+                        />
+                      </div>
+                      <div className="threshold-input-group">
+                        <label>Alert Level</label>
+                        <select
+                          id={`level-${monitor.id}`}
+                          defaultValue={parseAlertRule(alertRule).level || 'medium'}
+                          className="alert-level-select"
+                        >
+                          <option value="critical">🔴 Critical (30s)</option>
+                          <option value="high">🟠 High (2m)</option>
+                          <option value="medium">🟡 Medium (5m)</option>
+                          <option value="low">🟢 Low (15m)</option>
+                        </select>
+                      </div>
+                      <div className="threshold-popover-actions">
+                        <button
+                          className="btn-secondary"
+                          onMouseDown={(e) => e.stopPropagation()}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleAlertUpdate(monitor.id, undefined, undefined);
+                          }}
+                        >
+                          Clear
+                        </button>
+                        <button
+                          className="btn-primary"
+                          onMouseDown={(e) => e.stopPropagation()}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const upperInput = document.getElementById(`upper-${monitor.id}`) as HTMLInputElement;
+                            const lowerInput = document.getElementById(`lower-${monitor.id}`) as HTMLInputElement;
+                            const levelSelect = document.getElementById(`level-${monitor.id}`) as HTMLSelectElement;
+                            const upper = upperInput.value ? parseFloat(upperInput.value) : undefined;
+                            const lower = lowerInput.value ? parseFloat(lowerInput.value) : undefined;
+                            const level = levelSelect.value;
+                            handleAlertUpdate(monitor.id, upper, lower, level);
+                          }}
+                        >
+                          Done
+                        </button>
+                      </div>
+                    </div>
+                  )}
                   <button
                     className="threshold-btn"
                     onMouseDown={(e) => e.stopPropagation()}
@@ -262,14 +441,14 @@ export function Bento2View({
                       onRemoveCard(monitor.id);
                     }}
                     title="Remove from Bento"
-                    style={{ color: 'var(--destructive)', pointerEvents: 'auto' }}
+                    style={{ color: 'white', opacity: 0.7, pointerEvents: 'auto' }}
                   >
                     <Trash2 size={14} />
                   </button>
                 </div>
               </div>
 
-              <div className={`bento-value ${isAlert ? 'alert' : ''}`} style={{ color: isAlert ? undefined : (monitor.color || '#3b82f6') }}>
+              <div className={`bento-value ${isAlert ? 'alert' : ''}`}>
                 {formatValue(monitor.value ?? null, monitor.unit ?? null, monitor.decimal_places)}
                 {monitor.computed_at && (
                   <div className="last-updated" title={new Date(monitor.computed_at).toLocaleString()}>
@@ -278,34 +457,41 @@ export function Bento2View({
                 )}
               </div>
 
-              {showChart && (
+              {showChart && chartPoints.length > 0 && (
                 <div className="bento-mini-chart">
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    height: '120px',
-                    color: 'var(--muted-foreground)',
-                    fontSize: '12px'
-                  }}>
-                    Chart coming soon
-                  </div>
+                  <ResponsiveContainer width="100%" height={120}>
+                    <LineChart data={chartPoints}>
+                      <XAxis
+                        dataKey="timestamp"
+                        hide={true}
+                        type="number"
+                        domain={['dataMin', 'dataMax']}
+                        scale="time"
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="value"
+                        stroke="var(--primary)"
+                        strokeWidth={2}
+                        dot={false}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
                 </div>
               )}
 
-              <div className="bento-stats" style={{ opacity: 0.7 }}>
+              <div className="bento-stats">
                 <div className="bento-stat">
-                  <span className="label">Formula</span>
-                  <span className="value" style={{
-                    fontFamily: 'monospace',
-                    fontSize: '11px',
-                    maxWidth: '200px',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap'
-                  }}>
-                    {monitor.formula}
-                  </span>
+                  <span className="label">Min</span>
+                  <span className="value">{formatValue(minValue, monitor.unit ?? null, monitor.decimal_places)}</span>
+                </div>
+                <div className="bento-stat">
+                  <span className="label">Avg</span>
+                  <span className="value">{formatValue(avgValue, monitor.unit ?? null, monitor.decimal_places)}</span>
+                </div>
+                <div className="bento-stat">
+                  <span className="label">Max</span>
+                  <span className="value">{formatValue(maxValue, monitor.unit ?? null, monitor.decimal_places)}</span>
                 </div>
               </div>
             </div>
@@ -331,33 +517,6 @@ export function Bento2View({
         onAdd={(id) => {
           onAddCard(id);
           setShowAddModal(false);
-        }}
-      />
-
-      <AlertRuleModal
-        show={showAlertModal}
-        rule={editingMonitorId ? getAlertRuleForMonitor(editingMonitorId) ?? null : null}
-        monitors={allMonitors}
-        onClose={() => {
-          setShowAlertModal(false);
-          setEditingMonitorId(null);
-        }}
-        onSave={async (data) => {
-          // Add monitor ID to the data if creating new
-          const dataWithId = data as any;
-          if (!dataWithId.id && editingMonitorId) {
-            // Auto-fill name and condition based on selected monitor
-            const monitor = allMonitors.find(m => m.id === editingMonitorId);
-            if (monitor && !data.name) {
-              dataWithId.name = `${monitor.name} Alert`;
-            }
-            if (monitor && !data.condition) {
-              dataWithId.condition = `\${monitor:${editingMonitorId}} > 0`;
-            }
-          }
-          await onSaveAlertRule(dataWithId);
-          setShowAlertModal(false);
-          setEditingMonitorId(null);
         }}
       />
     </div>

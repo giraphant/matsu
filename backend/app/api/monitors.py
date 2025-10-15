@@ -218,6 +218,35 @@ async def recompute_all_monitors(db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.get("/monitors/{monitor_id}/history")
+async def get_monitor_history(
+    monitor_id: str,
+    limit: int = 100,
+    db: Session = Depends(get_db)
+):
+    """Get historical values for a monitor."""
+    try:
+        from app.models.database import MonitorValue
+
+        # Get historical values
+        values = db.query(MonitorValue).filter(
+            MonitorValue.monitor_id == monitor_id
+        ).order_by(MonitorValue.computed_at.desc()).limit(limit).all()
+
+        # Return in chronological order (oldest first for charts)
+        return [
+            {
+                "timestamp": int(v.computed_at.timestamp() * 1000),  # milliseconds
+                "value": v.value
+            }
+            for v in reversed(values)
+        ]
+
+    except Exception as e:
+        logger.error(f"Error retrieving monitor history: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # ============================================================================
 # Alert Rule Endpoints
 # ============================================================================

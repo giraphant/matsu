@@ -89,13 +89,6 @@ export function Header({
                     <Sliders size={20} />
                     <span>Monitors</span>
                   </button>
-                  <button
-                    className={`mobile-menu-item ${viewMode === 'bento2' ? 'active' : ''}`}
-                    onClick={() => { onViewModeChange('bento2'); onToggleMobileMenu(); }}
-                  >
-                    <LayoutGrid size={20} />
-                    <span>Bento2 (Testing)</span>
-                  </button>
                   {viewMode === 'overview' && (
                     <button
                       className="mobile-menu-item"
@@ -155,14 +148,6 @@ export function Header({
               style={{ padding: '8px 12px' }}
             >
               <Sliders size={18} />
-            </button>
-            <button
-              className={`btn-secondary ${viewMode === 'bento2' ? 'active' : ''}`}
-              onClick={() => onViewModeChange('bento2')}
-              title="Bento2 (Testing)"
-              style={{ padding: '8px 12px', fontSize: '12px' }}
-            >
-              B2
             </button>
             <button
               className="btn-secondary"

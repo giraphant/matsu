@@ -21,6 +21,21 @@ interface WebhookMonitor {
   unit?: string;
 }
 
+// Helper to get CSS variable value
+const getCSSVar = (varName: string): string => {
+  return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+};
+
+// Color presets for monitors - using CSS variables
+const COLOR_PRESETS = [
+  { name: 'Orange', cssVar: '--primary', fallback: '#f97316' },
+  { name: 'Blue', cssVar: null, fallback: '#3b82f6' },
+  { name: 'Purple', cssVar: null, fallback: '#8b5cf6' },
+  { name: 'Green', cssVar: null, fallback: '#10b981' },
+  { name: 'Red', cssVar: null, fallback: '#ef4444' },
+  { name: 'Slate', cssVar: null, fallback: '#64748b' }
+];
+
 export default function NewMonitorModal({
   show,
   monitor,
@@ -32,11 +47,26 @@ export default function NewMonitorModal({
   const [formula, setFormula] = useState('');
   const [unit, setUnit] = useState('');
   const [description, setDescription] = useState('');
-  const [color, setColor] = useState('#3b82f6');
+  const [color, setColor] = useState('');
   const [decimalPlaces, setDecimalPlaces] = useState(2);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [webhookMonitors, setWebhookMonitors] = useState<WebhookMonitor[]>([]);
+  const [resolvedColors, setResolvedColors] = useState<Array<{name: string, value: string}>>([]);
+
+  // Resolve CSS variables to actual colors
+  useEffect(() => {
+    const colors = COLOR_PRESETS.map(preset => ({
+      name: preset.name,
+      value: preset.cssVar ? getCSSVar(preset.cssVar) || preset.fallback : preset.fallback
+    }));
+    setResolvedColors(colors);
+
+    // Set default color to first resolved color (primary)
+    if (!color && colors.length > 0) {
+      setColor(colors[0].value);
+    }
+  }, []);
 
   // Load webhook monitors when modal opens
   useEffect(() => {
@@ -55,18 +85,18 @@ export default function NewMonitorModal({
       setFormula(monitor.formula);
       setUnit(monitor.unit || '');
       setDescription(monitor.description || '');
-      setColor(monitor.color || '#3b82f6');
+      setColor(monitor.color || (resolvedColors.length > 0 ? resolvedColors[0].value : ''));
       setDecimalPlaces(monitor.decimal_places);
-    } else if (show) {
+    } else if (show && !monitor) {
       setName('');
       setFormula('');
       setUnit('');
       setDescription('');
-      setColor('#3b82f6');
+      setColor(resolvedColors.length > 0 ? resolvedColors[0].value : '');
       setDecimalPlaces(2);
     }
     setError('');
-  }, [show, monitor]);
+  }, [show, monitor, resolvedColors]);
 
   const handleSave = async () => {
     if (!name.trim() || !formula.trim()) {
@@ -234,14 +264,38 @@ export default function NewMonitorModal({
 
           <div className="form-group">
             <label>Color</label>
-            <div className="color-picker-group">
-              <input
-                type="color"
-                value={color}
-                onChange={(e) => setColor(e.target.value)}
-                className="color-picker"
-              />
-              <span className="color-value">{color}</span>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(6, 1fr)',
+              gap: '8px',
+              marginTop: '8px'
+            }}>
+              {resolvedColors.map(preset => (
+                <button
+                  key={preset.value}
+                  type="button"
+                  onClick={() => setColor(preset.value)}
+                  title={preset.name}
+                  style={{
+                    width: '100%',
+                    height: '36px',
+                    backgroundColor: preset.value,
+                    border: color === preset.value ? '3px solid var(--foreground)' : '2px solid var(--border)',
+                    borderRadius: 'calc(var(--radius) - 2px)',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    boxShadow: color === preset.value ? '0 0 0 2px var(--background)' : 'none'
+                  }}
+                  onMouseOver={(e) => {
+                    if (color !== preset.value) {
+                      e.currentTarget.style.transform = 'scale(1.05)';
+                    }
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.transform = 'scale(1)';
+                  }}
+                />
+              ))}
             </div>
           </div>
         </div>
