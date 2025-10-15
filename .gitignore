@@ -67,4 +67,4 @@ node_modules/
 # Production files (contains sensitive info)
 .env.production
 docker-compose.production.yml
-nginx.conf
+nginx.conffrontend_backup/
