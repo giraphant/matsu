@@ -25,9 +25,9 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <SidebarProvider>
+          <SidebarProvider defaultOpen={true}>
             <AppSidebar />
-            <main className="flex-1">
+            <main className="flex-1 w-full">
               <div className="border-b">
                 <div className="flex h-16 items-center px-4 justify-between">
                   <SidebarTrigger />
