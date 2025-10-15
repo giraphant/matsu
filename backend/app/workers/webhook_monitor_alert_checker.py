@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.core.logger import get_logger
 from app.monitors.base import BaseMonitor
-from app.models.database import get_db_session, AlertConfig, AlertState, MonitoringData
+from app.models.database import get_db_session, AlertState, MonitoringData
 from app.services.pushover import PushoverService, format_alert_message
 
 logger = get_logger(__name__)
@@ -31,11 +31,18 @@ class WebhookMonitorAlertChecker(BaseMonitor):
         super().__init__(name="Webhook Monitor Alert Checker", interval=interval)
 
     async def run(self) -> None:
-        """Check all webhook monitor alert rules."""
-        db = get_db_session()
-        try:
+        """
+        DEPRECATED: This method is no longer active.
+        The AlertConfig system has been removed. Use AlertRule system instead.
+        """
+        logger.warning("[WebhookMonitorAlertChecker] This worker is deprecated and disabled. Use AlertRule system instead.")
+        return
+
+        # DEPRECATED CODE BELOW - NO LONGER FUNCTIONAL
+        # db = get_db_session()
+        # try:
             # Get all alert configs (both with and without thresholds, we'll filter later)
-            alert_configs = db.query(AlertConfig).all()
+            # alert_configs = db.query(AlertConfig).all()
 
             logger.info(f"[WebhookMonitorAlertChecker] Checking {len(alert_configs)} alert configs")
 
