@@ -188,6 +188,96 @@ export async function getAlertHistory(limit = 50): Promise<any[]> {
   return response.json();
 }
 
+// Pushover Configuration
+export interface PushoverConfig {
+  user_key: string;
+  api_token?: string;
+  updated_at?: string;
+}
+
+export async function getPushoverConfig(): Promise<PushoverConfig | null> {
+  const response = await fetch(`${API_BASE_URL}/pushover/config`);
+  if (!response.ok) return null;
+  return response.json();
+}
+
+export async function savePushoverConfig(config: { user_key: string; api_token?: string }): Promise<PushoverConfig> {
+  const response = await fetch(`${API_BASE_URL}/pushover/config`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(config),
+  });
+  if (!response.ok) throw new Error('Failed to save Pushover configuration');
+  return response.json();
+}
+
+export async function testPushover(config: { user_key: string; api_token?: string }): Promise<boolean> {
+  const response = await fetch(`${API_BASE_URL}/pushover/test`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(config),
+  });
+  return response.ok;
+}
+
+// Funding Rate Alerts
+export interface FundingRateAlert {
+  id: number;
+  name: string;
+  alert_type: string;
+  exchanges: string[];
+  threshold: number;
+  enabled: boolean;
+  created_at: string;
+  updated_at: string;
+  last_triggered_at?: string;
+}
+
+export async function getFundingRateAlerts(): Promise<FundingRateAlert[]> {
+  const response = await fetch(`${API_BASE_URL}/dex/funding-rate-alerts`);
+  if (!response.ok) throw new Error('Failed to fetch funding rate alerts');
+  return response.json();
+}
+
+export async function createFundingRateAlert(alert: {
+  name: string;
+  alert_type: string;
+  exchanges: string[];
+  threshold: number;
+  enabled: boolean;
+}): Promise<FundingRateAlert> {
+  const response = await fetch(`${API_BASE_URL}/dex/funding-rate-alerts`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(alert),
+  });
+  if (!response.ok) throw new Error('Failed to create funding rate alert');
+  return response.json();
+}
+
+export async function updateFundingRateAlert(id: number, alert: {
+  name: string;
+  alert_type: string;
+  exchanges: string[];
+  threshold: number;
+  enabled: boolean;
+}): Promise<FundingRateAlert> {
+  const response = await fetch(`${API_BASE_URL}/dex/funding-rate-alerts/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(alert),
+  });
+  if (!response.ok) throw new Error('Failed to update funding rate alert');
+  return response.json();
+}
+
+export async function deleteFundingRateAlert(id: number): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/dex/funding-rate-alerts/${id}`, {
+    method: 'DELETE',
+  });
+  if (!response.ok) throw new Error('Failed to delete funding rate alert');
+}
+
 // Utility function to check API health
 export async function checkHealth(): Promise<boolean> {
   try {
