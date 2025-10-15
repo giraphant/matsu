@@ -1,0 +1,55 @@
+/* CSS Variables - Must be loaded first */
+:root {
+  --radius: 0.65rem;
+  --background: 0 0% 100%;
+  --foreground: 224 5% 14%;
+  --card: 0 0% 100%;
+  --card-foreground: 224 5% 14%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 224 5% 14%;
+  --primary: 27 95% 58%;
+  --primary-foreground: 0 0% 98%;
+  --secondary: 240 5% 96%;
+  --secondary-foreground: 240 6% 21%;
+  --muted: 240 5% 96%;
+  --muted-foreground: 240 4% 55%;
+  --accent: 240 5% 96%;
+  --accent-foreground: 240 6% 21%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 240 6% 90%;
+  --input: 240 6% 90%;
+  --ring: 27 95% 58%;
+  --chart-1: 20 88% 55%;
+  --chart-2: 185 60% 50%;
+  --chart-3: 215 40% 35%;
+  --chart-4: 85 80% 70%;
+  --chart-5: 45 90% 65%;
+}
+
+.dark {
+  --background: 224 10% 10%;
+  --foreground: 0 0% 98%;
+  --card: 224 10% 15%;
+  --card-foreground: 0 0% 98%;
+  --popover: 224 10% 15%;
+  --popover-foreground: 0 0% 98%;
+  --primary: 27 95% 58%;
+  --primary-foreground: 0 0% 98%;
+  --secondary: 240 6% 25%;
+  --secondary-foreground: 0 0% 98%;
+  --muted: 240 6% 25%;
+  --muted-foreground: 240 5% 65%;
+  --accent: 240 6% 25%;
+  --accent-foreground: 0 0% 98%;
+  --destructive: 0 75% 60%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 240 6% 20%;
+  --input: 240 6% 20%;
+  --ring: 27 95% 58%;
+  --chart-1: 260 85% 58%;
+  --chart-2: 160 75% 58%;
+  --chart-3: 45 90% 65%;
+  --chart-4: 300 80% 60%;
+  --chart-5: 15 90% 60%;
+}
