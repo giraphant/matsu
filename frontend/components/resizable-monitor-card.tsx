@@ -1,5 +1,6 @@
 'use client';
 
+import { memo } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -69,13 +70,9 @@ const shouldShowStats = (size: CardSize): boolean => {
   return ['medium', 'large', 'xlarge', 'tall'].includes(size);
 };
 
-export function ResizableMonitorCard({
-  monitor,
-  size,
-  onEdit,
-  onDelete,
-  onResize,
-}: ResizableMonitorCardProps) {
+function ResizableMonitorCardComponent(props: ResizableMonitorCardProps) {
+  const { monitor, size, onEdit, onDelete, onResize } = props;
+
   const {
     attributes,
     listeners,
@@ -89,6 +86,7 @@ export function ResizableMonitorCard({
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
+    willChange: isDragging ? 'transform' : 'auto',
   };
 
   // Format value with unit
@@ -99,7 +97,7 @@ export function ResizableMonitorCard({
   };
 
   // Get trend (mock for now - would calculate from history)
-  const trend = 0; // TODO: Calculate from actual data
+  const trend = 0;
   const isPositive = trend > 0;
   const isNegative = trend < 0;
 
@@ -126,7 +124,6 @@ export function ResizableMonitorCard({
       className={`${getGridClassForSize(size)} overflow-hidden hover:shadow-lg transition-all relative group flex flex-col`}
       {...attributes}
     >
-      {/* Color indicator bar */}
       <div
         className="absolute top-0 left-0 right-0 h-1"
         style={{ backgroundColor: monitor.color || '#3b82f6' }}
@@ -134,7 +131,6 @@ export function ResizableMonitorCard({
 
       <CardHeader className="pb-3 pt-4 flex-shrink-0">
         <div className="flex items-start justify-between gap-2">
-          {/* Drag handle */}
           <button
             {...listeners}
             className="cursor-grab active:cursor-grabbing p-1 hover:bg-muted rounded opacity-0 group-hover:opacity-100 transition-opacity touch-none flex-shrink-0"
@@ -160,7 +156,6 @@ export function ResizableMonitorCard({
           </div>
 
           <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
-            {/* Resize dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button size="icon" variant="ghost" className="h-7 w-7">
@@ -213,7 +208,6 @@ export function ResizableMonitorCard({
       </CardHeader>
 
       <CardContent className="pb-4 flex-1 flex flex-col gap-3">
-        {/* Main Value */}
         <div className="space-y-1">
           <div className="flex items-baseline gap-2">
             <span className={`font-bold tabular-nums ${size === 'tiny' ? 'text-2xl' : size === 'small' || size === 'vertical' ? 'text-3xl' : 'text-4xl'}`}>
@@ -239,7 +233,6 @@ export function ResizableMonitorCard({
           )}
         </div>
 
-        {/* Chart - shown for medium and larger cards */}
         {showChart && (
           <>
             <Separator />
@@ -249,7 +242,6 @@ export function ResizableMonitorCard({
           </>
         )}
 
-        {/* Stats - Min/Avg/Max */}
         {showStats && (
           <>
             <Separator />
@@ -276,7 +268,6 @@ export function ResizableMonitorCard({
           </>
         )}
 
-        {/* Formula hint for tiny/small cards */}
         {!showStats && size !== 'tiny' && (
           <code className="text-xs bg-muted px-2 py-1 rounded truncate block mt-auto">
             {monitor.formula}
@@ -286,3 +277,13 @@ export function ResizableMonitorCard({
     </Card>
   );
 }
+
+export const ResizableMonitorCard = memo(ResizableMonitorCardComponent, (prevProps, nextProps) => {
+  return (
+    prevProps.monitor.id === nextProps.monitor.id &&
+    prevProps.monitor.value === nextProps.monitor.value &&
+    prevProps.monitor.computed_at === nextProps.monitor.computed_at &&
+    prevProps.monitor.enabled === nextProps.monitor.enabled &&
+    prevProps.size === nextProps.size
+  );
+});

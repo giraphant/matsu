@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   DndContext,
   closestCenter,
@@ -64,11 +64,13 @@ export default function MonitorsPage() {
     decimal_places: 2
   });
 
-  // Setup drag sensors
+  // Setup drag sensors with optimized settings
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 8,
+        distance: 5, // Reduced for more responsive drag
+        delay: 100, // Small delay to prevent accidental drags
+        tolerance: 5,
       },
     }),
     useSensor(KeyboardSensor, {
@@ -171,8 +173,8 @@ export default function MonitorsPage() {
     }
   };
 
-  // Handle delete
-  const handleDelete = async (id: string) => {
+  // Handle delete - memoized
+  const handleDelete = useCallback(async (id: string) => {
     if (!confirm('Are you sure you want to delete this monitor?')) return;
 
     try {
@@ -182,19 +184,21 @@ export default function MonitorsPage() {
       toast.success('Monitor deleted');
 
       // Remove from layout
-      const newLayout = layout.filter(l => l.id !== id);
-      setLayout(newLayout);
-      saveLayout(newLayout);
+      setLayout(prevLayout => {
+        const newLayout = prevLayout.filter(l => l.id !== id);
+        saveLayout(newLayout);
+        return newLayout;
+      });
 
       fetchMonitors();
     } catch (error) {
       console.error('Error deleting monitor:', error);
       toast.error('Failed to delete monitor');
     }
-  };
+  }, [fetchMonitors]);
 
-  // Handle edit
-  const handleEdit = (monitor: Monitor) => {
+  // Handle edit - memoized
+  const handleEdit = useCallback((monitor: Monitor) => {
     setEditingMonitor(monitor);
     setFormData({
       name: monitor.name,
@@ -205,32 +209,36 @@ export default function MonitorsPage() {
       decimal_places: monitor.decimal_places
     });
     setDialogOpen(true);
-  };
+  }, []);
 
-  // Handle resize
-  const handleResize = (id: string, size: CardSize) => {
-    const newLayout = layout.map(item =>
-      item.id === id ? { ...item, size } : item
-    );
-    setLayout(newLayout);
-    saveLayout(newLayout);
+  // Handle resize - memoized
+  const handleResize = useCallback((id: string, size: CardSize) => {
+    setLayout(prevLayout => {
+      const newLayout = prevLayout.map(item =>
+        item.id === id ? { ...item, size } : item
+      );
+      saveLayout(newLayout);
+      return newLayout;
+    });
     toast.success('Card size updated');
-  };
+  }, []);
 
-  // Handle drag end
-  const handleDragEnd = (event: DragEndEvent) => {
+  // Handle drag end - memoized
+  const handleDragEnd = useCallback((event: DragEndEvent) => {
     const { active, over } = event;
 
     if (over && active.id !== over.id) {
-      const oldIndex = layout.findIndex(item => item.id === active.id);
-      const newIndex = layout.findIndex(item => item.id === over.id);
+      setLayout(prevLayout => {
+        const oldIndex = prevLayout.findIndex(item => item.id === active.id);
+        const newIndex = prevLayout.findIndex(item => item.id === over.id);
 
-      const newLayout = arrayMove(layout, oldIndex, newIndex);
-      setLayout(newLayout);
-      saveLayout(newLayout);
-      toast.success('Layout updated');
+        const newLayout = arrayMove(prevLayout, oldIndex, newIndex);
+        saveLayout(newLayout);
+        toast.success('Layout updated');
+        return newLayout;
+      });
     }
-  };
+  }, []);
 
   // Reset form
   const resetForm = () => {
