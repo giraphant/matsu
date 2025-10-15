@@ -19,8 +19,10 @@ class JupiterSpotMonitor(BaseMonitor):
         self.api_url = "https://price.jup.ag/v6/price"
         self.symbols = ['SOL', 'BTC', 'ETH']
 
-    async def check(self, db: Session) -> dict:
+    async def run(self) -> None:
         """Fetch spot prices from Jupiter API"""
+        db = get_db_session()
+
         try:
             import httpx
 
@@ -35,7 +37,7 @@ class JupiterSpotMonitor(BaseMonitor):
 
             if not data or 'data' not in data:
                 logger.warning(f"No data returned from Jupiter API")
-                return {"status": "no_data"}
+                return
 
             # Process each symbol
             prices_data = data['data']
@@ -67,17 +69,13 @@ class JupiterSpotMonitor(BaseMonitor):
                 logger.info(f"Jupiter {symbol} price: ${price}")
 
             db.commit()
-
-            return {
-                "status": "success",
-                "symbols_count": stored_count,
-                "message": f"Stored {stored_count} Jupiter spot prices"
-            }
+            logger.info(f"Stored {stored_count} Jupiter spot prices")
 
         except Exception as e:
             logger.error(f"Error fetching Jupiter spot prices: {e}", exc_info=True)
             db.rollback()
-            return {"status": "error", "error": str(e)}
+        finally:
+            db.close()
 
 
 def get_monitor():

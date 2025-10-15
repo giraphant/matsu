@@ -26,8 +26,10 @@ class PythSpotMonitor(BaseMonitor):
             'SOL': '0xef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d',
         }
 
-    async def check(self, db: Session) -> dict:
+    async def run(self) -> None:
         """Fetch spot prices from Pyth Hermes API"""
+        db = get_db_session()
+
         try:
             import httpx
 
@@ -79,17 +81,13 @@ class PythSpotMonitor(BaseMonitor):
                     continue
 
             db.commit()
-
-            return {
-                "status": "success",
-                "symbols_count": stored_count,
-                "message": f"Stored {stored_count} Pyth oracle prices"
-            }
+            logger.info(f"Stored {stored_count} Pyth oracle prices")
 
         except Exception as e:
             logger.error(f"Error fetching Pyth oracle prices: {e}", exc_info=True)
             db.rollback()
-            return {"status": "error", "error": str(e)}
+        finally:
+            db.close()
 
 
 def get_monitor():
