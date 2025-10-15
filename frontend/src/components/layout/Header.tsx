@@ -15,7 +15,7 @@ import {
   Sliders
 } from 'lucide-react';
 
-export type ViewMode = 'overview' | 'detail' | 'dex' | 'monitors' | 'bento2';
+export type ViewMode = 'overview' | 'dex' | 'monitors' | 'settings';
 
 interface HeaderProps {
   viewMode: ViewMode;
@@ -69,13 +69,6 @@ export function Header({
                     <span>Overview</span>
                   </button>
                   <button
-                    className={`mobile-menu-item ${viewMode === 'detail' ? 'active' : ''}`}
-                    onClick={() => { onViewModeChange('detail'); onToggleMobileMenu(); }}
-                  >
-                    <LineChartIcon size={20} />
-                    <span>Detail View</span>
-                  </button>
-                  <button
                     className={`mobile-menu-item ${viewMode === 'dex' ? 'active' : ''}`}
                     onClick={() => { onViewModeChange('dex'); onToggleMobileMenu(); }}
                   >
@@ -88,6 +81,13 @@ export function Header({
                   >
                     <Sliders size={20} />
                     <span>Monitors</span>
+                  </button>
+                  <button
+                    className={`mobile-menu-item ${viewMode === 'settings' ? 'active' : ''}`}
+                    onClick={() => { onViewModeChange('settings'); onToggleMobileMenu(); }}
+                  >
+                    <Settings size={20} />
+                    <span>Settings</span>
                   </button>
                   {viewMode === 'overview' && (
                     <button
@@ -126,14 +126,6 @@ export function Header({
               <LayoutGrid size={18} />
             </button>
             <button
-              className={`btn-secondary ${viewMode === 'detail' ? 'active' : ''}`}
-              onClick={() => onViewModeChange('detail')}
-              title="Detail view"
-              style={{ padding: '8px 12px' }}
-            >
-              <LineChartIcon size={18} />
-            </button>
-            <button
               className={`btn-secondary ${viewMode === 'dex' ? 'active' : ''}`}
               onClick={() => onViewModeChange('dex')}
               title="DEX Rates"
@@ -148,6 +140,14 @@ export function Header({
               style={{ padding: '8px 12px' }}
             >
               <Sliders size={18} />
+            </button>
+            <button
+              className={`btn-secondary ${viewMode === 'settings' ? 'active' : ''}`}
+              onClick={() => onViewModeChange('settings')}
+              title="Settings"
+              style={{ padding: '8px 12px' }}
+            >
+              <Settings size={18} />
             </button>
             <button
               className="btn-secondary"

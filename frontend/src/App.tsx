@@ -5,7 +5,7 @@ import ConstantCardModal from './ConstantCardModal';
 import { Loading, EmptyState } from './components/common';
 import { LoginForm } from './components/auth';
 import { Header, ViewMode } from './components/layout';
-import { OverviewView, DetailView, Bento2View } from './views';
+import { OverviewView, DetailView, Bento2View, SettingsView } from './views';
 import MonitorsView from './views/MonitorsView';
 import { alertRuleApi } from './api/newMonitors';
 import {
@@ -162,12 +162,12 @@ function App() {
     requestNotificationPermission();
   }, [requestNotificationPermission]);
 
-  // Load Pushover config when modal opens
+  // Load Pushover config when settings page opens
   useEffect(() => {
-    if (showManageModal && settingsTab === 'pushover') {
+    if (viewMode === 'settings') {
       loadPushoverConfig();
     }
-  }, [showManageModal, settingsTab, loadPushoverConfig]);
+  }, [viewMode, loadPushoverConfig]);
 
   // Alert checking loop
   useEffect(() => {
@@ -310,59 +310,16 @@ function App() {
         <DexRates />
       ) : viewMode === 'monitors' ? (
         <MonitorsView />
-      ) : viewMode === 'bento2' ? (
-        <Bento2View
-          displayedCards={displayedCards}
-          availableMonitors={availableBentoMonitors}
-          allMonitors={allBentoMonitors}
-          alertRules={alertRules}
-          computedLayout={bentoComputedLayout}
-          isMobile={isMobile}
-          onLayoutChange={(layout) => onBentoLayoutChange(layout, isMobile)}
-          onRemoveCard={removeCard}
-          onAddCard={addCard}
-          onSaveAlertRule={handleSaveAlertRule}
-          onDeleteAlertRule={handleDeleteAlertRule}
-          getAlertRuleForMonitor={getAlertRuleForMonitor}
-          gridLayout={bentoGridLayout}
-        />
-      ) : (
-        <DetailView
-          monitors={monitors}
-          visibleMonitors={visibleMonitors}
-          selectedMonitor={selectedMonitor}
-          currentMonitor={currentMonitor}
-          chartData={chartData}
-          days={days}
-          monitorNames={monitorNames}
-          monitorTags={monitorTags}
-          hiddenMonitors={hiddenMonitors}
-          allTags={allTags}
-          selectedTag={selectedTag}
-          showManageModal={showManageModal}
-          settingsTab={settingsTab}
-          monitorSearchQuery={monitorSearchQuery}
+      ) : viewMode === 'settings' ? (
+        <SettingsView
           pushoverUserKey={pushoverUserKey}
           pushoverApiToken={pushoverApiToken}
-          onSelectMonitor={setSelectedMonitor}
-          onSetDays={setDays}
-          onUpdateUnit={handleUpdateUnit}
-          onSetSelectedTag={setSelectedTag}
-          onShowManageModal={setShowManageModal}
-          onSetSettingsTab={setSettingsTab}
-          onSetMonitorSearchQuery={setMonitorSearchQuery}
-          onToggleHideMonitor={toggleHideMonitor}
-          onDeleteMonitor={handleDeleteMonitor}
-          onAddTag={addTagToMonitor}
-          onRemoveTag={removeTagFromMonitor}
-          onUpdateName={updateMonitorName}
-          onUpdateDecimalPlaces={updateMonitorDecimalPlaces}
           onSetPushoverUserKey={setPushoverUserKey}
           onSetPushoverApiToken={setPushoverApiToken}
           onSavePushoverConfig={savePushoverConfig}
           onTestPushoverNotification={testPushoverNotification}
         />
-      )}
+      ) : null}
 
       {/* Constant Card Modal */}
       <ConstantCardModal
