@@ -65,13 +65,15 @@ app.add_middleware(
 templates = Jinja2Templates(directory="templates")
 
 # Include routers
+# IMPORTANT: monitors_router must come before data_router to avoid route conflicts
+# Both have /monitors endpoints, and monitors_router (new system) should take precedence
 app.include_router(auth_router, prefix="/api/auth", tags=["auth"])
 app.include_router(webhook_router, prefix="/webhook", tags=["webhooks"])
+app.include_router(monitors_router, prefix="/api", tags=["monitors"])
 app.include_router(data_router, prefix="/api", tags=["data"])
 app.include_router(alerts_router, prefix="/api", tags=["alerts"])
 app.include_router(constants_router, prefix="/api", tags=["constants"])
 app.include_router(dex_router, prefix="/api", tags=["dex"])
-app.include_router(monitors_router, prefix="/api", tags=["monitors"])
 
 
 # Old HTML template pages (kept for reference)
