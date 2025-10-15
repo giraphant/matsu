@@ -111,17 +111,20 @@ class MonitorAlertChecker(BaseMonitor):
 
         # Evaluate the condition (simple comparison only for security)
         try:
-            # Only allow safe operators
-            if not all(op in evaluated_condition for op in ['>', '<', '=', '|', '&', ' ', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '-']):
-                # Check if condition contains only numbers and safe operators
-                safe_chars = set('0123456789.><=|& -')
-                if not all(c in safe_chars for c in evaluated_condition.replace('||', '').replace('&&', '').replace('==', '').replace('!=', '').replace('>=', '').replace('<=', '')):
-                    logger.error(f"[MonitorAlertChecker] Unsafe condition: {evaluated_condition}")
-                    return False
+            # Check if condition contains only numbers and safe operators
+            safe_chars = set('0123456789.><=|& -or')
+            # Replace operators to check remaining characters
+            check_str = evaluated_condition
+            for op in ['||', '&&', '>=', '<=', '==', '!=', '>', '<', ' or ', ' and ']:
+                check_str = check_str.replace(op, '')
+
+            if not all(c in safe_chars for c in evaluated_condition):
+                logger.error(f"[MonitorAlertChecker] Unsafe condition: {evaluated_condition}")
+                return False
 
             # Replace logical operators
-            evaluated_condition = evaluated_condition.replace('||', ' or ').replace('&&', ' and ')
-            evaluated_condition = evaluated_condition.replace('==', '==').replace('!=', '!=')
+            evaluated_condition = evaluated_condition.replace(' or ', ' or ').replace(' || ', ' or ')
+            evaluated_condition = evaluated_condition.replace(' and ', ' and ').replace(' && ', ' and ')
 
             result = eval(evaluated_condition)
             return bool(result)
