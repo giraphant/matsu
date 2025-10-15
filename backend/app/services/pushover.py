@@ -59,11 +59,14 @@ def send_pushover_notification(
     Returns:
         True if notification was sent successfully, False otherwise
     """
+    logger.info(f"[Pushover] send_pushover_notification called - title: {title}, level: {level}")
+
     if not user_key:
-        logger.warning("No user key configured")
+        logger.warning("[Pushover] No user key configured")
         return False
 
     token = api_token or DEFAULT_API_TOKEN
+    logger.info(f"[Pushover] Using {'custom' if api_token else 'default'} API token")
     config = ALERT_LEVELS.get(level, ALERT_LEVELS['medium'])
 
     payload = {
@@ -85,6 +88,9 @@ def send_pushover_notification(
         payload['url'] = url
         payload['url_title'] = "View Dashboard"
 
+    logger.info(f"[Pushover] Sending request to Pushover API...")
+    logger.debug(f"[Pushover] Payload: {payload}")
+
     try:
         response = requests.post(
             'https://api.pushover.net/1/messages.json',
@@ -92,15 +98,18 @@ def send_pushover_notification(
             timeout=10
         )
 
+        logger.info(f"[Pushover] Response status: {response.status_code}")
+        logger.debug(f"[Pushover] Response body: {response.text}")
+
         if response.status_code == 200:
-            logger.info(f"Notification sent successfully: {title}")
+            logger.info(f"[Pushover] ✅ Notification sent successfully: {title}")
             return True
         else:
-            logger.error(f"Failed to send notification: {response.status_code} - {response.text}")
+            logger.error(f"[Pushover] ❌ Failed to send notification: {response.status_code} - {response.text}")
             return False
 
     except Exception as e:
-        logger.error(f"Error sending notification: {e}")
+        logger.error(f"[Pushover] ❌ Exception while sending notification: {e}")
         return False
 
 
@@ -186,11 +195,15 @@ class PushoverService:
         Returns:
             True if sent successfully, False otherwise
         """
+        logger.info(f"[PushoverService] send_alert called - title: {title}, level: {level}")
+
         config = self.pushover_repo.get_config()
 
         if not config:
-            logger.warning("Pushover not configured, skipping notification")
+            logger.warning("[PushoverService] ⚠️  Pushover not configured, skipping notification")
             return False
+
+        logger.info(f"[PushoverService] Using config with user_key: {config.user_key[:10]}...")
 
         return send_pushover_notification(
             user_key=config.user_key,
