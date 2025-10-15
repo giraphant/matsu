@@ -7,10 +7,10 @@ from datetime import datetime, timedelta
 from typing import Optional, Dict, Any, List
 from sqlalchemy.orm import Session
 
-from app.models.database import MonitoringData, AlertConfig, AlertState
+from app.models.database import MonitoringData, AlertState
 from app.schemas.monitoring import DistillWebhookPayload
 from app.repositories.monitoring import MonitoringRepository
-from app.repositories.alert import AlertRepository, AlertStateRepository
+from app.repositories.alert import AlertStateRepository
 from app.services.pushover import PushoverService, format_alert_message
 from app.services.monitor_service import MonitorService
 from app.core.logger import get_logger
@@ -33,7 +33,6 @@ class MonitoringService:
         """
         self.db = db
         self.monitoring_repo = MonitoringRepository(db)
-        self.alert_repo = AlertRepository(db)
         self.alert_state_repo = AlertStateRepository(db)
         self.pushover_service = PushoverService(db)
         self.monitor_service = MonitorService(db)
@@ -58,10 +57,8 @@ class MonitoringService:
         # 1. Parse and create monitoring data
         data = self._create_monitoring_data(payload)
 
-        # 2. Check and trigger alerts (old system - AlertConfig)
-        self._check_and_trigger_alerts(data)
-
-        # 3. Trigger Monitor System recomputation (new system - monitors with formulas)
+        # 2. Trigger Monitor System recomputation (new system - monitors with formulas)
+        # Alert checking is now done via AlertRule system, not the old AlertConfig
         try:
             recomputed = self.monitor_service.trigger_recompute_on_webhook(data.monitor_id)
             if recomputed:
@@ -143,123 +140,6 @@ class MonitoringService:
         logger.info(f"Created monitoring data: monitor_id={monitor_id}, value={value}")
 
         return created_data
-
-    def _check_and_trigger_alerts(self, data: MonitoringData):
-        """
-        Check if alert should be triggered and send notification.
-
-        Args:
-            data: MonitoringData record
-        """
-        # Only check alerts if we have a numeric value
-        if data.value is None:
-            return
-
-        # Get alert configuration
-        alert_config = self.alert_repo.get_by_monitor_id(data.monitor_id)
-
-        if not alert_config:
-            return
-
-        # Check if alert should be triggered
-        should_alert, threshold_type = self._should_trigger_alert(
-            data.value,
-            alert_config
-        )
-
-        if not should_alert:
-            # No alert needed - resolve any active alerts
-            self.alert_state_repo.resolve(data.monitor_id)
-            return
-
-        # Check if we already have an active alert
-        active_alert = self.alert_state_repo.get_active_by_monitor_id(data.monitor_id)
-
-        if active_alert:
-            # Update notification count
-            self.alert_state_repo.update_notification_count(active_alert.id)
-            logger.debug(f"Updated existing alert for {data.monitor_id}")
-        else:
-            # Create new alert state
-            alert_state = AlertState(
-                monitor_id=data.monitor_id,
-                alert_level=alert_config.alert_level,
-                triggered_at=datetime.utcnow(),
-                last_notified_at=datetime.utcnow(),
-                is_active=True
-            )
-            self.alert_state_repo.create(alert_state)
-            logger.info(f"Created new alert state for {data.monitor_id}")
-
-            # Send notification for new alert
-            self._send_alert_notification(data, alert_config, threshold_type)
-
-    def _should_trigger_alert(
-        self,
-        value: float,
-        config: AlertConfig
-    ) -> tuple[bool, Optional[str]]:
-        """
-        Check if alert should be triggered based on thresholds.
-
-        Args:
-            value: Current value
-            config: Alert configuration
-
-        Returns:
-            Tuple of (should_trigger, threshold_type)
-            threshold_type is 'upper' or 'lower' or None
-        """
-        if config.upper_threshold is not None and value > config.upper_threshold:
-            return True, 'upper'
-
-        if config.lower_threshold is not None and value < config.lower_threshold:
-            return True, 'lower'
-
-        return False, None
-
-    def _send_alert_notification(
-        self,
-        data: MonitoringData,
-        config: AlertConfig,
-        threshold_type: str
-    ):
-        """
-        Send alert notification via Pushover.
-
-        Args:
-            data: MonitoringData that triggered alert
-            config: Alert configuration
-            threshold_type: 'upper' or 'lower'
-        """
-        if not self.pushover_service.is_configured():
-            logger.warning("Pushover not configured, skipping notification")
-            return
-
-        # Format alert message
-        threshold_upper = config.upper_threshold if threshold_type == 'upper' else None
-        threshold_lower = config.lower_threshold if threshold_type == 'lower' else None
-
-        message = format_alert_message(
-            monitor_name=data.monitor_name or data.monitor_id,
-            current_value=data.value,
-            threshold_upper=threshold_upper,
-            threshold_lower=threshold_lower,
-            unit=data.unit
-        )
-
-        # Send notification
-        success = self.pushover_service.send_alert(
-            message=message,
-            title=f"Alert: {data.monitor_name or data.monitor_id}",
-            level=config.alert_level,
-            url=data.url
-        )
-
-        if success:
-            logger.info(f"Alert notification sent for {data.monitor_id}")
-        else:
-            logger.error(f"Failed to send alert notification for {data.monitor_id}")
 
     def _parse_value_and_unit(self, text_value: Optional[str]) -> tuple[Optional[float], Optional[str]]:
         """
@@ -370,15 +250,8 @@ class MonitoringService:
         else:
             summary['status'] = 'unknown'
 
-        # Add alert information
-        alert_config = self.alert_repo.get_by_monitor_id(monitor_id)
-        if alert_config:
-            summary['alert_configured'] = True
-            summary['alert_level'] = alert_config.alert_level
-            summary['upper_threshold'] = alert_config.upper_threshold
-            summary['lower_threshold'] = alert_config.lower_threshold
-        else:
-            summary['alert_configured'] = False
+        # Alert information is now handled by AlertRule system
+        summary['alert_configured'] = False
 
         return summary
 
@@ -407,12 +280,7 @@ class MonitoringService:
             else:
                 summary['status'] = 'unknown'
 
-            # Add alert information
-            alert_config = self.alert_repo.get_by_monitor_id(monitor_id)
-            if alert_config:
-                summary['alert_configured'] = True
-                summary['alert_level'] = alert_config.alert_level
-            else:
-                summary['alert_configured'] = False
+            # Alert information is now handled by AlertRule system
+            summary['alert_configured'] = False
 
         return summaries

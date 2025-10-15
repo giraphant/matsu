@@ -231,7 +231,7 @@ export function MonitorCard({ monitor, onEdit, onDelete, onSetAlert, showChart =
             {onSetAlert && (
               <DropdownMenuItem onClick={() => onSetAlert(monitor)}>
                 <Bell className="mr-2 h-3 w-3" />
-                <span className="text-xs">Set Alert</span>
+                <span className="text-xs">Alert</span>
               </DropdownMenuItem>
             )}
             {onDelete && (

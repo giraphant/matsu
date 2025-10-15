@@ -95,22 +95,6 @@ class MonitoringData(Base):
         return f"<MonitoringData(monitor_id='{self.monitor_id}', timestamp='{self.timestamp}', value='{self.value}')>"
 
 
-class AlertConfig(Base):
-    """Database model for alert configurations."""
-
-    __tablename__ = "alert_configs"
-
-    monitor_id = Column(String, primary_key=True)
-    upper_threshold = Column(Float, nullable=True)
-    lower_threshold = Column(Float, nullable=True)
-    alert_level = Column(String, default='medium')  # critical, high, medium, low
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-
-    def __repr__(self):
-        return f"<AlertConfig(monitor_id='{self.monitor_id}', level='{self.alert_level}')>"
-
-
 class AlertState(Base):
     """Database model for tracking alert states."""
 

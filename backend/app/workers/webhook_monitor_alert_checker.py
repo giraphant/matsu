@@ -1,5 +1,9 @@
 """
-Webhook Monitor alert checker worker.
+DEPRECATED: Webhook Monitor alert checker worker.
+This worker is deprecated and should not be used. It checks the old AlertConfig system.
+The new AlertRule system is now used instead. This file is kept for reference only.
+
+Legacy documentation:
 Periodically checks AlertConfig rules against webhook monitor values and sends Pushover notifications.
 """
 

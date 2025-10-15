@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, Activity } from 'lucide-react';
 import { toast } from "sonner";
 import { MonitorCard } from '@/components/monitor-card';
@@ -301,8 +302,8 @@ export default function MonitorsPage() {
 
   // Parse condition formula to extract thresholds
   const parseConditionToThresholds = (condition: string, monitorId: string): { upper: string | null; lower: string | null } => {
-    const upperMatch = condition.match(/\$\{monitor:.*?\}\s*>\s*([\d.]+)/);
-    const lowerMatch = condition.match(/\$\{monitor:.*?\}\s*<\s*([\d.]+)/);
+    const upperMatch = condition.match(/\$\{monitor:.*?\}\s*>\s*(-?[\d.]+)/);
+    const lowerMatch = condition.match(/\$\{monitor:.*?\}\s*<\s*(-?[\d.]+)/);
 
     return {
       upper: upperMatch ? upperMatch[1] : null,
@@ -422,10 +423,30 @@ export default function MonitorsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <Activity className="h-8 w-8 animate-spin mx-auto mb-4" />
-          <p className="text-muted-foreground">Loading monitors...</p>
+      <div className="container mx-auto p-6 max-w-7xl">
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <Skeleton className="h-9 w-64 mb-2" />
+            <Skeleton className="h-5 w-96" />
+          </div>
+          <Skeleton className="h-10 w-32" />
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <Card key={i} className="p-4">
+              <div className="flex flex-col gap-y-4">
+                <div className="flex flex-col gap-y-2">
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-3 w-48" />
+                </div>
+                <div className="flex flex-col gap-y-1">
+                  <Skeleton className="h-9 w-24" />
+                  <Skeleton className="h-3 w-16" />
+                </div>
+              </div>
+              <Skeleton className="h-24 w-full mt-4" />
+            </Card>
+          ))}
         </div>
       </div>
     );
@@ -634,10 +655,10 @@ export default function MonitorsPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="low">Low</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="high">High</SelectItem>
                   <SelectItem value="critical">Critical</SelectItem>
+                  <SelectItem value="high">High</SelectItem>
+                  <SelectItem value="medium">Medium</SelectItem>
+                  <SelectItem value="low">Low</SelectItem>
                 </SelectContent>
               </Select>
             </div>

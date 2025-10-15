@@ -1,107 +1,16 @@
 """
 Repository for alert-related operations.
-Encapsulates all database queries for AlertConfig and AlertState models.
+Encapsulates all database queries for AlertState model.
 """
 
 from datetime import datetime
 from typing import Optional, List
 from sqlalchemy.orm import Session
 
-from app.models.database import AlertConfig, AlertState
+from app.models.database import AlertState
 from app.core.logger import get_logger
 
 logger = get_logger(__name__)
-
-
-class AlertRepository:
-    """Repository for AlertConfig model."""
-
-    def __init__(self, db: Session):
-        """
-        Initialize alert repository.
-
-        Args:
-            db: Database session
-        """
-        self.db = db
-
-    def get_by_monitor_id(self, monitor_id: str) -> Optional[AlertConfig]:
-        """
-        Get alert configuration by monitor ID.
-
-        Args:
-            monitor_id: Monitor identifier
-
-        Returns:
-            AlertConfig or None
-        """
-        return self.db.query(AlertConfig).filter(
-            AlertConfig.monitor_id == monitor_id
-        ).first()
-
-    def get_all(self) -> List[AlertConfig]:
-        """
-        Get all alert configurations.
-
-        Returns:
-            List of AlertConfig records
-        """
-        return self.db.query(AlertConfig).all()
-
-    def create(self, alert_config: AlertConfig) -> AlertConfig:
-        """
-        Create a new alert configuration.
-
-        Args:
-            alert_config: AlertConfig instance
-
-        Returns:
-            Created AlertConfig
-        """
-        self.db.add(alert_config)
-        self.db.commit()
-        self.db.refresh(alert_config)
-        logger.debug(f"Created alert config: {alert_config.monitor_id}")
-        return alert_config
-
-    def update(self, monitor_id: str, **kwargs) -> Optional[AlertConfig]:
-        """
-        Update alert configuration.
-
-        Args:
-            monitor_id: Monitor identifier
-            **kwargs: Fields to update
-
-        Returns:
-            Updated AlertConfig or None
-        """
-        config = self.get_by_monitor_id(monitor_id)
-        if config:
-            for key, value in kwargs.items():
-                setattr(config, key, value)
-            config.updated_at = datetime.utcnow()
-            self.db.commit()
-            self.db.refresh(config)
-            logger.debug(f"Updated alert config: {monitor_id}")
-        return config
-
-    def delete(self, monitor_id: str) -> bool:
-        """
-        Delete alert configuration.
-
-        Args:
-            monitor_id: Monitor identifier
-
-        Returns:
-            True if deleted, False if not found
-        """
-        config = self.get_by_monitor_id(monitor_id)
-        if config:
-            self.db.delete(config)
-            self.db.commit()
-            logger.debug(f"Deleted alert config: {monitor_id}")
-            return True
-        return False
 
 
 class AlertStateRepository:
