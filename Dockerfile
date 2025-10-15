@@ -1,4 +1,22 @@
-# Production Dockerfile for Coolify deployment
+# Multi-stage build for frontend and backend
+# Stage 1: Build frontend
+FROM node:18-alpine AS frontend-builder
+
+WORKDIR /build
+
+# Copy frontend package files
+COPY frontend/package*.json ./
+
+# Install dependencies
+RUN npm ci
+
+# Copy frontend source
+COPY frontend/ ./
+
+# Build frontend
+RUN npm run build
+
+# Stage 2: Python backend with built frontend
 FROM python:3.11-slim
 
 # Set working directory
@@ -29,8 +47,8 @@ RUN pip install --no-cache-dir --upgrade pip \
 # Copy backend code
 COPY backend/ .
 
-# Copy static files and other assets
-COPY static/ static/
+# Copy built frontend from frontend-builder stage
+COPY --from=frontend-builder /build/build/ static/
 
 # Create required directories
 RUN mkdir -p data static logs
