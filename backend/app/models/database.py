@@ -166,20 +166,19 @@ class ConstantCard(Base):
 
 class Monitor(Base):
     """
-    Unified Monitor definition.
-    All cards (direct, computed, constant) are represented as Monitors.
+    Unified Monitor definition - everything is just a formula.
 
-    Types:
-    - 'direct': References webhook data (monitoring_data table)
-    - 'computed': Formula-based calculation using other monitors
-    - 'constant': Fixed value set by user
+    Examples:
+    - Constant: formula = "100"
+    - Reference webhook: formula = "${webhook:btc_price}"
+    - Computed: formula = "${monitor:a} - ${monitor:b}"
+    - Complex: formula = "${monitor:a} * 0.05 + ${monitor:b}"
     """
     __tablename__ = 'monitors'
 
-    id = Column(String, primary_key=True)  # e.g., "monitor_btc_price", "computed_btc_eth_diff"
+    id = Column(String, primary_key=True)
     name = Column(String, nullable=False)
-    type = Column(String, nullable=False)  # 'direct', 'computed', 'constant'
-    formula = Column(Text, nullable=False)  # Formula or data source reference
+    formula = Column(Text, nullable=False)  # The formula IS the definition
     unit = Column(String)
     description = Column(Text)
     color = Column(String)
@@ -189,7 +188,7 @@ class Monitor(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     def __repr__(self):
-        return f"<Monitor(id={self.id}, name={self.name}, type={self.type})>"
+        return f"<Monitor(id={self.id}, name={self.name}, formula={self.formula[:50]})>"
 
 
 class MonitorValue(Base):

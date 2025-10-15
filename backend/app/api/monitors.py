@@ -26,7 +26,6 @@ logger = get_logger(__name__)
 class MonitorCreate(BaseModel):
     """Request model for creating a monitor."""
     name: str
-    type: str  # 'direct', 'computed', 'constant'
     formula: str
     unit: Optional[str] = None
     description: Optional[str] = None
@@ -49,7 +48,6 @@ class MonitorResponse(BaseModel):
     """Response model for monitor."""
     id: str
     name: str
-    type: str
     formula: str
     unit: Optional[str]
     description: Optional[str]
@@ -105,7 +103,6 @@ async def create_monitor(monitor: MonitorCreate, db: Session = Depends(get_db)):
         service = MonitorService(db)
         created = service.create_monitor(
             name=monitor.name,
-            monitor_type=monitor.type,
             formula=monitor.formula,
             unit=monitor.unit,
             description=monitor.description,

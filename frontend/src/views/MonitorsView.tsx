@@ -156,9 +156,6 @@ export default function MonitorsView() {
                   <div className="monitor-card-info">
                     <div className="monitor-card-title">
                       <h3>{monitor.name}</h3>
-                      <span className={`monitor-type-badge ${monitor.type}`}>
-                        {monitor.type}
-                      </span>
                     </div>
                     <div className="monitor-formula">{monitor.formula}</div>
                     {monitor.description && (

@@ -27,7 +27,6 @@ class MonitorService:
     def create_monitor(
         self,
         name: str,
-        monitor_type: str,
         formula: str,
         unit: Optional[str] = None,
         description: Optional[str] = None,
@@ -36,12 +35,11 @@ class MonitorService:
         monitor_id: Optional[str] = None
     ) -> Optional[Monitor]:
         """
-        Create a new monitor.
+        Create a new monitor. All monitors are just formulas.
 
         Args:
             name: Monitor name
-            monitor_type: 'direct', 'computed', or 'constant'
-            formula: Formula or data source reference
+            formula: The formula (constant, reference, or computation)
             unit: Display unit
             description: Description
             color: Display color
@@ -51,32 +49,20 @@ class MonitorService:
         Returns:
             Created Monitor or None if validation fails
         """
-        # Validate type
-        if monitor_type not in ['direct', 'computed', 'constant']:
-            logger.error(f"Invalid monitor type: {monitor_type}")
+        # Check circular dependency
+        temp_id = monitor_id or f"temp_{uuid.uuid4().hex[:8]}"
+        if self.formula_engine.check_circular_dependency(temp_id, formula):
+            logger.error(f"Circular dependency detected in formula: {formula}")
             return None
-
-        # Check circular dependency for computed monitors
-        if monitor_type == 'computed':
-            temp_id = monitor_id or f"temp_{uuid.uuid4().hex[:8]}"
-            if self.formula_engine.check_circular_dependency(temp_id, formula):
-                logger.error(f"Circular dependency detected in formula: {formula}")
-                return None
 
         # Generate ID if not provided
         if not monitor_id:
-            prefix = {
-                'direct': 'direct',
-                'computed': 'computed',
-                'constant': 'const'
-            }[monitor_type]
-            monitor_id = f"{prefix}_{uuid.uuid4().hex[:12]}"
+            monitor_id = f"monitor_{uuid.uuid4().hex[:12]}"
 
         # Create monitor
         monitor = Monitor(
             id=monitor_id,
             name=name,
-            type=monitor_type,
             formula=formula,
             unit=unit,
             description=description,
@@ -96,11 +82,9 @@ class MonitorService:
         """Update monitor."""
         # If formula is being updated, check for circular dependencies
         if 'formula' in updates:
-            monitor = self.repo.get_by_id(monitor_id)
-            if monitor and monitor.type == 'computed':
-                if self.formula_engine.check_circular_dependency(monitor_id, updates['formula']):
-                    logger.error(f"Circular dependency detected in updated formula")
-                    return None
+            if self.formula_engine.check_circular_dependency(monitor_id, updates['formula']):
+                logger.error(f"Circular dependency detected in updated formula")
+                return None
 
         updated = self.repo.update(monitor_id, updates)
 
@@ -139,7 +123,6 @@ class MonitorService:
         return {
             'id': monitor.id,
             'name': monitor.name,
-            'type': monitor.type,
             'formula': monitor.formula,
             'unit': monitor.unit,
             'description': monitor.description,
@@ -170,10 +153,9 @@ class MonitorService:
         recomputed = []
 
         for monitor in monitors:
-            if monitor.type in ['direct', 'computed']:
-                value = self.formula_engine.compute_monitor_value(monitor.id)
-                if value is not None:
-                    recomputed.append(monitor.id)
+            value = self.formula_engine.compute_monitor_value(monitor.id)
+            if value is not None:
+                recomputed.append(monitor.id)
 
         logger.info(f"Recomputed {len(recomputed)} monitors")
         return recomputed

@@ -1,11 +1,11 @@
 /**
  * API client for new unified Monitor System
+ * All monitors are just formulas - no type distinction
  */
 
 export interface NewMonitor {
   id: string;
   name: string;
-  type: 'direct' | 'computed' | 'constant';
   formula: string;
   unit?: string;
   description?: string;
@@ -20,7 +20,6 @@ export interface NewMonitor {
 
 export interface MonitorCreate {
   name: string;
-  type: 'direct' | 'computed' | 'constant';
   formula: string;
   unit?: string;
   description?: string;

@@ -21,7 +21,6 @@ export default function NewMonitorModal({
   onSave
 }: NewMonitorModalProps) {
   const [name, setName] = useState('');
-  const [type, setType] = useState<'direct' | 'computed' | 'constant'>('computed');
   const [formula, setFormula] = useState('');
   const [unit, setUnit] = useState('');
   const [description, setDescription] = useState('');
@@ -33,7 +32,6 @@ export default function NewMonitorModal({
   useEffect(() => {
     if (show && monitor) {
       setName(monitor.name);
-      setType(monitor.type);
       setFormula(monitor.formula);
       setUnit(monitor.unit || '');
       setDescription(monitor.description || '');
@@ -41,7 +39,6 @@ export default function NewMonitorModal({
       setDecimalPlaces(monitor.decimal_places);
     } else if (show) {
       setName('');
-      setType('computed');
       setFormula('');
       setUnit('');
       setDescription('');
@@ -63,7 +60,6 @@ export default function NewMonitorModal({
     try {
       await onSave({
         name: name.trim(),
-        type,
         formula: formula.trim(),
         unit: unit.trim() || undefined,
         description: description.trim() || undefined,
@@ -115,40 +111,21 @@ export default function NewMonitorModal({
           </div>
 
           <div className="form-group">
-            <label>Monitor Type *</label>
-            <select
-              value={type}
-              onChange={(e) => setType(e.target.value as any)}
-              className="form-input"
-            >
-              <option value="computed">Computed (formula-based)</option>
-              <option value="constant">Constant (fixed value)</option>
-              <option value="direct">Direct (webhook reference)</option>
-            </select>
-          </div>
-
-          <div className="form-group">
             <label>Formula *</label>
             <textarea
               value={formula}
               onChange={(e) => setFormula(e.target.value)}
-              placeholder={
-                type === 'computed' ? '${monitor:id1} - ${monitor:id2}' :
-                type === 'constant' ? '100' :
-                'webhook.btc_price'
-              }
-              rows={3}
+              placeholder="Examples:&#10;Constant: 100&#10;Reference: ${monitor:id}&#10;Computed: ${monitor:a} - ${monitor:b}"
+              rows={4}
               className="form-textarea"
               style={{ fontFamily: 'monospace', fontSize: '13px' }}
             />
             <p style={{ fontSize: '12px', color: 'var(--muted-foreground)', marginTop: '6px' }}>
-              {type === 'computed' && 'Use ${monitor:id} to reference other monitors. Supports +, -, *, /, abs(), max(), min()'}
-              {type === 'constant' && 'Enter a numeric value'}
-              {type === 'direct' && 'Enter the webhook field path (e.g., webhook.field_name)'}
+              Use ${'{monitor:id}'} to reference other monitors. Supports +, -, *, /, abs(), max(), min()
             </p>
           </div>
 
-          {type === 'computed' && existingMonitors.length > 0 && (
+          {existingMonitors.length > 0 && (
             <div className="form-group">
               <label>Insert Monitor Reference</label>
               <div className="monitor-list-select">
