@@ -146,15 +146,18 @@ class MonitorAlertChecker(BaseMonitor):
                 logger.debug(f"[MonitorAlertChecker] Alert '{rule.name}' in cooldown ({time_since_last:.0f}s < {rule.cooldown_seconds}s)")
                 return
 
+        # Build human-readable message with actual values
+        message = await self._format_alert_message(rule, db)
+
         # Send notification
         logger.info(f"[MonitorAlertChecker] 🚨 Alert triggered: {rule.name}")
 
         try:
             sent = pushover_service.send_alert(
-                message=f"Alert condition met: {rule.condition}",
+                message=message,
                 title=f"🚨 {rule.name}",
                 level=rule.level,
-                url="https://distill.baa.one"
+                url="https://distill.baa.one/monitors"
             )
 
             if sent:
@@ -168,3 +171,71 @@ class MonitorAlertChecker(BaseMonitor):
 
         except Exception as e:
             logger.error(f"[MonitorAlertChecker] Error sending notification for '{rule.name}': {e}")
+
+    async def _format_alert_message(self, rule: AlertRule, db: Session) -> str:
+        """
+        Format a human-readable alert message with actual values.
+
+        Example output:
+        Monitor: Drift Loop
+        Current value: 36.0%
+        Condition: Value must be between 30% and 50%
+        """
+        import re
+
+        # Find all monitor references
+        monitor_refs = re.findall(r'\$\{monitor:([^}]+)\}', rule.condition)
+
+        if not monitor_refs:
+            return f"Condition: {rule.condition}"
+
+        # Get info for the first monitor (most alerts reference one monitor)
+        monitor_id = monitor_refs[0]
+        monitor = db.query(Monitor).filter(Monitor.id == monitor_id).first()
+
+        if not monitor:
+            return f"Condition: {rule.condition}"
+
+        # Get latest value
+        latest_value = db.query(MonitorValue).filter(
+            MonitorValue.monitor_id == monitor_id
+        ).order_by(MonitorValue.computed_at.desc()).first()
+
+        if not latest_value or latest_value.value is None:
+            return f"Monitor: {monitor.name}\nNo value available"
+
+        # Format value with unit
+        value_str = f"{latest_value.value:.{monitor.decimal_places}f}"
+        if monitor.unit:
+            value_str += monitor.unit
+
+        # Parse condition to extract thresholds
+        condition_human = self._parse_condition_to_human(rule.condition, monitor.unit or '')
+
+        # Build message
+        message_parts = [
+            f"📊 Monitor: {monitor.name}",
+            f"📈 Current value: {value_str}",
+            f"⚠️  {condition_human}"
+        ]
+
+        return "\n".join(message_parts)
+
+    def _parse_condition_to_human(self, condition: str, unit: str) -> str:
+        """Parse condition formula to human-readable text."""
+        import re
+
+        # Replace monitor placeholders with "Value"
+        readable = re.sub(r'\$\{monitor:[^}]+\}', 'Value', condition)
+
+        # Replace operators
+        readable = readable.replace(' or ', ' OR ')
+        readable = readable.replace(' and ', ' AND ')
+        readable = readable.replace('||', ' OR ')
+        readable = readable.replace('&&', ' AND ')
+
+        # Add unit to numbers if provided
+        if unit:
+            readable = re.sub(r'(\d+\.?\d*)', r'\1' + unit, readable)
+
+        return f"Threshold: {readable}"
