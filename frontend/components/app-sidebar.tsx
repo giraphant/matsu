@@ -8,6 +8,7 @@ import {
   TrendingUp,
   Settings,
   User,
+  Activity,
 } from "lucide-react"
 
 import {
@@ -33,6 +34,11 @@ const navItems = [
     title: "Charts",
     url: "/charts",
     icon: LineChart,
+  },
+  {
+    title: "Monitors",
+    url: "/monitors",
+    icon: Activity,
   },
   {
     title: "DEX Rates",

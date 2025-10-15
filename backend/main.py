@@ -173,6 +173,15 @@ async def serve_settings():
             return f.read()
     return HTMLResponse(content="<h1>Page not found</h1>", status_code=404)
 
+@app.get("/monitors", response_class=HTMLResponse)
+async def serve_monitors():
+    """Serve monitors page."""
+    page_path = "static/monitors.html"
+    if os.path.exists(page_path):
+        with open(page_path, "r") as f:
+            return f.read()
+    return HTMLResponse(content="<h1>Page not found</h1>", status_code=404)
+
 
 if __name__ == "__main__":
     uvicorn.run(
