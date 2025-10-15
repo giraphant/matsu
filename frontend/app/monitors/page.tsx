@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Plus, Activity } from 'lucide-react';
 import { toast } from "sonner";
 import { MonitorCard } from '@/components/monitor-card';
+import { getApiUrl } from '@/lib/api-config';
 
 interface Monitor {
   id: string;
@@ -46,7 +47,7 @@ export default function MonitorsPage() {
   // Fetch monitors
   const fetchMonitors = async () => {
     try {
-      const response = await fetch('/api/monitors');
+      const response = await fetch(getApiUrl('/api/monitors'));
       if (!response.ok) throw new Error('Failed to fetch monitors');
       const data = await response.json();
       setMonitors(data);
@@ -69,8 +70,8 @@ export default function MonitorsPage() {
   const handleSubmit = async () => {
     try {
       const url = editingMonitor
-        ? `/api/monitors/${editingMonitor.id}`
-        : '/api/monitors';
+        ? getApiUrl(`/api/monitors/${editingMonitor.id}`)
+        : getApiUrl('/api/monitors');
 
       const method = editingMonitor ? 'PUT' : 'POST';
 
@@ -97,7 +98,7 @@ export default function MonitorsPage() {
     if (!confirm('Are you sure you want to delete this monitor?')) return;
 
     try {
-      const response = await fetch(`/api/monitors/${id}`, { method: 'DELETE' });
+      const response = await fetch(getApiUrl(`/api/monitors/${id}`), { method: 'DELETE' });
       if (!response.ok) throw new Error('Failed to delete monitor');
 
       toast.success('Monitor deleted');

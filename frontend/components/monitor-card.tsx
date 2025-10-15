@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Area, AreaChart, ResponsiveContainer, YAxis } from 'recharts';
 import { cn } from "@/lib/utils";
+import { getApiUrl } from "@/lib/api-config";
 
 interface Monitor {
   id: string;
@@ -39,7 +40,7 @@ export function MonitorCard({ monitor, onEdit, onDelete, showChart = true }: Mon
   useEffect(() => {
     const fetchChartData = async () => {
       try {
-        const response = await fetch(`/api/monitors/${monitor.id}/history?limit=50`);
+        const response = await fetch(getApiUrl(`/api/monitors/${monitor.id}/history?limit=50`));
         if (response.ok) {
           const data = await response.json();
           setChartData(data);
@@ -85,32 +86,32 @@ export function MonitorCard({ monitor, onEdit, onDelete, showChart = true }: Mon
   };
 
   return (
-    <Card className="relative overflow-hidden border-transparent dark:border-default-100">
-      <section className="flex flex-col">
+    <Card className="relative overflow-hidden border border-transparent dark:border-border/50">
+      <section className="flex flex-col flex-nowrap">
         {/* Header Section */}
-        <div className="flex flex-col justify-between gap-y-2 px-4 pt-4">
+        <div className="flex flex-col justify-between gap-y-2 px-4 pt-4 pb-2">
           <div className="flex flex-col gap-y-2">
-            <div className="flex flex-col gap-y-0">
-              <h3 className="text-sm font-medium text-muted-foreground truncate">
+            <div className="flex flex-col gap-y-0.5">
+              <dt className="text-sm font-medium text-muted-foreground/80 truncate">
                 {monitor.name}
-              </h3>
+              </dt>
               {monitor.description && (
-                <p className="text-xs text-muted-foreground/60 font-normal truncate">
+                <dt className="text-xs text-muted-foreground/50 font-normal truncate">
                   {monitor.description}
-                </p>
+                </dt>
               )}
             </div>
             <div className="flex items-baseline gap-x-2">
-              <span className="text-xl font-semibold text-foreground">
+              <dd className="text-xl font-semibold text-foreground">
                 {formatValue(monitor.value)}
-              </span>
+              </dd>
               {changePercent !== 0 && (
                 <Badge
                   variant={getChangeColor()}
-                  className="h-5 gap-0.5 text-xs font-medium"
+                  className="h-5 gap-0.5 text-xs font-medium px-1.5"
                 >
                   {getChangeIcon()}
-                  {Math.abs(changePercent).toFixed(1)}%
+                  <span>{Math.abs(changePercent).toFixed(1)}%</span>
                 </Badge>
               )}
             </div>
