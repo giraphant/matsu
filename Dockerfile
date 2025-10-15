@@ -11,7 +11,7 @@ COPY frontend/package*.json ./
 RUN npm ci
 
 # Force cache bust - change this value to force rebuild
-ARG CACHE_BUST=2025-10-15-v6-fix-entrypoint
+ARG CACHE_BUST=2025-10-15-v7-monitors-page
 
 # Copy frontend source
 COPY frontend/ ./
