@@ -1,220 +1,217 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
+import { DataTable } from './data-table';
+import { columns, WebhookData } from './columns';
+import { ChartDialog } from './chart-dialog';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { getMonitors, getMonitorHistory, getWebhookData } from '@/lib/api';
-import type { Monitor, ChartDataPoint } from '@/lib/api';
+import { Badge } from "@/components/ui/badge";
+import { RefreshCw, TrendingUp, TrendingDown, Activity } from 'lucide-react';
+import { Button } from "@/components/ui/button";
 
 export default function ChartsPage() {
-  const [monitors, setMonitors] = useState<Monitor[]>([]);
-  const [selectedMonitor, setSelectedMonitor] = useState<string | null>(null);
-  const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
-  const [recentEvents, setRecentEvents] = useState<any[]>([]);
+  const [webhooks, setWebhooks] = useState<WebhookData[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const [selectedWebhook, setSelectedWebhook] = useState<WebhookData | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+
+  // Statistics
+  const [stats, setStats] = useState({
+    total: 0,
+    increasing: 0,
+    decreasing: 0,
+    unchanged: 0,
+    avgChange: 0,
+  });
 
   useEffect(() => {
-    async function fetchMonitors() {
-      try {
-        setLoading(true);
-        setError(null);
-
-        // Fetch monitors
-        const monitorsData = await getMonitors();
-        setMonitors(monitorsData);
-
-        // Select first monitor by default
-        if (monitorsData.length > 0 && !selectedMonitor) {
-          setSelectedMonitor(monitorsData[0].id);
-        }
-
-        // Fetch recent webhook data
-        try {
-          const webhookData = await getWebhookData();
-          setRecentEvents(webhookData.slice(0, 10));
-        } catch {
-          setRecentEvents([]);
-        }
-      } catch (err) {
-        console.error('Failed to fetch monitors:', err);
-        setError('Failed to load data');
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchMonitors();
+    fetchWebhooks();
+    const interval = setInterval(fetchWebhooks, 60000); // Refresh every minute
+    return () => clearInterval(interval);
   }, []);
 
-  useEffect(() => {
-    async function fetchChartData() {
-      if (!selectedMonitor) return;
+  const fetchWebhooks = async () => {
+    if (!loading) setRefreshing(true);
+    try {
+      const response = await fetch('/api/webhooks');
+      if (response.ok) {
+        const data = await response.json();
 
-      try {
-        const history = await getMonitorHistory(selectedMonitor, 100);
+        // Process webhook data
+        const processedData: WebhookData[] = data.map((webhook: any) => {
+          // Extract value from data field
+          const value = webhook.data?.value || webhook.data?.price || 0;
+          const previousValue = webhook.previous_value || 0;
+          const changePercent = previousValue ? ((value - previousValue) / previousValue) * 100 : 0;
 
-        // Format data for recharts
-        const formattedData = history.map(point => ({
-          ...point,
-          time: new Date(point.timestamp).toLocaleTimeString(),
-          date: new Date(point.timestamp).toLocaleDateString(),
-        }));
+          return {
+            ...webhook,
+            current_value: value,
+            previous_value: previousValue,
+            change_percent: changePercent,
+          };
+        });
 
-        setChartData(formattedData);
-      } catch (err) {
-        console.error('Failed to fetch chart data:', err);
-        setChartData([]);
+        setWebhooks(processedData);
+        calculateStats(processedData);
       }
+    } catch (error) {
+      console.error('Failed to fetch webhooks:', error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
     }
+  };
 
-    fetchChartData();
+  const calculateStats = (data: WebhookData[]) => {
+    const total = data.length;
+    const increasing = data.filter(w => w.change_percent && w.change_percent > 0).length;
+    const decreasing = data.filter(w => w.change_percent && w.change_percent < 0).length;
+    const unchanged = total - increasing - decreasing;
 
-    // Refresh chart data every 30 seconds
-    const interval = setInterval(fetchChartData, 30000);
+    const avgChange = data.reduce((sum, w) => sum + (w.change_percent || 0), 0) / (total || 1);
 
-    return () => clearInterval(interval);
-  }, [selectedMonitor]);
+    setStats({
+      total,
+      increasing,
+      decreasing,
+      unchanged,
+      avgChange,
+    });
+  };
 
-  const selectedMonitorData = monitors.find(m => m.id === selectedMonitor);
+  const handleViewChart = (webhook: WebhookData) => {
+    setSelectedWebhook(webhook);
+    setDialogOpen(true);
+  };
+
+  const handleViewDetails = (webhook: WebhookData) => {
+    setSelectedWebhook(webhook);
+    setDialogOpen(true);
+  };
+
+  const handleRefresh = () => {
+    fetchWebhooks();
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <Activity className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading data...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="flex flex-1 flex-col gap-4">
-      <div className="flex items-center">
-        <h1 className="text-lg font-semibold md:text-2xl">Charts</h1>
+    <div className="container mx-auto py-6 space-y-6">
+      {/* Header */}
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Charts & Analytics</h1>
+          <p className="text-muted-foreground">
+            Monitor and analyze your webhook data in real-time
+          </p>
+        </div>
+        <Button
+          onClick={handleRefresh}
+          disabled={refreshing}
+          variant="outline"
+        >
+          <RefreshCw className={`mr-2 h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+          Refresh
+        </Button>
       </div>
 
-      {error && (
-        <div className="rounded-lg bg-destructive/10 p-3 text-destructive">
-          {error}
-        </div>
-      )}
-
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        <Card className="col-span-4">
-          <CardHeader>
-            <CardTitle>Activity Overview</CardTitle>
-            <CardDescription>
-              {selectedMonitorData ? `Monitoring: ${selectedMonitorData.name}` : 'Select a monitor to view data'}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="pl-2">
-            {loading ? (
-              <div className="flex h-[300px] items-center justify-center text-muted-foreground">
-                Loading...
-              </div>
-            ) : monitors.length === 0 ? (
-              <div className="flex h-[300px] items-center justify-center text-muted-foreground">
-                No monitors configured
-              </div>
-            ) : chartData.length === 0 ? (
-              <div className="flex h-[300px] items-center justify-center text-muted-foreground">
-                No data available for this monitor
-              </div>
-            ) : (
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                  <XAxis
-                    dataKey="time"
-                    className="text-xs"
-                    tick={{ fill: 'currentColor' }}
-                  />
-                  <YAxis
-                    className="text-xs"
-                    tick={{ fill: 'currentColor' }}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: 'hsl(var(--background))',
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: '6px'
-                    }}
-                  />
-                  <Legend />
-                  <Line
-                    type="monotone"
-                    dataKey="value"
-                    stroke={selectedMonitorData?.color || '#3b82f6'}
-                    strokeWidth={2}
-                    dot={false}
-                    name={selectedMonitorData?.name || 'Value'}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="col-span-3">
-          <CardHeader>
-            <CardTitle>Monitor Selection</CardTitle>
-            <CardDescription>
-              Choose a monitor to display
-            </CardDescription>
+      {/* Statistics Cards */}
+      <div className="grid gap-4 md:grid-cols-5">
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium">Total Monitors</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
-              {monitors.map(monitor => (
-                <button
-                  key={monitor.id}
-                  onClick={() => setSelectedMonitor(monitor.id)}
-                  className={`w-full rounded-lg border p-3 text-left transition-colors hover:bg-accent ${
-                    selectedMonitor === monitor.id ? 'border-primary bg-accent' : ''
-                  }`}
-                >
-                  <div className="font-medium">{monitor.name}</div>
-                  <div className="text-sm text-muted-foreground">
-                    {monitor.description || 'No description'}
-                  </div>
-                  <div className="mt-1 text-xs text-muted-foreground">
-                    Last value: {monitor.value !== undefined
-                      ? `${monitor.value.toFixed(monitor.decimal_places)} ${monitor.unit || ''}`
-                      : 'No data'}
-                  </div>
-                </button>
-              ))}
-              {monitors.length === 0 && !loading && (
-                <div className="text-center text-muted-foreground py-8">
-                  No monitors available
-                </div>
-              )}
+            <div className="text-2xl font-bold">{stats.total}</div>
+            <p className="text-xs text-muted-foreground">Active webhooks</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium">Increasing</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-green-500" />
+              <span className="text-2xl font-bold text-green-600">{stats.increasing}</span>
             </div>
+            <p className="text-xs text-muted-foreground">Positive change</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium">Decreasing</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-2">
+              <TrendingDown className="h-5 w-5 text-red-500" />
+              <span className="text-2xl font-bold text-red-600">{stats.decreasing}</span>
+            </div>
+            <p className="text-xs text-muted-foreground">Negative change</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium">Unchanged</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-gray-600">{stats.unchanged}</div>
+            <p className="text-xs text-muted-foreground">No change</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium">Avg. Change</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className={`text-2xl font-bold ${
+              stats.avgChange > 0 ? 'text-green-600' :
+              stats.avgChange < 0 ? 'text-red-600' :
+              'text-gray-600'
+            }`}>
+              {stats.avgChange.toFixed(2)}%
+            </div>
+            <p className="text-xs text-muted-foreground">Average percentage</p>
           </CardContent>
         </Card>
       </div>
 
+      {/* Data Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Recent Webhook Events</CardTitle>
-          <CardDescription>Latest incoming webhook data</CardDescription>
+          <CardTitle>Webhook Monitors</CardTitle>
+          <CardDescription>
+            Click on any row to view detailed charts and analytics
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          {recentEvents.length === 0 ? (
-            <div className="text-center text-muted-foreground py-4">
-              No recent events
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {recentEvents.map((event, idx) => (
-                <div key={idx} className="rounded-lg border p-3">
-                  <div className="flex items-center justify-between">
-                    <div className="font-medium">
-                      {event.monitor_id || 'Unknown Monitor'}
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      {new Date(event.timestamp).toLocaleString()}
-                    </div>
-                  </div>
-                  <div className="mt-1 text-sm text-muted-foreground">
-                    {JSON.stringify(event.data).substring(0, 100)}...
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+          <DataTable
+            columns={columns}
+            data={webhooks}
+            onViewChart={handleViewChart}
+            onViewDetails={handleViewDetails}
+            pageSize={15}
+          />
         </CardContent>
       </Card>
+
+      {/* Chart Dialog */}
+      <ChartDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        webhook={selectedWebhook}
+      />
     </div>
-  )
+  );
 }
