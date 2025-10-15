@@ -34,20 +34,60 @@ export default function ChartsPage() {
   const fetchWebhooks = async () => {
     if (!loading) setRefreshing(true);
     try {
-      const response = await fetch('/api/webhooks');
+      const response = await fetch('/api/webhook-monitors');
       if (response.ok) {
         const data = await response.json();
 
-        // Process webhook data
-        const processedData: WebhookData[] = data.map((webhook: any) => {
-          // Extract value from data field
-          const value = webhook.data?.value || webhook.data?.price || 0;
-          const previousValue = webhook.previous_value || 0;
-          const changePercent = previousValue ? ((value - previousValue) / previousValue) * 100 : 0;
+        // Process webhook-monitors data and convert to WebhookData format
+        const processedData: WebhookData[] = data.map((monitor: any) => {
+          // Calculate time since
+          const timestamp = new Date(monitor.latest_timestamp);
+          const now = new Date();
+          const diffMs = now.getTime() - timestamp.getTime();
+          const diffMins = Math.floor(diffMs / 60000);
+          const diffHours = Math.floor(diffMs / 3600000);
+          const diffDays = Math.floor(diffMs / 86400000);
+
+          let time_since = '';
+          if (diffMins < 1) {
+            time_since = 'Just now';
+          } else if (diffMins < 60) {
+            time_since = `${diffMins}m ago`;
+          } else if (diffHours < 24) {
+            time_since = `${diffHours}h ago`;
+          } else {
+            time_since = `${diffDays}d ago`;
+          }
+
+          // Extract current and calculate previous value (if available)
+          const currentValue = monitor.latest_value || 0;
+          const previousValue = 0; // TODO: Get from history if needed
+          const changePercent = previousValue ? ((currentValue - previousValue) / previousValue) * 100 : 0;
+
+          // Parse description as data if it's JSON
+          let dataObj = {};
+          try {
+            if (monitor.description) {
+              dataObj = JSON.parse(monitor.description);
+            }
+          } catch {
+            dataObj = { description: monitor.description };
+          }
+
+          // Extract tags from monitor_type or description
+          const tags = [monitor.monitor_type || 'monitor'];
+          if (monitor.unit) tags.push(monitor.unit);
 
           return {
-            ...webhook,
-            current_value: value,
+            id: monitor.monitor_id,
+            uid: monitor.monitor_id,
+            title: monitor.monitor_name || monitor.monitor_id,
+            text: monitor.description || `Latest: ${currentValue} ${monitor.unit || ''}`,
+            tags: tags,
+            data: dataObj,
+            created_at: monitor.latest_timestamp,
+            time_since: time_since,
+            current_value: currentValue,
             previous_value: previousValue,
             change_percent: changePercent,
           };
