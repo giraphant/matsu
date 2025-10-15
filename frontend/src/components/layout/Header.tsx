@@ -11,10 +11,11 @@ import {
   Sun,
   Menu,
   X,
-  Settings
+  Settings,
+  Sliders
 } from 'lucide-react';
 
-export type ViewMode = 'overview' | 'detail' | 'dex';
+export type ViewMode = 'overview' | 'detail' | 'dex' | 'monitors';
 
 interface HeaderProps {
   viewMode: ViewMode;
@@ -81,6 +82,13 @@ export function Header({
                     <TrendingUp size={20} />
                     <span>DEX Rates</span>
                   </button>
+                  <button
+                    className={`mobile-menu-item ${viewMode === 'monitors' ? 'active' : ''}`}
+                    onClick={() => { onViewModeChange('monitors'); onToggleMobileMenu(); }}
+                  >
+                    <Sliders size={20} />
+                    <span>Monitors</span>
+                  </button>
                   {viewMode === 'overview' && (
                     <button
                       className="mobile-menu-item"
@@ -132,6 +140,14 @@ export function Header({
               style={{ padding: '8px 12px' }}
             >
               <TrendingUp size={18} />
+            </button>
+            <button
+              className={`btn-secondary ${viewMode === 'monitors' ? 'active' : ''}`}
+              onClick={() => onViewModeChange('monitors')}
+              title="Monitors"
+              style={{ padding: '8px 12px' }}
+            >
+              <Sliders size={18} />
             </button>
             <button
               className="btn-secondary"

@@ -6,6 +6,7 @@ import { Loading, EmptyState } from './components/common';
 import { LoginForm } from './components/auth';
 import { Header, ViewMode } from './components/layout';
 import { OverviewView, DetailView } from './views';
+import MonitorsView from './views/MonitorsView';
 import {
   useAuth,
   useTheme,
@@ -272,6 +273,8 @@ function App() {
         />
       ) : viewMode === 'dex' ? (
         <DexRates />
+      ) : viewMode === 'monitors' ? (
+        <MonitorsView />
       ) : (
         <DetailView
           monitors={monitors}
