@@ -19,7 +19,6 @@ services:
     volumes:
       - /home/matsu/data:/app/data
       - /home/matsu/logs:/app/logs
-      - /home/matsu/static:/app/static
     # Coolify manages port mapping through its reverse proxy
     # ports:
     #   - "9988:9988"
