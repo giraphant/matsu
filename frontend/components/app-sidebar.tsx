@@ -31,11 +31,6 @@ const navItems = [
     icon: LayoutGrid,
   },
   {
-    title: "Charts",
-    url: "/charts",
-    icon: LineChart,
-  },
-  {
     title: "Monitors",
     url: "/monitors",
     icon: Activity,
@@ -44,6 +39,11 @@ const navItems = [
     title: "DEX Rates",
     url: "/dex-rates",
     icon: TrendingUp,
+  },
+  {
+    title: "Webhooks",
+    url: "/charts",
+    icon: LineChart,
   },
   {
     title: "Settings",

@@ -1,21 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  DragEndEvent,
-} from '@dnd-kit/core';
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  rectSortingStrategy,
-} from '@dnd-kit/sortable';
+import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,7 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, Activity } from 'lucide-react';
 import { toast } from "sonner";
-import { ResizableMonitorCard, CardSize } from '@/components/resizable-monitor-card';
+import { MonitorCard } from '@/components/monitor-card';
 
 interface Monitor {
   id: string;
@@ -38,18 +23,12 @@ interface Monitor {
   enabled: boolean;
   value?: number;
   computed_at?: string;
+  created_at: string;
+  updated_at: string;
 }
-
-interface MonitorLayout {
-  id: string;
-  size: CardSize;
-}
-
-const STORAGE_KEY = 'monitors-layout';
 
 export default function MonitorsPage() {
   const [monitors, setMonitors] = useState<Monitor[]>([]);
-  const [layout, setLayout] = useState<MonitorLayout[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingMonitor, setEditingMonitor] = useState<Monitor | null>(null);
@@ -64,62 +43,6 @@ export default function MonitorsPage() {
     decimal_places: 2
   });
 
-  // Setup drag sensors with optimized settings
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 5, // Reduced for more responsive drag
-        delay: 100, // Small delay to prevent accidental drags
-        tolerance: 5,
-      },
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
-
-  // Load layout from localStorage
-  const loadLayout = (monitors: Monitor[]): MonitorLayout[] => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const savedLayout: MonitorLayout[] = JSON.parse(saved);
-
-        // Create a map of existing layouts
-        const layoutMap = new Map(savedLayout.map(l => [l.id, l.size]));
-
-        // Build layout array matching current monitors
-        return monitors.map((monitor, index) => ({
-          id: monitor.id,
-          size: layoutMap.get(monitor.id) || getDefaultSize(index),
-        }));
-      }
-    } catch (error) {
-      console.error('Failed to load layout:', error);
-    }
-
-    // Return default layout
-    return monitors.map((monitor, index) => ({
-      id: monitor.id,
-      size: getDefaultSize(index),
-    }));
-  };
-
-  // Get default size based on index (more varied pattern for 4-column grid)
-  const getDefaultSize = (index: number): CardSize => {
-    const pattern: CardSize[] = ['medium', 'small', 'vertical', 'tiny', 'small', 'large', 'vertical', 'tiny'];
-    return pattern[index % pattern.length];
-  };
-
-  // Save layout to localStorage
-  const saveLayout = (newLayout: MonitorLayout[]) => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(newLayout));
-    } catch (error) {
-      console.error('Failed to save layout:', error);
-    }
-  };
-
   // Fetch monitors
   const fetchMonitors = async () => {
     try {
@@ -127,10 +50,6 @@ export default function MonitorsPage() {
       if (!response.ok) throw new Error('Failed to fetch monitors');
       const data = await response.json();
       setMonitors(data);
-
-      // Initialize or update layout
-      const newLayout = loadLayout(data);
-      setLayout(newLayout);
     } catch (error) {
       console.error('Error fetching monitors:', error);
       toast.error('Failed to load monitors');
@@ -173,8 +92,8 @@ export default function MonitorsPage() {
     }
   };
 
-  // Handle delete - memoized
-  const handleDelete = useCallback(async (id: string) => {
+  // Handle delete
+  const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this monitor?')) return;
 
     try {
@@ -182,23 +101,15 @@ export default function MonitorsPage() {
       if (!response.ok) throw new Error('Failed to delete monitor');
 
       toast.success('Monitor deleted');
-
-      // Remove from layout
-      setLayout(prevLayout => {
-        const newLayout = prevLayout.filter(l => l.id !== id);
-        saveLayout(newLayout);
-        return newLayout;
-      });
-
       fetchMonitors();
     } catch (error) {
       console.error('Error deleting monitor:', error);
       toast.error('Failed to delete monitor');
     }
-  }, [fetchMonitors]);
+  };
 
-  // Handle edit - memoized
-  const handleEdit = useCallback((monitor: Monitor) => {
+  // Handle edit
+  const handleEdit = (monitor: Monitor) => {
     setEditingMonitor(monitor);
     setFormData({
       name: monitor.name,
@@ -209,36 +120,7 @@ export default function MonitorsPage() {
       decimal_places: monitor.decimal_places
     });
     setDialogOpen(true);
-  }, []);
-
-  // Handle resize - memoized
-  const handleResize = useCallback((id: string, size: CardSize) => {
-    setLayout(prevLayout => {
-      const newLayout = prevLayout.map(item =>
-        item.id === id ? { ...item, size } : item
-      );
-      saveLayout(newLayout);
-      return newLayout;
-    });
-    toast.success('Card size updated');
-  }, []);
-
-  // Handle drag end - memoized
-  const handleDragEnd = useCallback((event: DragEndEvent) => {
-    const { active, over } = event;
-
-    if (over && active.id !== over.id) {
-      setLayout(prevLayout => {
-        const oldIndex = prevLayout.findIndex(item => item.id === active.id);
-        const newIndex = prevLayout.findIndex(item => item.id === over.id);
-
-        const newLayout = arrayMove(prevLayout, oldIndex, newIndex);
-        saveLayout(newLayout);
-        toast.success('Layout updated');
-        return newLayout;
-      });
-    }
-  }, []);
+  };
 
   // Reset form
   const resetForm = () => {
@@ -253,16 +135,6 @@ export default function MonitorsPage() {
     setEditingMonitor(null);
   };
 
-  // Get sorted monitors based on layout order
-  const getSortedMonitors = (): { monitor: Monitor; size: CardSize }[] => {
-    return layout
-      .map(layoutItem => {
-        const monitor = monitors.find(m => m.id === layoutItem.id);
-        return monitor ? { monitor, size: layoutItem.size } : null;
-      })
-      .filter((item): item is { monitor: Monitor; size: CardSize } => item !== null);
-  };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -274,15 +146,13 @@ export default function MonitorsPage() {
     );
   }
 
-  const sortedMonitors = getSortedMonitors();
-
   return (
     <div className="container mx-auto p-6 max-w-7xl">
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Monitors Dashboard</h1>
           <p className="text-muted-foreground mt-1">
-            Drag cards to reorder • Click resize icon to change size
+            Track your custom metrics with real-time updates
           </p>
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -411,29 +281,17 @@ export default function MonitorsPage() {
           </div>
         </Card>
       ) : (
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={handleDragEnd}
-        >
-          <SortableContext
-            items={layout.map(l => l.id)}
-            strategy={rectSortingStrategy}
-          >
-            <div className="grid grid-cols-4 gap-4 auto-rows-[200px]">
-              {sortedMonitors.map(({ monitor, size }) => (
-                <ResizableMonitorCard
-                  key={monitor.id}
-                  monitor={monitor}
-                  size={size}
-                  onEdit={handleEdit}
-                  onDelete={handleDelete}
-                  onResize={handleResize}
-                />
-              ))}
-            </div>
-          </SortableContext>
-        </DndContext>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {monitors.map((monitor) => (
+            <MonitorCard
+              key={monitor.id}
+              monitor={monitor}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+              showChart={true}
+            />
+          ))}
+        </div>
       )}
 
       {/* Floating refresh button */}

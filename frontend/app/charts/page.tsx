@@ -151,9 +151,9 @@ export default function ChartsPage() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Charts & Analytics</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Webhooks</h1>
           <p className="text-muted-foreground">
-            Monitor and analyze your webhook data in real-time
+            Monitor and analyze webhook data from Distill Web Monitor
           </p>
         </div>
         <Button
@@ -230,9 +230,9 @@ export default function ChartsPage() {
       {/* Data Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Webhook Monitors</CardTitle>
+          <CardTitle>All Webhooks</CardTitle>
           <CardDescription>
-            Click on any row to view detailed charts and analytics
+            Click on any row to view detailed charts and historical data
           </CardDescription>
         </CardHeader>
         <CardContent>
