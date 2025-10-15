@@ -26,16 +26,21 @@ async def get_funding_rates() -> List[Dict[str, Any]]:
     db = get_db_session()
 
     try:
-        # Get all unique exchange-symbol pairs
+        # Get all unique exchange-symbol combinations
+        from sqlalchemy import func
         pairs = db.query(
-            distinct(FundingRate.exchange),
-            distinct(FundingRate.symbol)
+            FundingRate.exchange,
+            FundingRate.symbol,
+            func.max(FundingRate.timestamp).label('latest_timestamp')
+        ).group_by(
+            FundingRate.exchange,
+            FundingRate.symbol
         ).all()
 
         results = []
 
         # For each pair, get the latest funding rate
-        for exchange, symbol in set(pairs):
+        for exchange, symbol, _ in pairs:
             latest = db.query(FundingRate).filter(
                 FundingRate.exchange == exchange,
                 FundingRate.symbol == symbol
@@ -55,8 +60,8 @@ async def get_funding_rates() -> List[Dict[str, Any]]:
         return results
 
     except Exception as e:
-        logger.error(f"Error fetching funding rates: {e}")
-        raise HTTPException(status_code=500, detail="Failed to fetch funding rates")
+        logger.error(f"Error fetching funding rates: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to fetch funding rates: {str(e)}")
     finally:
         db.close()
 
@@ -71,16 +76,21 @@ async def get_spot_prices() -> List[Dict[str, Any]]:
     db = get_db_session()
 
     try:
-        # Get all unique exchange-symbol pairs
+        # Get all unique exchange-symbol combinations
+        from sqlalchemy import func
         pairs = db.query(
-            distinct(SpotPrice.exchange),
-            distinct(SpotPrice.symbol)
+            SpotPrice.exchange,
+            SpotPrice.symbol,
+            func.max(SpotPrice.timestamp).label('latest_timestamp')
+        ).group_by(
+            SpotPrice.exchange,
+            SpotPrice.symbol
         ).all()
 
         results = []
 
         # For each pair, get the latest spot price
-        for exchange, symbol in set(pairs):
+        for exchange, symbol, _ in pairs:
             latest = db.query(SpotPrice).filter(
                 SpotPrice.exchange == exchange,
                 SpotPrice.symbol == symbol
@@ -98,8 +108,8 @@ async def get_spot_prices() -> List[Dict[str, Any]]:
         return results
 
     except Exception as e:
-        logger.error(f"Error fetching spot prices: {e}")
-        raise HTTPException(status_code=500, detail="Failed to fetch spot prices")
+        logger.error(f"Error fetching spot prices: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to fetch spot prices: {str(e)}")
     finally:
         db.close()
 
