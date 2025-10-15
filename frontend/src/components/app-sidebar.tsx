@@ -1,3 +1,4 @@
+import { Link, useLocation } from "react-router-dom"
 import {
   LayoutGrid,
   LineChart,
@@ -22,34 +23,36 @@ import {
 const navItems = [
   {
     title: "Overview",
-    url: "#",
+    url: "/overview",
     icon: LayoutGrid,
   },
   {
     title: "Charts",
-    url: "#",
+    url: "/charts",
     icon: LineChart,
   },
   {
     title: "DEX Rates",
-    url: "#",
+    url: "/dex-rates",
     icon: TrendingUp,
   },
   {
     title: "Settings",
-    url: "#",
+    url: "/settings",
     icon: Settings,
   },
 ]
 
 export function AppSidebar() {
+  const location = useLocation()
+
   return (
     <Sidebar>
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <a href="#">
+              <Link to="/overview">
                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
                   <LayoutGrid className="size-4" />
                 </div>
@@ -57,7 +60,7 @@ export function AppSidebar() {
                   <span className="font-semibold">Matsu</span>
                   <span className="text-xs">Monitor System</span>
                 </div>
-              </a>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -69,11 +72,11 @@ export function AppSidebar() {
             <SidebarMenu>
               {navItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <a href={item.url}>
+                  <SidebarMenuButton asChild isActive={location.pathname === item.url}>
+                    <Link to={item.url}>
                       <item.icon />
                       <span>{item.title}</span>
-                    </a>
+                    </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
