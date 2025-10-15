@@ -112,7 +112,8 @@ class StartupManager:
         # Import monitors and workers
         from app.background_tasks import (
             LighterMonitor, AsterMonitor, GRVTMonitor, BackpackMonitor,
-            BinanceSpotMonitor, OKXSpotMonitor, BybitSpotMonitor, JupiterSpotMonitor
+            BinanceSpotMonitor, OKXSpotMonitor, BybitSpotMonitor,
+            JupiterSpotMonitor, PythSpotMonitor
         )
         from app.workers.dex_cache_warmer import DexCacheWarmer
         from app.workers.alert_checker import AlertChecker
@@ -134,6 +135,7 @@ class StartupManager:
         self.monitors.append(OKXSpotMonitor())
         self.monitors.append(BybitSpotMonitor())
         self.monitors.append(JupiterSpotMonitor())  # Solana on-chain prices
+        self.monitors.append(PythSpotMonitor())     # Oracle prices
 
         # DEPRECATED: WebhookMonitorAlertChecker removed (used old AlertConfig system)
         # Now only use Monitor Alert Checker for AlertRule system

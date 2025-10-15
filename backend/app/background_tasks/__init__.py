@@ -11,6 +11,7 @@ from .binance_spot import BinanceSpotMonitor
 from .okx_spot import OKXSpotMonitor
 from .bybit_spot import BybitSpotMonitor
 from .jupiter_spot import JupiterSpotMonitor
+from .pyth_spot import PythSpotMonitor
 
 __all__ = [
     "BaseMonitor",
@@ -24,4 +25,5 @@ __all__ = [
     "OKXSpotMonitor",
     "BybitSpotMonitor",
     "JupiterSpotMonitor",
+    "PythSpotMonitor",
 ]

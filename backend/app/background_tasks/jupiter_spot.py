@@ -6,7 +6,7 @@ Fetches spot prices from Jupiter aggregator API
 from datetime import datetime
 from sqlalchemy.orm import Session
 
-from app.background_tasks.base_monitor import BaseMonitor
+from app.background_tasks.base import BaseMonitor
 from app.models.database import SpotPrice, get_db_session
 from app.core.logger import get_logger
 
