@@ -184,6 +184,15 @@ async def serve_monitors():
             return f.read()
     return HTMLResponse(content="<h1>Page not found</h1>", status_code=404)
 
+@app.get("/login", response_class=HTMLResponse)
+async def serve_login():
+    """Serve login page."""
+    page_path = "static/login.html"
+    if os.path.exists(page_path):
+        with open(page_path, "r") as f:
+            return f.read()
+    return HTMLResponse(content="<h1>Page not found</h1>", status_code=404)
+
 
 if __name__ == "__main__":
     uvicorn.run(
