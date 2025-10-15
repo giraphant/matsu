@@ -42,10 +42,14 @@ export function MonitorCard({ monitor, onEdit, onDelete, onSetAlert, showChart =
   const formatTimeAgo = (dateString: string | undefined) => {
     if (!dateString) return '';
 
-    const now = new Date();
+    // Parse UTC time and convert to local
     const past = new Date(dateString);
-    const seconds = Math.floor((now.getTime() - past.getTime()) / 1000);
+    // Check if the date string doesn't end with 'Z', add it to parse as UTC
+    const utcPast = dateString.endsWith('Z') ? past : new Date(dateString + 'Z');
+    const now = new Date();
+    const seconds = Math.floor((now.getTime() - utcPast.getTime()) / 1000);
 
+    if (seconds < 0) return 'just now';
     if (seconds < 60) return `${seconds}s ago`;
     const minutes = Math.floor(seconds / 60);
     if (minutes < 60) return `${minutes}m ago`;
