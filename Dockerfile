@@ -11,7 +11,7 @@ COPY frontend/package*.json ./
 RUN npm ci
 
 # Force cache bust - change this value to force rebuild
-ARG CACHE_BUST=2025-10-15-v8-charts-table
+ARG CACHE_BUST=2025-10-15-v9-api-webhooks
 
 # Copy frontend source
 COPY frontend/ ./
