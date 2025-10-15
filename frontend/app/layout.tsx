@@ -19,19 +19,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
-        {/* Prevent dark mode flash - must be blocking script */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(function(){try{var e=localStorage.getItem('matsu-theme')||'system',t=window.matchMedia('(prefers-color-scheme: dark)');('dark'===e||'system'===e&&t.matches)?document.documentElement.classList.add('dark'):document.documentElement.classList.remove('dark')}catch(e){}})();`,
-          }}
-        />
-      </head>
       <body className="font-sans antialiased" suppressHydrationWarning>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
           enableSystem
+          disableTransitionOnChange
           storageKey="matsu-theme"
         >
           <SidebarWrapper>
