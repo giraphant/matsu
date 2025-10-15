@@ -59,6 +59,7 @@ function SortableMonitorCard({
     attributes,
     listeners,
     setNodeRef,
+    setActivatorNodeRef,
     transform,
     transition,
     isDragging,
@@ -68,16 +69,19 @@ function SortableMonitorCard({
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
+    cursor: isDragging ? 'grabbing' : 'grab',
   };
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-      <MonitorCard
-        monitor={monitor}
-        onEdit={onEdit}
-        onDelete={onDelete}
-        showChart={true}
-      />
+    <div ref={setNodeRef} style={style} {...attributes}>
+      <div ref={setActivatorNodeRef} {...listeners}>
+        <MonitorCard
+          monitor={monitor}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          showChart={true}
+        />
+      </div>
     </div>
   );
 }
@@ -100,7 +104,11 @@ export default function MonitorsPage() {
 
   // Drag and drop sensors
   const sensors = useSensors(
-    useSensor(PointerSensor),
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8, // Require 8px movement before drag starts
+      },
+    }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     })

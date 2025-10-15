@@ -173,7 +173,9 @@ export function MonitorCard({ monitor, onEdit, onDelete, showChart = true }: Mon
             <Button
               variant="ghost"
               size="icon"
-              className="absolute top-2 right-2 h-7 w-7 rounded-full"
+              className="absolute top-2 right-2 h-7 w-7 rounded-full z-10"
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={(e) => e.stopPropagation()}
             >
               <MoreVertical className="h-4 w-4" />
             </Button>
