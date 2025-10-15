@@ -103,9 +103,13 @@ async def health_check():
 import os
 from fastapi.responses import FileResponse
 
-# Mount the nested static directory from React build
+# Mount the nested static directory from React build (old CRA structure)
 if os.path.exists("static/static"):
     app.mount("/static", StaticFiles(directory="static/static"), name="static")
+
+# Mount assets directory from Vite build
+if os.path.exists("static/assets"):
+    app.mount("/assets", StaticFiles(directory="static/assets"), name="assets")
 
 # Mount sounds directory
 if os.path.exists("static/sounds"):
