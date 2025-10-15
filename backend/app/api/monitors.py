@@ -386,6 +386,34 @@ async def delete_alert_rule(rule_id: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.get("/alert-rules/by-monitor/{monitor_id}", response_model=List[AlertRuleResponse])
+async def get_alert_rules_by_monitor(monitor_id: str, db: Session = Depends(get_db)):
+    """Get all alert rules that reference a specific monitor."""
+    try:
+        rules = db.query(AlertRule).filter(
+            AlertRule.condition.like(f'%${{monitor:{monitor_id}}}%')
+        ).all()
+
+        return [
+            AlertRuleResponse(
+                id=rule.id,
+                name=rule.name,
+                condition=rule.condition,
+                level=rule.level,
+                enabled=rule.enabled,
+                cooldown_seconds=rule.cooldown_seconds,
+                actions=json.loads(rule.actions) if rule.actions else [],
+                created_at=rule.created_at,
+                updated_at=rule.updated_at
+            )
+            for rule in rules
+        ]
+
+    except Exception as e:
+        logger.error(f"Error retrieving alert rules for monitor {monitor_id}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.post("/alert-rules/check")
 async def check_alerts(db: Session = Depends(get_db)):
     """Manually trigger alert checking."""

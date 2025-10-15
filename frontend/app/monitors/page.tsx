@@ -261,29 +261,53 @@ export default function MonitorsPage() {
   const handleSetAlert = async (monitor: Monitor) => {
     setAlertMonitor(monitor);
 
-    // Fetch existing alert config
+    // Fetch existing alert rules for this monitor
     try {
-      const response = await fetch(getApiUrl(`/api/alerts/config/${monitor.id}`));
+      const url = getApiUrl(`/api/alert-rules/by-monitor/${monitor.id}`);
+      console.log('Fetching alert rules from:', url);
+      const response = await fetch(url);
+      console.log('Alert rules response status:', response.status);
+
       if (response.ok) {
-        const config = await response.json();
-        if (config) {
+        const rules = await response.json();
+        console.log('Alert rules data:', rules);
+
+        if (rules && rules.length > 0) {
+          // Parse the first rule's condition to extract thresholds
+          const rule = rules[0];
+          const { upper, lower } = parseConditionToThresholds(rule.condition, monitor.id);
+
           setAlertFormData({
-            upper_threshold: config.upper_threshold?.toString() || '',
-            lower_threshold: config.lower_threshold?.toString() || '',
-            alert_level: config.alert_level || 'medium'
+            upper_threshold: upper || '',
+            lower_threshold: lower || '',
+            alert_level: rule.level || 'medium'
           });
+          toast.info(`Loaded existing alert configuration`);
         } else {
           resetAlertForm();
+          toast.info('No existing alert rules found');
         }
       } else {
         resetAlertForm();
+        toast.info('No existing alert rules found');
       }
     } catch (error) {
-      console.error('Error fetching alert config:', error);
+      console.error('Error fetching alert rules:', error);
       resetAlertForm();
     }
 
     setAlertDialogOpen(true);
+  };
+
+  // Parse condition formula to extract thresholds
+  const parseConditionToThresholds = (condition: string, monitorId: string): { upper: string | null; lower: string | null } => {
+    const upperMatch = condition.match(/\$\{monitor:.*?\}\s*>\s*([\d.]+)/);
+    const lowerMatch = condition.match(/\$\{monitor:.*?\}\s*<\s*([\d.]+)/);
+
+    return {
+      upper: upperMatch ? upperMatch[1] : null,
+      lower: lowerMatch ? lowerMatch[1] : null
+    };
   };
 
   // Handle alert submit
@@ -291,26 +315,64 @@ export default function MonitorsPage() {
     if (!alertMonitor) return;
 
     try {
+      // First, delete existing alert rules for this monitor
+      const existingRulesResponse = await fetch(getApiUrl(`/api/alert-rules/by-monitor/${alertMonitor.id}`));
+      if (existingRulesResponse.ok) {
+        const existingRules = await existingRulesResponse.json();
+        for (const rule of existingRules) {
+          await fetch(getApiUrl(`/api/alert-rules/${rule.id}`), { method: 'DELETE' });
+        }
+      }
+
+      // Build condition formula from thresholds
+      const conditions = [];
+      if (alertFormData.upper_threshold) {
+        conditions.push(`\${monitor:${alertMonitor.id}} > ${alertFormData.upper_threshold}`);
+      }
+      if (alertFormData.lower_threshold) {
+        conditions.push(`\${monitor:${alertMonitor.id}} < ${alertFormData.lower_threshold}`);
+      }
+
+      if (conditions.length === 0) {
+        toast.error('Please set at least one threshold');
+        return;
+      }
+
+      const condition = conditions.join(' or ');
+
+      // Create new alert rule
       const payload = {
-        monitor_id: alertMonitor.id,
-        upper_threshold: alertFormData.upper_threshold ? parseFloat(alertFormData.upper_threshold) : null,
-        lower_threshold: alertFormData.lower_threshold ? parseFloat(alertFormData.lower_threshold) : null,
-        alert_level: alertFormData.alert_level
+        name: `Alert for ${alertMonitor.name}`,
+        condition: condition,
+        level: alertFormData.alert_level,
+        cooldown_seconds: 300,
+        actions: ['pushover']
       };
 
-      const response = await fetch(getApiUrl('/api/alerts/config'), {
+      console.log('Creating alert rule:', payload);
+
+      const response = await fetch(getApiUrl('/api/alert-rules'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
 
-      if (!response.ok) throw new Error('Failed to save alert config');
+      console.log('Save response status:', response.status);
 
-      toast.success('Alert configuration saved');
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Save error response:', errorText);
+        throw new Error('Failed to save alert rule');
+      }
+
+      const savedRule = await response.json();
+      console.log('Saved rule:', savedRule);
+
+      toast.success('Alert configuration saved successfully');
       setAlertDialogOpen(false);
       resetAlertForm();
     } catch (error) {
-      console.error('Error saving alert config:', error);
+      console.error('Error saving alert rule:', error);
       toast.error('Failed to save alert configuration');
     }
   };
@@ -318,21 +380,33 @@ export default function MonitorsPage() {
   // Handle delete alert
   const handleDeleteAlert = async () => {
     if (!alertMonitor) return;
-    if (!confirm('Are you sure you want to delete this alert configuration?')) return;
+    if (!confirm('Are you sure you want to delete all alert rules for this monitor?')) return;
 
     try {
-      const response = await fetch(getApiUrl(`/api/alerts/config/${alertMonitor.id}`), {
-        method: 'DELETE'
-      });
+      // Get all alert rules for this monitor
+      const rulesResponse = await fetch(getApiUrl(`/api/alert-rules/by-monitor/${alertMonitor.id}`));
 
-      if (!response.ok) throw new Error('Failed to delete alert config');
+      if (!rulesResponse.ok) throw new Error('Failed to fetch alert rules');
 
-      toast.success('Alert configuration deleted');
+      const rules = await rulesResponse.json();
+
+      // Delete each rule
+      for (const rule of rules) {
+        const deleteResponse = await fetch(getApiUrl(`/api/alert-rules/${rule.id}`), {
+          method: 'DELETE'
+        });
+
+        if (!deleteResponse.ok) {
+          console.error(`Failed to delete alert rule ${rule.id}`);
+        }
+      }
+
+      toast.success(`Deleted ${rules.length} alert rule(s)`);
       setAlertDialogOpen(false);
       resetAlertForm();
     } catch (error) {
-      console.error('Error deleting alert config:', error);
-      toast.error('Failed to delete alert configuration');
+      console.error('Error deleting alert rules:', error);
+      toast.error('Failed to delete alert rules');
     }
   };
 
