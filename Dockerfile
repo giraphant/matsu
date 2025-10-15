@@ -1,6 +1,6 @@
 # Multi-stage build for frontend and backend
 # Stage 1: Build frontend
-FROM node:18-alpine AS frontend-builder
+FROM node:20-alpine AS frontend-builder
 
 WORKDIR /build
 
@@ -11,7 +11,7 @@ COPY frontend/package*.json ./
 RUN npm ci
 
 # Force cache bust - change this value to force rebuild
-ARG CACHE_BUST=2025-10-15-v3-shadcn-sidebar
+ARG CACHE_BUST=2025-10-15-v4-vite-dist-fix
 
 # Copy frontend source
 COPY frontend/ ./
@@ -50,8 +50,8 @@ RUN pip install --no-cache-dir --upgrade pip \
 # Copy backend code
 COPY backend/ .
 
-# Copy built frontend from frontend-builder stage
-COPY --from=frontend-builder /build/build/ static/
+# Copy built frontend from frontend-builder stage (Vite outputs to dist/)
+COPY --from=frontend-builder /build/dist/ static/
 
 # Create required directories
 RUN mkdir -p data static logs
