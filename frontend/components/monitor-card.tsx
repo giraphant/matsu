@@ -1,12 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Bell, Trash2, TrendingUp, TrendingDown } from 'lucide-react';
+import { MoreVertical, Edit, Trash2, ArrowUpRight, ArrowDownRight, Minus } from 'lucide-react';
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { LineChart, Line, XAxis, ResponsiveContainer } from 'recharts';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Area, AreaChart, ResponsiveContainer, YAxis } from 'recharts';
 import { cn } from "@/lib/utils";
 
 interface Monitor {
@@ -33,11 +33,7 @@ interface MonitorCardProps {
 
 export function MonitorCard({ monitor, onEdit, onDelete, showChart = true }: MonitorCardProps) {
   const [chartData, setChartData] = useState<any[]>([]);
-  const [stats, setStats] = useState<{ min: number | null; avg: number | null; max: number | null }>({
-    min: null,
-    avg: null,
-    max: null,
-  });
+  const [changePercent, setChangePercent] = useState<number>(0);
 
   // Fetch chart data
   useEffect(() => {
@@ -48,14 +44,14 @@ export function MonitorCard({ monitor, onEdit, onDelete, showChart = true }: Mon
           const data = await response.json();
           setChartData(data);
 
-          // Calculate stats
-          if (data.length > 0) {
-            const values = data.map((p: any) => p.value);
-            setStats({
-              min: Math.min(...values),
-              max: Math.max(...values),
-              avg: values.reduce((sum: number, v: number) => sum + v, 0) / values.length,
-            });
+          // Calculate percentage change
+          if (data.length >= 2) {
+            const firstValue = data[0].value;
+            const lastValue = data[data.length - 1].value;
+            if (firstValue !== 0) {
+              const change = ((lastValue - firstValue) / firstValue) * 100;
+              setChangePercent(change);
+            }
           }
         }
       } catch (error) {
@@ -64,7 +60,6 @@ export function MonitorCard({ monitor, onEdit, onDelete, showChart = true }: Mon
     };
 
     fetchChartData();
-    // Refresh every 30 seconds
     const interval = setInterval(fetchChartData, 30000);
     return () => clearInterval(interval);
   }, [monitor.id]);
@@ -76,166 +71,131 @@ export function MonitorCard({ monitor, onEdit, onDelete, showChart = true }: Mon
     return monitor.unit ? `${formatted} ${monitor.unit}` : formatted;
   };
 
-  // Calculate trend
-  const hasTrend = chartData.length >= 2;
-  const trend = hasTrend
-    ? chartData[chartData.length - 1].value - chartData[chartData.length - 2].value
-    : 0;
-  const isPositive = trend > 0;
+  // Determine color variant based on change
+  const getChangeColor = () => {
+    if (changePercent > 0) return 'success';
+    if (changePercent < 0) return 'destructive';
+    return 'secondary';
+  };
 
-  // Format time since
-  const formatTimeSince = (timestamp?: string) => {
-    if (!timestamp) return '';
-    const date = new Date(timestamp);
-    const now = new Date();
-    const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-
-    if (seconds < 60) return `${seconds}s ago`;
-    if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
-    if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
-    return `${Math.floor(seconds / 86400)}d ago`;
+  const getChangeIcon = () => {
+    if (changePercent > 0) return <ArrowUpRight className="h-3 w-3" />;
+    if (changePercent < 0) return <ArrowDownRight className="h-3 w-3" />;
+    return <Minus className="h-3 w-3" />;
   };
 
   return (
-    <Card
-      className="relative overflow-hidden transition-all duration-300 hover:shadow-lg h-full flex flex-col"
-      style={{ borderTop: `3px solid ${monitor.color || 'hsl(var(--primary))'}` }}
-    >
-      <CardHeader className="pb-3">
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              <h3 className="font-semibold text-base truncate">
+    <Card className="relative overflow-hidden border-transparent dark:border-default-100">
+      <section className="flex flex-col">
+        {/* Header Section */}
+        <CardHeader className="flex-row items-start justify-between gap-2 pb-2">
+          <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-0">
+              <h3 className="text-sm font-medium text-muted-foreground truncate">
                 {monitor.name}
               </h3>
-              <Badge variant={monitor.enabled ? "default" : "secondary"} className="text-xs">
-                {monitor.enabled ? 'Active' : 'Disabled'}
-              </Badge>
+              {monitor.description && (
+                <p className="text-xs text-muted-foreground/60 truncate">
+                  {monitor.description}
+                </p>
+              )}
             </div>
-            {monitor.description && (
-              <p className="text-xs text-muted-foreground line-clamp-2">
-                {monitor.description}
-              </p>
-            )}
-          </div>
-
-          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-            {onEdit && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7"
-                onClick={() => onEdit(monitor)}
-                title="Edit monitor"
-              >
-                <Bell className="h-3.5 w-3.5" />
-              </Button>
-            )}
-            {onDelete && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7"
-                onClick={() => onDelete(monitor.id)}
-                title="Delete monitor"
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-              </Button>
-            )}
-          </div>
-        </div>
-      </CardHeader>
-
-      <CardContent className="pb-4 flex-1 flex flex-col space-y-3">
-        {/* Main Value */}
-        <div className="space-y-1">
-          <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-bold tabular-nums">
-              {formatValue(monitor.value)}
-            </span>
-            {hasTrend && trend !== 0 && (
-              <span className={cn(
-                "flex items-center text-sm font-medium",
-                isPositive ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
-              )}>
-                {isPositive ? (
-                  <TrendingUp className="h-3 w-3 mr-0.5" />
-                ) : (
-                  <TrendingDown className="h-3 w-3 mr-0.5" />
-                )}
-                {Math.abs(trend).toFixed(monitor.decimal_places)}
+            <div className="flex items-baseline gap-2 mt-1">
+              <span className="text-xl font-semibold text-foreground">
+                {formatValue(monitor.value)}
               </span>
-            )}
+              {changePercent !== 0 && (
+                <Badge
+                  variant={getChangeColor()}
+                  className="h-5 gap-0.5 text-xs font-medium"
+                >
+                  {getChangeIcon()}
+                  {Math.abs(changePercent).toFixed(1)}%
+                </Badge>
+              )}
+            </div>
           </div>
-          {monitor.computed_at && (
-            <p className="text-xs text-muted-foreground">
-              Updated {formatTimeSince(monitor.computed_at)}
-            </p>
-          )}
-        </div>
 
-        {/* Chart */}
+          {/* Menu Button */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 rounded-full"
+              >
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-32">
+              {onEdit && (
+                <DropdownMenuItem onClick={() => onEdit(monitor)}>
+                  <Edit className="mr-2 h-3 w-3" />
+                  <span className="text-xs">Edit</span>
+                </DropdownMenuItem>
+              )}
+              {onDelete && (
+                <DropdownMenuItem
+                  onClick={() => onDelete(monitor.id)}
+                  className="text-destructive focus:text-destructive"
+                >
+                  <Trash2 className="mr-2 h-3 w-3" />
+                  <span className="text-xs">Delete</span>
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </CardHeader>
+
+        {/* Chart Section */}
         {showChart && chartData.length > 0 && (
-          <>
-            <Separator />
-            <div className="h-24 -mx-2">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chartData}>
-                  <XAxis
-                    dataKey="timestamp"
-                    hide={true}
-                    type="number"
-                    domain={['dataMin', 'dataMax']}
-                    scale="time"
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="value"
-                    stroke={monitor.color || 'hsl(var(--primary))'}
-                    strokeWidth={2}
-                    dot={false}
-                    animationDuration={300}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </>
+          <div className="h-24 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart
+                data={chartData}
+                className="translate-y-1 scale-105"
+              >
+                <defs>
+                  <linearGradient id={`gradient-${monitor.id}`} x1="0" y1="0" x2="0" y2="1">
+                    <stop
+                      offset="10%"
+                      stopColor={monitor.color || 'hsl(var(--primary))'}
+                      stopOpacity={0.3}
+                    />
+                    <stop
+                      offset="100%"
+                      stopColor={monitor.color || 'hsl(var(--primary))'}
+                      stopOpacity={0.05}
+                    />
+                  </linearGradient>
+                </defs>
+                <YAxis
+                  domain={[
+                    Math.min(...chartData.map((d) => d.value)) * 0.95,
+                    'auto'
+                  ]}
+                  hide
+                />
+                <Area
+                  type="monotone"
+                  dataKey="value"
+                  stroke={monitor.color || 'hsl(var(--primary))'}
+                  strokeWidth={2}
+                  fill={`url(#gradient-${monitor.id})`}
+                  animationDuration={300}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
         )}
 
-        {/* Stats */}
-        {chartData.length > 0 && (
-          <>
-            <Separator />
-            <div className="grid grid-cols-3 gap-2 text-center">
-              <div>
-                <p className="text-[10px] uppercase text-muted-foreground font-medium tracking-wide">Min</p>
-                <p className="text-sm font-semibold mt-0.5 tabular-nums">
-                  {formatValue(stats.min)}
-                </p>
-              </div>
-              <div>
-                <p className="text-[10px] uppercase text-muted-foreground font-medium tracking-wide">Avg</p>
-                <p className="text-sm font-semibold mt-0.5 tabular-nums">
-                  {formatValue(stats.avg)}
-                </p>
-              </div>
-              <div>
-                <p className="text-[10px] uppercase text-muted-foreground font-medium tracking-wide">Max</p>
-                <p className="text-sm font-semibold mt-0.5 tabular-nums">
-                  {formatValue(stats.max)}
-                </p>
-              </div>
-            </div>
-          </>
+        {/* Empty state for no chart data */}
+        {showChart && chartData.length === 0 && (
+          <div className="h-24 w-full flex items-center justify-center text-xs text-muted-foreground">
+            No data available
+          </div>
         )}
-
-        {/* Formula hint if no chart */}
-        {!showChart && (
-          <code className="text-xs bg-muted px-2 py-1 rounded truncate block mt-auto">
-            {monitor.formula}
-          </code>
-        )}
-      </CardContent>
+      </section>
     </Card>
   );
 }
