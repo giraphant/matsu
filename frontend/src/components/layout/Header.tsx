@@ -12,10 +12,11 @@ import {
   Menu,
   X,
   Settings,
-  Sliders
+  Sliders,
+  PanelLeft
 } from 'lucide-react';
 
-export type ViewMode = 'overview' | 'dex' | 'monitors' | 'settings';
+export type ViewMode = 'overview' | 'detail' | 'dex' | 'monitors' | 'settings';
 
 interface HeaderProps {
   viewMode: ViewMode;
@@ -67,6 +68,13 @@ export function Header({
                   >
                     <LayoutGrid size={20} />
                     <span>Overview</span>
+                  </button>
+                  <button
+                    className={`mobile-menu-item ${viewMode === 'detail' ? 'active' : ''}`}
+                    onClick={() => { onViewModeChange('detail'); onToggleMobileMenu(); }}
+                  >
+                    <PanelLeft size={20} />
+                    <span>Detail View</span>
                   </button>
                   <button
                     className={`mobile-menu-item ${viewMode === 'dex' ? 'active' : ''}`}
@@ -124,6 +132,14 @@ export function Header({
               style={{ padding: '8px 12px' }}
             >
               <LayoutGrid size={18} />
+            </button>
+            <button
+              className={`btn-secondary ${viewMode === 'detail' ? 'active' : ''}`}
+              onClick={() => onViewModeChange('detail')}
+              title="Detail View"
+              style={{ padding: '8px 12px' }}
+            >
+              <PanelLeft size={18} />
             </button>
             <button
               className={`btn-secondary ${viewMode === 'dex' ? 'active' : ''}`}

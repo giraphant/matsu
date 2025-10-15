@@ -306,6 +306,42 @@ function App() {
           getAlertRuleForMonitor={getAlertRuleForMonitor}
           gridLayout={bentoGridLayout}
         />
+      ) : viewMode === 'detail' ? (
+        <DetailView
+          monitors={monitors}
+          visibleMonitors={visibleMonitors}
+          selectedMonitor={selectedMonitor}
+          currentMonitor={currentMonitor}
+          chartData={chartData}
+          days={days}
+          monitorNames={monitorNames}
+          monitorTags={monitorTags}
+          hiddenMonitors={hiddenMonitors}
+          allTags={allTags}
+          selectedTag={selectedTag}
+          showManageModal={showManageModal}
+          settingsTab={settingsTab}
+          monitorSearchQuery={monitorSearchQuery}
+          pushoverUserKey={pushoverUserKey}
+          pushoverApiToken={pushoverApiToken}
+          onSelectMonitor={setSelectedMonitor}
+          onSetDays={setDays}
+          onUpdateUnit={handleUpdateUnit}
+          onSetSelectedTag={setSelectedTag}
+          onShowManageModal={setShowManageModal}
+          onSetSettingsTab={setSettingsTab}
+          onSetMonitorSearchQuery={setMonitorSearchQuery}
+          onToggleHideMonitor={toggleHideMonitor}
+          onDeleteMonitor={handleDeleteMonitor}
+          onAddTag={addTagToMonitor}
+          onRemoveTag={removeTagFromMonitor}
+          onUpdateName={updateMonitorName}
+          onUpdateDecimalPlaces={updateMonitorDecimalPlaces}
+          onSetPushoverUserKey={setPushoverUserKey}
+          onSetPushoverApiToken={setPushoverApiToken}
+          onSavePushoverConfig={savePushoverConfig}
+          onTestPushoverNotification={testPushoverNotification}
+        />
       ) : viewMode === 'dex' ? (
         <DexRates />
       ) : viewMode === 'monitors' ? (
