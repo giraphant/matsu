@@ -4,7 +4,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
   LayoutGrid,
-  LineChart,
+  Database,
   TrendingUp,
   Settings,
   Activity,
@@ -42,9 +42,9 @@ const navItems = [
     icon: TrendingUp,
   },
   {
-    title: "Webhooks",
+    title: "Data Management",
     url: "/charts",
-    icon: LineChart,
+    icon: Database,
   },
   {
     title: "Settings",

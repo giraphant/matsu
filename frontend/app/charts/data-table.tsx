@@ -37,6 +37,7 @@ interface DataTableProps<TData, TValue> {
   data: TData[]
   onViewChart?: (data: TData) => void
   onViewDetails?: (data: TData) => void
+  meta?: Record<string, any>
   pageSize?: number
 }
 
@@ -45,6 +46,7 @@ export function DataTable<TData, TValue>({
   data,
   onViewChart,
   onViewDetails,
+  meta: additionalMeta,
   pageSize = 10
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([])
@@ -77,6 +79,7 @@ export function DataTable<TData, TValue>({
     meta: {
       onViewChart,
       onViewDetails,
+      ...additionalMeta,
     },
   })
 

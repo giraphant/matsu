@@ -3,18 +3,24 @@
 import { useState, useEffect } from 'react';
 import { DataTable } from './data-table';
 import { columns, WebhookData } from './columns';
+import { columns as monitorColumns, MonitorData } from './monitors-columns';
+import { columns as alertRuleColumns, AlertRuleData } from './alert-rules-columns';
 import { ChartDialog } from './chart-dialog';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { RefreshCw, TrendingUp, TrendingDown, Activity } from 'lucide-react';
+import { RefreshCw, TrendingUp, TrendingDown, Activity, Database } from 'lucide-react';
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function ChartsPage() {
   const [webhooks, setWebhooks] = useState<WebhookData[]>([]);
+  const [monitors, setMonitors] = useState<MonitorData[]>([]);
+  const [alertRules, setAlertRules] = useState<AlertRuleData[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedWebhook, setSelectedWebhook] = useState<WebhookData | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("webhooks");
 
   // Statistics
   const [stats, setStats] = useState({
@@ -27,7 +33,13 @@ export default function ChartsPage() {
 
   useEffect(() => {
     fetchWebhooks();
-    const interval = setInterval(fetchWebhooks, 60000); // Refresh every minute
+    fetchMonitors();
+    fetchAlertRules();
+    const interval = setInterval(() => {
+      fetchWebhooks();
+      fetchMonitors();
+      fetchAlertRules();
+    }, 60000); // Refresh every minute
     return () => clearInterval(interval);
   }, []);
 
@@ -120,6 +132,30 @@ export default function ChartsPage() {
     }
   };
 
+  const fetchMonitors = async () => {
+    try {
+      const response = await fetch('/api/monitors');
+      if (response.ok) {
+        const data = await response.json();
+        setMonitors(data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch monitors:', error);
+    }
+  };
+
+  const fetchAlertRules = async () => {
+    try {
+      const response = await fetch('/api/alert-rules');
+      if (response.ok) {
+        const data = await response.json();
+        setAlertRules(data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch alert rules:', error);
+    }
+  };
+
   const calculateStats = (data: WebhookData[]) => {
     const total = data.length;
     const increasing = data.filter(w => w.change_percent && w.change_percent > 0).length;
@@ -148,7 +184,83 @@ export default function ChartsPage() {
   };
 
   const handleRefresh = () => {
-    fetchWebhooks();
+    if (activeTab === 'webhooks') {
+      fetchWebhooks();
+    } else if (activeTab === 'monitors') {
+      fetchMonitors();
+    } else if (activeTab === 'alerts') {
+      fetchAlertRules();
+    }
+  };
+
+  // Monitor handlers
+  const handleMonitorToggle = async (monitor: MonitorData) => {
+    try {
+      const response = await fetch(`/api/monitors/${monitor.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled: !monitor.enabled }),
+      });
+      if (response.ok) {
+        fetchMonitors();
+      }
+    } catch (error) {
+      console.error('Failed to toggle monitor:', error);
+    }
+  };
+
+  const handleMonitorEdit = (monitor: MonitorData) => {
+    // TODO: Implement edit dialog
+    console.log('Edit monitor:', monitor);
+  };
+
+  const handleMonitorDelete = async (monitorId: string) => {
+    if (!confirm('Are you sure you want to delete this monitor?')) return;
+    try {
+      const response = await fetch(`/api/monitors/${monitorId}`, {
+        method: 'DELETE',
+      });
+      if (response.ok) {
+        fetchMonitors();
+      }
+    } catch (error) {
+      console.error('Failed to delete monitor:', error);
+    }
+  };
+
+  // Alert rule handlers
+  const handleAlertRuleToggle = async (rule: AlertRuleData) => {
+    try {
+      const response = await fetch(`/api/alert-rules/${rule.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled: !rule.enabled }),
+      });
+      if (response.ok) {
+        fetchAlertRules();
+      }
+    } catch (error) {
+      console.error('Failed to toggle alert rule:', error);
+    }
+  };
+
+  const handleAlertRuleEdit = (rule: AlertRuleData) => {
+    // TODO: Implement edit dialog
+    console.log('Edit alert rule:', rule);
+  };
+
+  const handleAlertRuleDelete = async (ruleId: string) => {
+    if (!confirm('Are you sure you want to delete this alert rule?')) return;
+    try {
+      const response = await fetch(`/api/alert-rules/${ruleId}`, {
+        method: 'DELETE',
+      });
+      if (response.ok) {
+        fetchAlertRules();
+      }
+    } catch (error) {
+      console.error('Failed to delete alert rule:', error);
+    }
   };
 
   if (loading) {
@@ -167,9 +279,9 @@ export default function ChartsPage() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Webhooks</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Data Management</h1>
           <p className="text-muted-foreground">
-            Monitor and analyze webhook data from Distill Web Monitor
+            Manage webhooks, monitors, and alert rules
           </p>
         </div>
         <Button
@@ -182,85 +294,145 @@ export default function ChartsPage() {
         </Button>
       </div>
 
-      {/* Statistics Cards */}
-      <div className="grid gap-4 md:grid-cols-5">
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Total Monitors</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.total}</div>
-            <p className="text-xs text-muted-foreground">Active webhooks</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Increasing</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-green-500" />
-              <span className="text-2xl font-bold text-green-600">{stats.increasing}</span>
-            </div>
-            <p className="text-xs text-muted-foreground">Positive change</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Decreasing</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-2">
-              <TrendingDown className="h-5 w-5 text-red-500" />
-              <span className="text-2xl font-bold text-red-600">{stats.decreasing}</span>
-            </div>
-            <p className="text-xs text-muted-foreground">Negative change</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Unchanged</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-gray-600">{stats.unchanged}</div>
-            <p className="text-xs text-muted-foreground">No change</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Avg. Change</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className={`text-2xl font-bold ${
-              stats.avgChange > 0 ? 'text-green-600' :
-              stats.avgChange < 0 ? 'text-red-600' :
-              'text-gray-600'
-            }`}>
-              {stats.avgChange.toFixed(2)}%
-            </div>
-            <p className="text-xs text-muted-foreground">Average percentage</p>
-          </CardContent>
-        </Card>
-      </div>
+      {/* Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid w-full max-w-md grid-cols-3">
+          <TabsTrigger value="webhooks">Webhooks</TabsTrigger>
+          <TabsTrigger value="monitors">Monitors</TabsTrigger>
+          <TabsTrigger value="alerts">Alert Rules</TabsTrigger>
+        </TabsList>
 
-      {/* Data Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>All Webhooks</CardTitle>
-          <CardDescription>
-            Click on any row to view detailed charts and historical data
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <DataTable
-            columns={columns}
-            data={webhooks}
-            onViewChart={handleViewChart}
-            onViewDetails={handleViewDetails}
-            pageSize={15}
-          />
-        </CardContent>
-      </Card>
+        {/* Webhooks Tab */}
+        <TabsContent value="webhooks" className="space-y-6">
+          {/* Statistics Cards */}
+          <div className="grid gap-4 md:grid-cols-5">
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium">Total Monitors</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.total}</div>
+                <p className="text-xs text-muted-foreground">Active webhooks</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium">Increasing</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5 text-green-500" />
+                  <span className="text-2xl font-bold text-green-600">{stats.increasing}</span>
+                </div>
+                <p className="text-xs text-muted-foreground">Positive change</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium">Decreasing</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center gap-2">
+                  <TrendingDown className="h-5 w-5 text-red-500" />
+                  <span className="text-2xl font-bold text-red-600">{stats.decreasing}</span>
+                </div>
+                <p className="text-xs text-muted-foreground">Negative change</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium">Unchanged</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-gray-600">{stats.unchanged}</div>
+                <p className="text-xs text-muted-foreground">No change</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium">Avg. Change</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className={`text-2xl font-bold ${
+                  stats.avgChange > 0 ? 'text-green-600' :
+                  stats.avgChange < 0 ? 'text-red-600' :
+                  'text-gray-600'
+                }`}>
+                  {stats.avgChange.toFixed(2)}%
+                </div>
+                <p className="text-xs text-muted-foreground">Average percentage</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Webhooks Data Table */}
+          <Card>
+            <CardHeader>
+              <CardTitle>All Webhooks</CardTitle>
+              <CardDescription>
+                Click on any row to view detailed charts and historical data
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <DataTable
+                columns={columns}
+                data={webhooks}
+                onViewChart={handleViewChart}
+                onViewDetails={handleViewDetails}
+                pageSize={15}
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Monitors Tab */}
+        <TabsContent value="monitors" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>All Monitors</CardTitle>
+              <CardDescription>
+                Manage and monitor your data sources
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <DataTable
+                columns={monitorColumns}
+                data={monitors}
+                meta={{
+                  onToggle: handleMonitorToggle,
+                  onEdit: handleMonitorEdit,
+                  onDelete: handleMonitorDelete,
+                }}
+                pageSize={15}
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Alert Rules Tab */}
+        <TabsContent value="alerts" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>All Alert Rules</CardTitle>
+              <CardDescription>
+                Configure alerting conditions and thresholds
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <DataTable
+                columns={alertRuleColumns}
+                data={alertRules}
+                meta={{
+                  onToggle: handleAlertRuleToggle,
+                  onEdit: handleAlertRuleEdit,
+                  onDelete: handleAlertRuleDelete,
+                }}
+                pageSize={15}
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
 
       {/* Chart Dialog */}
       <ChartDialog
