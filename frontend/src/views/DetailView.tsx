@@ -4,6 +4,8 @@ import { Settings } from 'lucide-react';
 import { MonitorSummary, ChartData } from '../types';
 import { formatValue } from '../utils/format';
 import ManageMonitorItem from '../ManageMonitorItem';
+import { MonitorSidebar } from '../components/monitor-sidebar';
+import { SidebarProvider } from '@/components/ui/sidebar';
 
 interface DetailViewProps {
   monitors: MonitorSummary[];
@@ -85,66 +87,33 @@ export function DetailView({
     setEditingUnit('');
   };
 
+  // Create a wrapper function for formatValue that matches MonitorSidebar's expected signature
+  const formatMonitorValue = (monitor: MonitorSummary) => {
+    return formatValue(monitor.latest_value, monitor.unit, monitor.decimal_places);
+  };
+
+  // Map monitors to include custom names from monitorNames
+  const monitorsWithNames = monitors.map(monitor => ({
+    ...monitor,
+    monitor_name: monitorNames.get(monitor.monitor_id) || monitor.monitor_name || monitor.monitor_id,
+  }));
+
   return (
     <>
-      <div className="dashboard">
-        {/* Sidebar */}
-        <div className="sidebar">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <h3 style={{ margin: 0 }}>Monitors ({visibleMonitors.length}/{monitors.length})</h3>
-            <button className="manage-btn" onClick={() => onShowManageModal(true)} title="Manage monitors">
-              <Settings size={16} />
-            </button>
-          </div>
+      <SidebarProvider>
+        <div className="flex h-screen w-full">
+          <MonitorSidebar
+            monitors={monitorsWithNames}
+            selectedMonitor={selectedMonitor}
+            selectedTag={selectedTag}
+            onMonitorSelect={onSelectMonitor}
+            onTagSelect={onSetSelectedTag}
+            onShowManageModal={onShowManageModal}
+            formatValue={formatMonitorValue}
+          />
 
-          {/* Tag Filter */}
-          {allTags.length > 0 && (
-            <div className="tag-filter">
-              <button
-                className={`tag-filter-btn ${selectedTag === 'all' ? 'active' : ''}`}
-                onClick={() => onSetSelectedTag('all')}
-              >
-                All
-              </button>
-              {allTags.map(tag => (
-                <button
-                  key={tag}
-                  className={`tag-filter-btn ${selectedTag === tag ? 'active' : ''}`}
-                  onClick={() => onSetSelectedTag(tag)}
-                >
-                  {tag}
-                </button>
-              ))}
-            </div>
-          )}
-
-          <div className="monitor-list">
-            {visibleMonitors.map(monitor => (
-              <button
-                key={monitor.monitor_id}
-                className={`monitor-item ${selectedMonitor === monitor.monitor_id ? 'active' : ''}`}
-                onClick={() => onSelectMonitor(monitor.monitor_id)}
-              >
-                <div className="monitor-name">
-                  {monitorNames.get(monitor.monitor_id) || monitor.monitor_name || monitor.monitor_id}
-                </div>
-                <div className="monitor-value">
-                  {formatValue(monitor.latest_value, monitor.unit, monitor.decimal_places)}
-                </div>
-                {monitorTags.get(monitor.monitor_id) && monitorTags.get(monitor.monitor_id)!.length > 0 && (
-                  <div className="monitor-tags">
-                    {monitorTags.get(monitor.monitor_id)!.map(tag => (
-                      <span key={tag} className="monitor-tag">{tag}</span>
-                    ))}
-                  </div>
-                )}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Main Content */}
-        <div className="main-content">
+          {/* Main Content */}
+          <div className="flex-1 overflow-auto p-6">
           {currentMonitor && (
             <>
               {/* Stats Cards */}
@@ -288,8 +257,9 @@ export function DetailView({
               )}
             </>
           )}
+          </div>
         </div>
-      </div>
+      </SidebarProvider>
 
       {/* Unit Edit Modal */}
       {showUnitModal && (
