@@ -113,6 +113,7 @@ class StartupManager:
         from app.monitors.lighter import LighterMonitor
         from app.workers.dex_cache_warmer import DexCacheWarmer
         from app.workers.alert_checker import AlertChecker
+        from app.workers.webhook_monitor_alert_checker import WebhookMonitorAlertChecker
 
         # Create monitor instances based on feature flags
         if settings.ENABLE_DEX_MONITORING:
@@ -121,6 +122,9 @@ class StartupManager:
 
         if settings.ENABLE_LIGHTER_MONITORING:
             self.monitors.append(LighterMonitor())
+
+        # Always start Webhook Monitor Alert Checker (for Bento/Overview page alerts)
+        self.monitors.append(WebhookMonitorAlertChecker(interval=30))
 
         # Start all monitors
         for monitor in self.monitors:
