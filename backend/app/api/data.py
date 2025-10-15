@@ -94,10 +94,10 @@ async def get_monitoring_data(
         db.close()
 
 
-@router.get("/monitors", response_model=List[MonitorSummary])
+@router.get("/webhook-monitors", response_model=List[MonitorSummary])
 async def get_monitor_summaries() -> List[MonitorSummary]:
     """
-    Get summary statistics for all monitors.
+    Get summary statistics for all webhook monitors (legacy endpoint).
     Uses MonitoringService for business logic.
     """
     db = get_db_session()

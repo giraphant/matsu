@@ -8,8 +8,8 @@ export const API_ENDPOINTS = {
   // Auth
   LOGIN: `${API_BASE}/auth/login`,
 
-  // Monitors
-  MONITORS: `${API_BASE}/monitors`,
+  // Webhook Monitors (legacy)
+  MONITORS: `${API_BASE}/webhook-monitors`,
   MONITOR_BY_ID: (id: string) => `${API_BASE}/monitors/${id}`,
   MONITOR_UNIT: (id: string) => `${API_BASE}/monitors/${id}/unit`,
   MONITOR_DECIMAL: (id: string) => `${API_BASE}/monitors/${id}/decimal-places`,
