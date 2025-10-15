@@ -10,7 +10,7 @@ from datetime import datetime
 from sqlalchemy.orm import Session
 
 from app.core.logger import get_logger
-from app.models.database import Monitor, MonitorValue, WebhookData, ConstantCard
+from app.models.database import Monitor, MonitorValue, WebhookData
 
 logger = get_logger(__name__)
 
@@ -20,7 +20,7 @@ class FormulaEngine:
     Engine for parsing and evaluating monitor formulas.
 
     Supported syntax:
-    - Variables: ${monitor:id}, ${webhook:id}, ${constant:id}
+    - Variables: ${monitor:id}, ${webhook:id}
     - Operators: +, -, *, /, %, ()
     - Functions: abs(), max(), min()
 
@@ -93,11 +93,6 @@ class FormulaEngine:
                     WebhookData.monitor_id == dep_id
                 ).order_by(WebhookData.timestamp.desc()).first()
                 values[var_name] = latest.value if latest else None
-
-            elif dep_type == 'constant':
-                # Get constant card value
-                constant = self.db.query(ConstantCard).filter(ConstantCard.id == dep_id).first()
-                values[var_name] = constant.value if constant else None
 
             else:
                 logger.warning(f"Unknown dependency type: {dep_type}")

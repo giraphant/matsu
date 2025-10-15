@@ -146,26 +146,8 @@ class FundingRateAlert(Base):
         return f"<FundingRateAlert(name='{self.name}', type='{self.alert_type}', enabled={self.enabled})>"
 
 
-class ConstantCard(Base):
-    """Database model for constant/reference value cards."""
-
-    __tablename__ = "constant_cards"
-
-    id = Column(String, primary_key=True)  # UUID
-    name = Column(String, nullable=False)
-    value = Column(Float, nullable=False)
-    unit = Column(String, nullable=True)
-    description = Column(Text, nullable=True)
-    color = Column(String, nullable=True, default='#3b82f6')  # Hex color for the card
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-
-    def __repr__(self):
-        return f"<ConstantCard(name='{self.name}', value={self.value})>"
-
-
 # ============================================================================
-# New Monitor System Models (Phase 1)
+# New Monitor System Models
 # ============================================================================
 
 class Monitor(Base):
