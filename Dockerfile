@@ -10,11 +10,11 @@ COPY frontend/package*.json ./
 # Install dependencies
 RUN npm ci
 
+# Force cache bust - change this value to force rebuild
+ARG CACHE_BUST=2025-10-15-v2
+
 # Copy frontend source
 COPY frontend/ ./
-
-# Force rebuild (bypass cache) - v0.1.1
-ARG FRONTEND_VERSION=0.1.1
 
 # Build frontend
 RUN npm run build
