@@ -1,11 +1,9 @@
 import type { Metadata } from "next"
 import "./globals.css"
-import { SidebarTrigger } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/app-sidebar"
-import { SidebarWrapper } from "@/components/sidebar-wrapper"
 import { Toaster } from "sonner"
 import { ThemeProvider } from "@/components/theme-provider"
-import { ThemeToggle } from "@/components/theme-toggle"
+import { AuthProvider } from "@/contexts/auth-context"
+import { MainLayout } from "@/components/main-layout"
 
 export const metadata: Metadata = {
   title: "Matsu Monitor",
@@ -27,21 +25,10 @@ export default function RootLayout({
           disableTransitionOnChange
           storageKey="matsu-theme"
         >
-          <SidebarWrapper>
-            <AppSidebar />
-            <main className="flex-1 w-full">
-              <div className="border-b">
-                <div className="flex h-16 items-center px-4 justify-between">
-                  <SidebarTrigger />
-                  <ThemeToggle />
-                </div>
-              </div>
-              <div className="flex-1 space-y-4 p-8 pt-6">
-                {children}
-              </div>
-            </main>
-          </SidebarWrapper>
-          <Toaster position="bottom-right" />
+          <AuthProvider>
+            <MainLayout>{children}</MainLayout>
+            <Toaster position="bottom-right" />
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>
