@@ -29,19 +29,12 @@ class MonitorRepository:
             query = query.filter(Monitor.enabled == True)
         return query.order_by(Monitor.created_at).all()
 
-    def get_by_type(self, monitor_type: str) -> List[Monitor]:
-        """Get monitors by type."""
-        return self.db.query(Monitor).filter(
-            Monitor.type == monitor_type,
-            Monitor.enabled == True
-        ).all()
-
     def create(self, monitor: Monitor) -> Monitor:
         """Create a new monitor."""
         self.db.add(monitor)
         self.db.commit()
         self.db.refresh(monitor)
-        logger.info(f"Created monitor: {monitor.id} ({monitor.type})")
+        logger.info(f"Created monitor: {monitor.id}")
         return monitor
 
     def update(self, monitor_id: str, updates: dict) -> Optional[Monitor]:

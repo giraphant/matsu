@@ -81,30 +81,9 @@ class FormulaEngine:
                 # Get value from another monitor
                 monitor = self.db.query(Monitor).filter(Monitor.id == dep_id).first()
                 if monitor:
-                    if monitor.type == 'constant':
-                        # Constant monitor: parse formula as literal value
-                        try:
-                            values[var_name] = float(monitor.formula)
-                        except:
-                            values[var_name] = None
-                    elif monitor.type == 'direct':
-                        # Direct monitor: get latest webhook data
-                        # Extract webhook ID from formula: ${webhook:xxx}
-                        webhook_match = self.VAR_PATTERN.match(monitor.formula)
-                        if webhook_match:
-                            webhook_id = webhook_match.group(2)
-                            latest = self.db.query(MonitoringData).filter(
-                                MonitoringData.monitor_id == webhook_id
-                            ).order_by(MonitoringData.timestamp.desc()).first()
-                            values[var_name] = latest.value if latest else None
-                        else:
-                            values[var_name] = None
-                    elif monitor.type == 'computed':
-                        # Computed monitor: recursively evaluate
-                        result = self.evaluate(monitor.formula)
-                        values[var_name] = result
-                    else:
-                        values[var_name] = None
+                    # Recursively evaluate the monitor's formula
+                    result = self.evaluate(monitor.formula)
+                    values[var_name] = result
                 else:
                     values[var_name] = None
 
@@ -197,7 +176,8 @@ class FormulaEngine:
                 if dep_id not in visited:
                     visited.add(dep_id)
                     monitor = self.db.query(Monitor).filter(Monitor.id == dep_id).first()
-                    if monitor and monitor.type == 'computed':
+                    if monitor:
+                        # Check the monitor's formula for circular dependencies
                         if check_deps(monitor.formula, path | {dep_id}):
                             return True
 
@@ -232,31 +212,9 @@ class FormulaEngine:
         if not monitor or not monitor.enabled:
             return None
 
-        value = None
-        dependencies = []
-
-        if monitor.type == 'constant':
-            # Constant: parse as literal
-            try:
-                value = float(monitor.formula)
-            except:
-                value = None
-
-        elif monitor.type == 'direct':
-            # Direct: get from webhook
-            webhook_match = self.VAR_PATTERN.match(monitor.formula)
-            if webhook_match:
-                webhook_id = webhook_match.group(2)
-                dependencies = [f"webhook:{webhook_id}"]
-                latest = self.db.query(MonitoringData).filter(
-                    MonitoringData.monitor_id == webhook_id
-                ).order_by(MonitoringData.timestamp.desc()).first()
-                value = latest.value if latest else None
-
-        elif monitor.type == 'computed':
-            # Computed: evaluate formula
-            dependencies = self.get_dependencies(monitor.formula)
-            value = self.evaluate(monitor.formula)
+        # Evaluate the formula (works for constants, references, and computed formulas)
+        value = self.evaluate(monitor.formula)
+        dependencies = self.get_dependencies(monitor.formula)
 
         # Cache the computed value
         if value is not None:
@@ -278,11 +236,8 @@ class FormulaEngine:
         Args:
             changed_dependency: Dependency identifier that changed (e.g., "webhook:xxx")
         """
-        # Find all monitors that depend on this
-        all_monitors = self.db.query(Monitor).filter(
-            Monitor.enabled == True,
-            Monitor.type.in_(['direct', 'computed'])
-        ).all()
+        # Find all enabled monitors
+        all_monitors = self.db.query(Monitor).filter(Monitor.enabled == True).all()
 
         recomputed = []
         for monitor in all_monitors:
