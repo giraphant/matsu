@@ -10,8 +10,8 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
-lib64/
+/lib/
+/lib64/
 parts/
 sdist/
 var/
@@ -68,3 +68,4 @@ node_modules/
 .env.production
 docker-compose.production.yml
 nginx.conffrontend_backup/
+frontend_backup/

@@ -11,12 +11,12 @@ COPY frontend/package*.json ./
 RUN npm ci
 
 # Force cache bust - change this value to force rebuild
-ARG CACHE_BUST=2025-10-15-v4-vite-dist-fix
+ARG CACHE_BUST=2025-10-15-v5-nextjs-static-export
 
 # Copy frontend source
 COPY frontend/ ./
 
-# Build frontend
+# Build frontend (Next.js with static export)
 RUN npm run build
 
 # Stage 2: Python backend with built frontend
@@ -50,8 +50,8 @@ RUN pip install --no-cache-dir --upgrade pip \
 # Copy backend code
 COPY backend/ .
 
-# Copy built frontend from frontend-builder stage (Vite outputs to dist/)
-COPY --from=frontend-builder /build/dist/ static/
+# Copy built frontend from frontend-builder stage (Next.js outputs to out/)
+COPY --from=frontend-builder /build/out/ static/
 
 # Create required directories
 RUN mkdir -p data static logs
