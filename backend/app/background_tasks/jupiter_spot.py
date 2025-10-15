@@ -24,6 +24,8 @@ class JupiterSpotMonitor(BaseMonitor):
             'SOL': 'So11111111111111111111111111111111111111112',  # Native SOL
             'BTC': '3NZ9JMVBmGAqocybic2c7LQCJScmgsAZ6vQqTDzcqmJh',  # Wrapped BTC (Portal)
             'ETH': '7vfCXTUXx5WJV5JADk17DUJ4ksgau7utNKj4b963voxs',  # Wrapped Ether (Wormhole)
+            'JLP': '27G8MtK7VtTcCHkpASjSDdkWWYfoqT6ggEuKidVJidD4',  # Jupiter Perps LP
+            'ALP': '4yCLi5yWGzpTWMQ1iWHG5CrGYAdBkhyEdsuSugjDUqwj',  # Adrena LP
         }
 
     async def run(self) -> None:
