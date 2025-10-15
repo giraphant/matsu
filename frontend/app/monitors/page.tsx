@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,6 +13,8 @@ import { Plus, Activity } from 'lucide-react';
 import { toast } from "sonner";
 import { MonitorCard } from '@/components/monitor-card';
 import { getApiUrl } from '@/lib/api-config';
+import { useNotification } from '@/hooks/useNotification';
+import { AlertLevel, ALERT_LEVELS } from '@/lib/alerts';
 import {
   DndContext,
   closestCenter,
@@ -46,17 +48,31 @@ interface Monitor {
   updated_at: string;
 }
 
+interface AlertRule {
+  id: string;
+  name: string;
+  condition: string;
+  level: string;
+  enabled: boolean;
+  cooldown_seconds: number;
+  actions: string[];
+}
+
 // Sortable wrapper for MonitorCard
 function SortableMonitorCard({
   monitor,
   onEdit,
   onDelete,
-  onSetAlert
+  onSetAlert,
+  isAlert = false,
+  alertLevel
 }: {
   monitor: Monitor;
   onEdit: (monitor: Monitor) => void;
   onDelete: (id: string) => void;
   onSetAlert: (monitor: Monitor) => void;
+  isAlert?: boolean;
+  alertLevel?: string;
 }) {
   const {
     attributes,
@@ -84,6 +100,8 @@ function SortableMonitorCard({
           onDelete={onDelete}
           onSetAlert={onSetAlert}
           showChart={true}
+          isAlert={isAlert}
+          alertLevel={alertLevel}
         />
       </div>
     </div>
@@ -95,6 +113,10 @@ export default function MonitorsPage() {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingMonitor, setEditingMonitor] = useState<Monitor | null>(null);
+  const [alertRules, setAlertRules] = useState<AlertRule[]>([]);
+  const [alertStates, setAlertStates] = useState<Map<string, {lastNotified: number, isActive: boolean}>>(new Map());
+
+  const { playAlertSound, requestNotificationPermission } = useNotification();
 
   // Alert dialog states
   const [alertDialogOpen, setAlertDialogOpen] = useState(false);
@@ -181,11 +203,115 @@ export default function MonitorsPage() {
     }
   };
 
+  // Fetch alert rules
+  const fetchAlertRules = async () => {
+    try {
+      const response = await fetch(getApiUrl('/api/alert-rules'));
+      if (!response.ok) throw new Error('Failed to fetch alert rules');
+      const data = await response.json();
+      setAlertRules(data);
+    } catch (error) {
+      console.error('Error fetching alert rules:', error);
+    }
+  };
+
+  // Check if monitor is in alert state
+  const isMonitorInAlert = useCallback((monitor: Monitor, rule: AlertRule): boolean => {
+    if (!rule.enabled || monitor.value === null || monitor.value === undefined) {
+      return false;
+    }
+
+    const condition = rule.condition;
+    const value = monitor.value;
+
+    // Parse condition to extract upper/lower limits
+    const upperMatch = condition.match(/>\s*=?\s*(-?\d+\.?\d*)/);
+    const lowerMatch = condition.match(/<\s*=?\s*(-?\d+\.?\d*)/);
+
+    if (upperMatch || lowerMatch) {
+      const upper = upperMatch ? parseFloat(upperMatch[1]) : null;
+      const lower = lowerMatch ? parseFloat(lowerMatch[1]) : null;
+
+      if (upper !== null && value > upper) return true;
+      if (lower !== null && value < lower) return true;
+    }
+
+    return false;
+  }, []);
+
+  // Get alert rule for monitor
+  const getAlertRuleForMonitor = useCallback((monitorId: string): AlertRule | undefined => {
+    return alertRules.find(rule =>
+      rule.condition.includes(`monitor:${monitorId}`)
+    );
+  }, [alertRules]);
+
+  // Check alerts and play sounds
+  useEffect(() => {
+    if (monitors.length === 0 || alertRules.length === 0) return;
+
+    const checkAlerts = () => {
+      monitors.forEach(monitor => {
+        const rule = getAlertRuleForMonitor(monitor.id);
+        if (!rule || !rule.enabled) return;
+
+        const isAlert = isMonitorInAlert(monitor, rule);
+        const state = alertStates.get(monitor.id);
+        const level = rule.level as AlertLevel;
+        const alertConfig = ALERT_LEVELS[level] || ALERT_LEVELS.medium;
+
+        if (isAlert && monitor.value !== null) {
+          // New alert or time to repeat
+          const now = Date.now();
+          const shouldNotify = !state?.isActive ||
+            (now - (state.lastNotified || 0)) >= alertConfig.interval * 1000;
+
+          if (shouldNotify) {
+            // Play alert sound
+            playAlertSound(level);
+
+            const newStates = new Map(alertStates);
+            newStates.set(monitor.id, {
+              lastNotified: now,
+              isActive: true
+            });
+            setAlertStates(newStates);
+          }
+        } else if (state?.isActive) {
+          // Clear alert state when value returns to normal
+          const newStates = new Map(alertStates);
+          newStates.set(monitor.id, {
+            lastNotified: state.lastNotified,
+            isActive: false
+          });
+          setAlertStates(newStates);
+        }
+      });
+    };
+
+    // Check immediately
+    checkAlerts();
+
+    // Then check every 10 seconds
+    const interval = setInterval(checkAlerts, 10000);
+    return () => clearInterval(interval);
+  }, [monitors, alertRules, alertStates, isMonitorInAlert, getAlertRuleForMonitor, playAlertSound]);
+
+  // Request notification permission on mount
+  useEffect(() => {
+    requestNotificationPermission();
+  }, [requestNotificationPermission]);
+
   useEffect(() => {
     fetchMonitors();
+    fetchAlertRules();
     // Refresh every 30 seconds
-    const interval = setInterval(fetchMonitors, 30000);
-    return () => clearInterval(interval);
+    const monitorInterval = setInterval(fetchMonitors, 30000);
+    const alertInterval = setInterval(fetchAlertRules, 60000);
+    return () => {
+      clearInterval(monitorInterval);
+      clearInterval(alertInterval);
+    };
   }, []);
 
   // Handle form submission
@@ -597,15 +723,22 @@ export default function MonitorsPage() {
             strategy={rectSortingStrategy}
           >
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-              {monitors.map((monitor) => (
-                <SortableMonitorCard
-                  key={monitor.id}
-                  monitor={monitor}
-                  onEdit={handleEdit}
-                  onDelete={handleDelete}
-                  onSetAlert={handleSetAlert}
-                />
-              ))}
+              {monitors.map((monitor) => {
+                const alertRule = getAlertRuleForMonitor(monitor.id);
+                const isAlert = alertRule ? isMonitorInAlert(monitor, alertRule) : false;
+
+                return (
+                  <SortableMonitorCard
+                    key={monitor.id}
+                    monitor={monitor}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                    onSetAlert={handleSetAlert}
+                    isAlert={isAlert}
+                    alertLevel={alertRule?.level}
+                  />
+                );
+              })}
             </div>
           </SortableContext>
         </DndContext>

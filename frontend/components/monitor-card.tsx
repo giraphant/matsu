@@ -31,9 +31,11 @@ interface MonitorCardProps {
   onDelete?: (id: string) => void;
   onSetAlert?: (monitor: Monitor) => void;
   showChart?: boolean;
+  isAlert?: boolean;
+  alertLevel?: string;
 }
 
-export function MonitorCard({ monitor, onEdit, onDelete, onSetAlert, showChart = true }: MonitorCardProps) {
+export function MonitorCard({ monitor, onEdit, onDelete, onSetAlert, showChart = true, isAlert = false, alertLevel }: MonitorCardProps) {
   const [chartData, setChartData] = useState<any[]>([]);
   const [changePercent, setChangePercent] = useState<number>(0);
   const [timeAgo, setTimeAgo] = useState<string>('');
@@ -120,24 +122,36 @@ export function MonitorCard({ monitor, onEdit, onDelete, onSetAlert, showChart =
   };
 
   return (
-    <Card className="relative overflow-hidden border border-transparent dark:border-border/50 p-0 gap-0">
+    <Card className={cn(
+      "relative overflow-hidden border border-transparent dark:border-border/50 p-0 gap-0 transition-all duration-300",
+      isAlert && "bg-primary border-primary border-2"
+    )}>
       <section className="flex flex-col flex-nowrap">
         {/* Header Section */}
         <div className="flex flex-col justify-between gap-y-2 p-4">
           <div className="flex flex-col gap-y-4">
             <div className="flex flex-col gap-y-0">
-              <dt className="text-sm font-medium text-default-600 truncate">
+              <dt className={cn(
+                "text-sm font-medium truncate",
+                isAlert ? "text-primary-foreground" : "text-default-600"
+              )}>
                 {monitor.name}
               </dt>
               {monitor.description && (
-                <dt className="text-xs text-default-400 font-normal truncate">
+                <dt className={cn(
+                  "text-xs font-normal truncate",
+                  isAlert ? "text-primary-foreground/80" : "text-default-400"
+                )}>
                   {monitor.description}
                 </dt>
               )}
             </div>
             <div className="flex flex-col gap-y-1">
               <div className="flex items-baseline gap-x-2">
-                <dd className="text-3xl font-semibold text-default-700">
+                <dd className={cn(
+                  "text-3xl font-semibold",
+                  isAlert ? "text-primary-foreground" : "text-default-700"
+                )}>
                   {formatValue(monitor.value)}
                 </dd>
                 {changePercent !== 0 && (
@@ -151,7 +165,10 @@ export function MonitorCard({ monitor, onEdit, onDelete, onSetAlert, showChart =
                 )}
               </div>
               {timeAgo && (
-                <p className="text-xs text-muted-foreground">
+                <p className={cn(
+                  "text-xs",
+                  isAlert ? "text-primary-foreground/70" : "text-muted-foreground"
+                )}>
                   {timeAgo}
                 </p>
               )}
@@ -191,7 +208,7 @@ export function MonitorCard({ monitor, onEdit, onDelete, onSetAlert, showChart =
                 />
                 <Area
                   dataKey="value"
-                  stroke={monitor.color || 'hsl(var(--primary))'}
+                  stroke={isAlert ? 'hsl(var(--primary-foreground))' : (monitor.color || 'hsl(var(--primary))')}
                   strokeWidth={2}
                   fill={`url(#gradient-${monitor.id})`}
                   animationDuration={300}
