@@ -37,7 +37,7 @@ const navItems = [
     icon: Activity,
   },
   {
-    title: "DEX Rates",
+    title: "Trading",
     url: "/dex-rates",
     icon: TrendingUp,
   },

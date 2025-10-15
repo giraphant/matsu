@@ -2,310 +2,301 @@
 
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { getDexFundingRates, getDexFundingRatesBySymbol } from '@/lib/api';
-import type { FundingRate, FundingRatesResponse } from '@/lib/api';
+import { RefreshCw, TrendingUp, TrendingDown } from 'lucide-react';
+import { getApiUrl } from "@/lib/api-config";
 
-export default function DexRatesPage() {
-  const [fundingRates, setFundingRates] = useState<FundingRate[]>([]);
-  const [selectedSymbol, setSelectedSymbol] = useState<string>('');
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+interface FundingRateData {
+  exchange: string;
+  symbol: string;
+  rate: number;
+  annualized_rate: number;
+  next_funding_time: string | null;
+  mark_price: number | null;
+  timestamp: string;
+}
+
+interface SpotPriceData {
+  exchange: string;
+  symbol: string;
+  price: number;
+  volume_24h: number | null;
+  timestamp: string;
+}
+
+export default function TradingPage() {
+  const [fundingRates, setFundingRates] = useState<FundingRateData[]>([]);
+  const [spotPrices, setSpotPrices] = useState<SpotPriceData[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  // Group rates by symbol
-  const groupedRates = fundingRates.reduce((acc, rate) => {
-    if (!acc[rate.symbol]) {
-      acc[rate.symbol] = [];
-    }
-    acc[rate.symbol].push(rate);
-    return acc;
-  }, {} as Record<string, FundingRate[]>);
-
-  // Get unique symbols sorted
-  const symbols = Object.keys(groupedRates).sort();
+  const [activeTab, setActiveTab] = useState("funding");
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   useEffect(() => {
-    fetchRates(false);
-
-    // Refresh data every minute
-    const interval = setInterval(() => fetchRates(false), 60000);
-
+    fetchData();
+    const interval = setInterval(fetchData, 60000); // Refresh every minute
     return () => clearInterval(interval);
   }, []);
 
-  async function fetchRates(forceRefresh: boolean) {
+  async function fetchData() {
     try {
-      if (forceRefresh) {
-        setRefreshing(true);
-      } else {
-        setLoading(true);
-      }
-      setError(null);
+      if (!loading) setRefreshing(true);
 
-      let response: FundingRatesResponse;
-      if (selectedSymbol) {
-        response = await getDexFundingRatesBySymbol(selectedSymbol, forceRefresh);
-      } else {
-        response = await getDexFundingRates(forceRefresh);
+      const [fundingRes, spotRes] = await Promise.all([
+        fetch(getApiUrl('/api/trading/funding-rates')),
+        fetch(getApiUrl('/api/trading/spot-prices'))
+      ]);
+
+      if (fundingRes.ok) {
+        const fundingData = await fundingRes.json();
+        setFundingRates(fundingData);
       }
 
-      setFundingRates(response.rates);
-      setLastUpdated(new Date(response.last_updated));
-
-      if (response.error) {
-        setError(response.error);
+      if (spotRes.ok) {
+        const spotData = await spotRes.json();
+        setSpotPrices(spotData);
       }
-    } catch (err) {
-      console.error('Failed to fetch funding rates:', err);
-      setError('Failed to load funding rates');
+
+      setLastUpdated(new Date());
+    } catch (error) {
+      console.error('Failed to fetch trading data:', error);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
   }
 
-  // Calculate statistics
-  const topFundingRates = [...fundingRates]
-    .filter(r => r.rate !== null)
-    .sort((a, b) => (b.rate || 0) - (a.rate || 0))
-    .slice(0, 5);
+  // Group funding rates by symbol
+  const fundingBySymbol = fundingRates.reduce((acc, rate) => {
+    if (!acc[rate.symbol]) acc[rate.symbol] = [];
+    acc[rate.symbol].push(rate);
+    return acc;
+  }, {} as Record<string, FundingRateData[]>);
 
-  const exchanges = [...new Set(fundingRates.map(r => r.exchange))].sort();
+  // Group spot prices by symbol
+  const spotBySymbol = spotPrices.reduce((acc, price) => {
+    if (!acc[price.symbol]) acc[price.symbol] = [];
+    acc[price.symbol].push(price);
+    return acc;
+  }, {} as Record<string, SpotPriceData[]>);
 
-  // Format rate for display
-  const formatRate = (rate: number | null): string => {
-    if (rate === null) return 'N/A';
-    return `${(rate * 100).toFixed(4)}%`;
-  };
+  const symbols = ['BTC', 'ETH', 'SOL'];
 
-  const formatAnnualized = (rate: number | null, periodHours?: number): string => {
-    if (rate === null) return 'N/A';
-    const periodsPerYear = (365 * 24) / (periodHours || 8);
-    const annualized = rate * periodsPerYear * 100;
-    return `${annualized.toFixed(2)}%`;
+  // Calculate price spreads
+  const calculateSpread = (symbol: string) => {
+    const prices = spotBySymbol[symbol] || [];
+    if (prices.length < 2) return null;
+
+    const priceValues = prices.map(p => p.price);
+    const maxPrice = Math.max(...priceValues);
+    const minPrice = Math.min(...priceValues);
+    const spreadPercent = ((maxPrice - minPrice) / minPrice) * 100;
+
+    return {
+      maxPrice,
+      minPrice,
+      spread: maxPrice - minPrice,
+      spreadPercent,
+      maxExchange: prices.find(p => p.price === maxPrice)?.exchange,
+      minExchange: prices.find(p => p.price === minPrice)?.exchange
+    };
   };
 
   return (
-    <div className="flex flex-1 flex-col gap-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold md:text-2xl">DEX Funding Rates</h1>
-        <div className="flex items-center gap-2">
+    <div className="container mx-auto py-6 space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Trading Monitor</h1>
+          <p className="text-muted-foreground">
+            Monitor funding rates and spot price spreads across exchanges
+          </p>
+        </div>
+        <div className="flex items-center gap-4">
           {lastUpdated && (
             <span className="text-sm text-muted-foreground">
               Updated: {lastUpdated.toLocaleTimeString()}
             </span>
           )}
           <Button
-            size="sm"
-            onClick={() => fetchRates(true)}
+            onClick={fetchData}
             disabled={refreshing}
+            variant="outline"
           >
-            {refreshing ? 'Refreshing...' : 'Force Refresh'}
+            <RefreshCw className={`mr-2 h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+            Refresh
           </Button>
         </div>
       </div>
 
-      {error && (
-        <div className="rounded-lg bg-destructive/10 p-3 text-destructive">
-          {error}
-        </div>
-      )}
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid w-full max-w-md grid-cols-2">
+          <TabsTrigger value="funding">Funding Rates</TabsTrigger>
+          <TabsTrigger value="spot">Spot Spreads</TabsTrigger>
+        </TabsList>
 
-      {/* Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Symbols</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{symbols.length}</div>
-            <p className="text-xs text-muted-foreground">Across {exchanges.length} exchanges</p>
-          </CardContent>
-        </Card>
+        {/* Funding Rates Tab */}
+        <TabsContent value="funding" className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-3">
+            {symbols.map(symbol => {
+              const rates = fundingBySymbol[symbol] || [];
+              const avgRate = rates.length > 0
+                ? rates.reduce((sum, r) => sum + r.annualized_rate, 0) / rates.length
+                : 0;
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Highest Funding</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {topFundingRates[0] ? (
-              <>
-                <div className="text-2xl font-bold">{formatRate(topFundingRates[0].rate)}</div>
-                <p className="text-xs text-muted-foreground">
-                  {topFundingRates[0].symbol} on {topFundingRates[0].exchange}
-                </p>
-              </>
-            ) : (
-              <div className="text-2xl font-bold">N/A</div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">With Binance Spot</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {fundingRates.filter(r => r.has_binance_spot).length}
-            </div>
-            <p className="text-xs text-muted-foreground">Available for spot arbitrage</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Data Points</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{fundingRates.length}</div>
-            <p className="text-xs text-muted-foreground">Total funding rates</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Symbol Filter */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Filter by Symbol</CardTitle>
-          <CardDescription>Select a symbol to view rates across all exchanges</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-2">
-            <Button
-              variant={selectedSymbol === '' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => {
-                setSelectedSymbol('');
-                fetchRates(false);
-              }}
-            >
-              All
-            </Button>
-            {['BTC', 'ETH', 'SOL', 'ARB', 'OP', 'MATIC'].map(symbol => (
-              <Button
-                key={symbol}
-                variant={selectedSymbol === symbol ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => {
-                  setSelectedSymbol(symbol);
-                  fetchRates(false);
-                }}
-              >
-                {symbol}
-              </Button>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Top Funding Rates */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Top Funding Rates</CardTitle>
-          <CardDescription>Highest funding rates across all exchanges</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {loading && !refreshing ? (
-            <div className="text-muted-foreground">Loading...</div>
-          ) : topFundingRates.length === 0 ? (
-            <div className="text-muted-foreground">No data available</div>
-          ) : (
-            <div className="space-y-2">
-              {topFundingRates.map((rate, idx) => (
-                <div key={idx} className="flex items-center justify-between rounded-lg border p-3">
-                  <div className="space-y-1">
-                    <div className="font-medium">
-                      {rate.symbol} on {rate.exchange.toUpperCase()}
+              return (
+                <Card key={symbol}>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg">{symbol} Funding Rates</CardTitle>
+                    <CardDescription>Annualized rates across exchanges</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-bold mb-4">
+                      {avgRate.toFixed(2)}%
                     </div>
-                    <div className="text-sm text-muted-foreground">
-                      {rate.has_binance_spot && (
-                        <span className="mr-2 rounded bg-green-100 dark:bg-green-900 px-1.5 py-0.5 text-xs">
-                          Spot Available
-                        </span>
-                      )}
-                      {rate.next_funding_time && (
-                        <span>Next: {new Date(rate.next_funding_time).toLocaleTimeString()}</span>
-                      )}
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-bold text-lg">{formatRate(rate.rate)}</div>
-                    <div className="text-xs text-muted-foreground">
-                      Annual: {formatAnnualized(rate.rate, rate.funding_period_hours)}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Rates by Symbol */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Funding Rates by Symbol</CardTitle>
-          <CardDescription>
-            Compare rates across different exchanges
-            {selectedSymbol && ` (Filtered: ${selectedSymbol})`}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {loading && !refreshing ? (
-            <div className="text-muted-foreground">Loading...</div>
-          ) : symbols.length === 0 ? (
-            <div className="text-muted-foreground">No data available</div>
-          ) : (
-            <div className="space-y-4 max-h-[600px] overflow-y-auto">
-              {symbols.map(symbol => {
-                const symbolRates = groupedRates[symbol];
-                const hasSpot = symbolRates.some(r => r.has_binance_spot);
-                const maxRate = Math.max(...symbolRates.map(r => r.rate || 0));
-                const minRate = Math.min(...symbolRates.filter(r => r.rate !== null).map(r => r.rate || 0));
-                const spread = maxRate - minRate;
-
-                return (
-                  <div key={symbol} className="rounded-lg border p-4">
-                    <div className="mb-2 flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-semibold">{symbol}</h3>
-                        {hasSpot && (
-                          <span className="rounded bg-green-100 dark:bg-green-900 px-1.5 py-0.5 text-xs">
-                            Spot
+                    <div className="space-y-2">
+                      {rates.sort((a, b) => b.annualized_rate - a.annualized_rate).map((rate, idx) => (
+                        <div key={idx} className="flex justify-between items-center text-sm">
+                          <span className="font-medium capitalize">{rate.exchange}</span>
+                          <span className={rate.annualized_rate > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}>
+                            {rate.annualized_rate.toFixed(2)}%
                           </span>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+
+          {/* Detailed Funding Rates */}
+          {symbols.map(symbol => {
+            const rates = fundingBySymbol[symbol] || [];
+            if (rates.length === 0) return null;
+
+            return (
+              <Card key={symbol}>
+                <CardHeader>
+                  <CardTitle>{symbol} Detailed Rates</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+                    {rates.sort((a, b) => b.annualized_rate - a.annualized_rate).map((rate, idx) => (
+                      <div key={idx} className="border rounded-lg p-3 space-y-1">
+                        <div className="font-semibold capitalize">{rate.exchange}</div>
+                        <div className="text-2xl font-bold">
+                          {rate.annualized_rate.toFixed(2)}%
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          8h: {(rate.rate * 100).toFixed(4)}%
+                        </div>
+                        {rate.mark_price && (
+                          <div className="text-xs text-muted-foreground">
+                            Mark: ${rate.mark_price.toLocaleString()}
+                          </div>
                         )}
                       </div>
-                      {spread > 0 && (
-                        <span className="text-sm text-muted-foreground">
-                          Spread: {(spread * 100).toFixed(4)}%
-                        </span>
-                      )}
-                    </div>
-                    <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                      {symbolRates
-                        .sort((a, b) => (b.rate || 0) - (a.rate || 0))
-                        .map((rate, idx) => (
-                          <div
-                            key={idx}
-                            className="flex items-center justify-between rounded bg-muted/50 p-2 text-sm"
-                          >
-                            <span className="font-medium">{rate.exchange.toUpperCase()}</span>
-                            <span className={rate.rate === maxRate ? 'text-green-600 dark:text-green-400' : ''}>
-                              {formatRate(rate.rate)}
-                            </span>
-                          </div>
-                        ))}
-                    </div>
+                    ))}
                   </div>
-                );
-              })}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </TabsContent>
+
+        {/* Spot Spreads Tab */}
+        <TabsContent value="spot" className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-3">
+            {symbols.map(symbol => {
+              const spread = calculateSpread(symbol);
+              if (!spread) return null;
+
+              return (
+                <Card key={symbol}>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg">{symbol} Price Spread</CardTitle>
+                    <CardDescription>Across CEX exchanges</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center gap-2 mb-4">
+                      {spread.spreadPercent > 0 ? (
+                        <TrendingUp className="h-5 w-5 text-green-500" />
+                      ) : (
+                        <TrendingDown className="h-5 w-5 text-red-500" />
+                      )}
+                      <div className="text-3xl font-bold">
+                        {spread.spreadPercent.toFixed(3)}%
+                      </div>
+                    </div>
+                    <div className="space-y-1 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">High:</span>
+                        <span className="font-medium">
+                          ${spread.maxPrice.toLocaleString()} ({spread.maxExchange})
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Low:</span>
+                        <span className="font-medium">
+                          ${spread.minPrice.toLocaleString()} ({spread.minExchange})
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Spread:</span>
+                        <span className="font-medium">${spread.spread.toFixed(2)}</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+
+          {/* Detailed Spot Prices */}
+          {symbols.map(symbol => {
+            const prices = spotBySymbol[symbol] || [];
+            if (prices.length === 0) return null;
+
+            return (
+              <Card key={symbol}>
+                <CardHeader>
+                  <CardTitle>{symbol} Spot Prices</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+                    {prices.sort((a, b) => b.price - a.price).map((price, idx) => (
+                      <div key={idx} className="border rounded-lg p-3 space-y-1">
+                        <div className="font-semibold capitalize">{price.exchange}</div>
+                        <div className="text-2xl font-bold">
+                          ${price.price.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                        </div>
+                        {price.volume_24h && (
+                          <div className="text-xs text-muted-foreground">
+                            Vol: ${(price.volume_24h / 1000000).toFixed(2)}M
+                          </div>
+                        )}
+                        <div className="text-xs text-muted-foreground">
+                          {new Date(price.timestamp).toLocaleTimeString()}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </TabsContent>
+      </Tabs>
+
+      {loading && (
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4" />
+            <p className="text-muted-foreground">Loading trading data...</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
