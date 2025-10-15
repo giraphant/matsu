@@ -36,6 +36,35 @@ interface MonitorCardProps {
 export function MonitorCard({ monitor, onEdit, onDelete, onSetAlert, showChart = true }: MonitorCardProps) {
   const [chartData, setChartData] = useState<any[]>([]);
   const [changePercent, setChangePercent] = useState<number>(0);
+  const [timeAgo, setTimeAgo] = useState<string>('');
+
+  // Format time ago
+  const formatTimeAgo = (dateString: string | undefined) => {
+    if (!dateString) return '';
+
+    const now = new Date();
+    const past = new Date(dateString);
+    const seconds = Math.floor((now.getTime() - past.getTime()) / 1000);
+
+    if (seconds < 60) return `${seconds}s ago`;
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes}m ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}h ago`;
+    const days = Math.floor(hours / 24);
+    return `${days}d ago`;
+  };
+
+  // Update time ago every second
+  useEffect(() => {
+    const updateTimeAgo = () => {
+      setTimeAgo(formatTimeAgo(monitor.computed_at));
+    };
+
+    updateTimeAgo();
+    const interval = setInterval(updateTimeAgo, 1000);
+    return () => clearInterval(interval);
+  }, [monitor.computed_at]);
 
   // Fetch chart data
   useEffect(() => {
@@ -102,18 +131,25 @@ export function MonitorCard({ monitor, onEdit, onDelete, onSetAlert, showChart =
                 </dt>
               )}
             </div>
-            <div className="flex items-baseline gap-x-2">
-              <dd className="text-3xl font-semibold text-default-700">
-                {formatValue(monitor.value)}
-              </dd>
-              {changePercent !== 0 && (
-                <Badge
-                  variant={getChangeColor()}
-                  className="h-5 gap-0.5 text-xs font-medium px-1.5"
-                >
-                  {getChangeIcon()}
-                  <span>{Math.abs(changePercent).toFixed(1)}%</span>
-                </Badge>
+            <div className="flex flex-col gap-y-1">
+              <div className="flex items-baseline gap-x-2">
+                <dd className="text-3xl font-semibold text-default-700">
+                  {formatValue(monitor.value)}
+                </dd>
+                {changePercent !== 0 && (
+                  <Badge
+                    variant={getChangeColor()}
+                    className="h-5 gap-0.5 text-xs font-medium px-1.5"
+                  >
+                    {getChangeIcon()}
+                    <span>{Math.abs(changePercent).toFixed(1)}%</span>
+                  </Badge>
+                )}
+              </div>
+              {timeAgo && (
+                <p className="text-xs text-muted-foreground">
+                  Updated {timeAgo}
+                </p>
               )}
             </div>
           </div>
