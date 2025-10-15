@@ -10,7 +10,7 @@ from datetime import datetime
 from sqlalchemy.orm import Session
 
 from app.core.logger import get_logger
-from app.models.database import Monitor, MonitorValue, WebhookData
+from app.models.database import Monitor, MonitorValue, WebhookData, FundingRate, SpotPrice
 
 logger = get_logger(__name__)
 
@@ -20,7 +20,7 @@ class FormulaEngine:
     Engine for parsing and evaluating monitor formulas.
 
     Supported syntax:
-    - Variables: ${monitor:id}, ${webhook:id}
+    - Variables: ${monitor:id}, ${webhook:id}, ${funding:exchange-symbol}, ${spot:exchange-symbol}
     - Operators: +, -, *, /, %, ()
     - Functions: abs(), max(), min()
 
@@ -28,6 +28,9 @@ class FormulaEngine:
     - "${monitor:btc} - ${monitor:eth}"
     - "abs(${monitor:a} - ${monitor:b}) / 100"
     - "max(${monitor:x}, ${monitor:y})"
+    - "${funding:lighter-BTC}" - Lighter BTC funding rate
+    - "${spot:binance-BTC}" - Binance BTC spot price
+    - "(${spot:binance-BTC} - ${spot:lighter-BTC}) / ${spot:binance-BTC} * 100" - Price spread
     """
 
     # Variable pattern: ${type:id}
@@ -93,6 +96,34 @@ class FormulaEngine:
                     WebhookData.monitor_id == dep_id
                 ).order_by(WebhookData.timestamp.desc()).first()
                 values[var_name] = latest.value if latest else None
+
+            elif dep_type == 'funding':
+                # Access funding rate data: ${funding:lighter-BTC}
+                parts = dep_id.split('-', 1)
+                if len(parts) == 2:
+                    exchange, symbol = parts
+                    latest = self.db.query(FundingRate).filter(
+                        FundingRate.exchange == exchange.lower(),
+                        FundingRate.symbol == symbol.upper()
+                    ).order_by(FundingRate.timestamp.desc()).first()
+                    values[var_name] = latest.annualized_rate if latest else None
+                else:
+                    logger.warning(f"Invalid funding reference format: {dep_id}")
+                    values[var_name] = None
+
+            elif dep_type == 'spot':
+                # Access spot price data: ${spot:binance-BTC}
+                parts = dep_id.split('-', 1)
+                if len(parts) == 2:
+                    exchange, symbol = parts
+                    latest = self.db.query(SpotPrice).filter(
+                        SpotPrice.exchange == exchange.lower(),
+                        SpotPrice.symbol == symbol.upper()
+                    ).order_by(SpotPrice.timestamp.desc()).first()
+                    values[var_name] = latest.price if latest else None
+                else:
+                    logger.warning(f"Invalid spot reference format: {dep_id}")
+                    values[var_name] = None
 
             else:
                 logger.warning(f"Unknown dependency type: {dep_type}")

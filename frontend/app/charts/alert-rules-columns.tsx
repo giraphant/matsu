@@ -3,7 +3,7 @@
 import { ColumnDef } from "@tanstack/react-table"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { MoreHorizontal, Pencil, Trash2 } from "lucide-react"
+import { MoreHorizontal, Pencil, Trash2, ArrowUpDown } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -35,18 +35,51 @@ const levelColors: Record<string, "default" | "destructive" | "secondary"> = {
 export const columns: ColumnDef<AlertRuleData>[] = [
   {
     accessorKey: "name",
-    header: "Name",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Name
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      )
+    },
+    enableSorting: true,
+    enableColumnFilter: true,
   },
   {
     accessorKey: "condition",
-    header: "Condition",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Condition
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      )
+    },
     cell: ({ row }) => (
       <code className="text-xs bg-muted px-2 py-1 rounded whitespace-nowrap">{row.getValue("condition")}</code>
     ),
+    enableSorting: true,
   },
   {
     accessorKey: "level",
-    header: "Level",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Level
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      )
+    },
     cell: ({ row }) => {
       const level = row.getValue("level") as string
       return (
@@ -55,19 +88,41 @@ export const columns: ColumnDef<AlertRuleData>[] = [
         </Badge>
       )
     },
+    enableSorting: true,
   },
   {
     accessorKey: "cooldown_seconds",
-    header: "Cooldown",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Cooldown
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      )
+    },
     cell: ({ row }) => {
       const seconds = row.getValue("cooldown_seconds") as number
       const minutes = Math.floor(seconds / 60)
       return minutes > 0 ? `${minutes}m` : `${seconds}s`
     },
+    enableSorting: true,
   },
   {
     accessorKey: "enabled",
-    header: "Status",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Status
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      )
+    },
     cell: ({ row }) => {
       const enabled = row.getValue("enabled") as boolean
       return (
@@ -76,6 +131,7 @@ export const columns: ColumnDef<AlertRuleData>[] = [
         </Badge>
       )
     },
+    enableSorting: true,
   },
   {
     id: "actions",

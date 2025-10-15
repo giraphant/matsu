@@ -210,7 +210,7 @@ export function MonitorCard({ monitor, onEdit, onDelete, onSetAlert, showChart =
                 </defs>
                 <YAxis
                   domain={[
-                    Math.min(...chartData.map((d) => d.value)),
+                    (dataMin: number) => Math.min(0, dataMin),
                     'auto'
                   ]}
                   hide

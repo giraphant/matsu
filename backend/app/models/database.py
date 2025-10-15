@@ -147,6 +147,44 @@ class FundingRateAlert(Base):
 
 
 # ============================================================================
+# Trading Data Models (Funding Rates & Spot Prices)
+# ============================================================================
+
+class FundingRate(Base):
+    """Database model for funding rate data from various exchanges."""
+
+    __tablename__ = "funding_rates"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    exchange = Column(String, nullable=False, index=True)  # lighter, aster, grvt, backpack
+    symbol = Column(String, nullable=False, index=True)    # BTC, ETH, SOL
+    rate = Column(Float, nullable=False)                   # 8-hour funding rate
+    annualized_rate = Column(Float, nullable=False)        # Annualized rate in percentage
+    next_funding_time = Column(DateTime, nullable=True)    # Next funding timestamp
+    mark_price = Column(Float, nullable=True)              # Mark price at time of collection
+    timestamp = Column(DateTime, nullable=False, index=True, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f"<FundingRate(exchange='{self.exchange}', symbol='{self.symbol}', rate={self.annualized_rate}%)>"
+
+
+class SpotPrice(Base):
+    """Database model for spot price data from various exchanges."""
+
+    __tablename__ = "spot_prices"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    exchange = Column(String, nullable=False, index=True)  # binance, okx, bybit, lighter, aster
+    symbol = Column(String, nullable=False, index=True)    # BTC, ETH, SOL
+    price = Column(Float, nullable=False)                  # Spot price in USDT
+    volume_24h = Column(Float, nullable=True)              # 24h trading volume
+    timestamp = Column(DateTime, nullable=False, index=True, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f"<SpotPrice(exchange='{self.exchange}', symbol='{self.symbol}', price={self.price})>"
+
+
+# ============================================================================
 # New Monitor System Models
 # ============================================================================
 

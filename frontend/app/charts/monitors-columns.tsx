@@ -4,7 +4,7 @@ import { ColumnDef } from "@tanstack/react-table"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
-import { MoreHorizontal, Pencil, Trash2 } from "lucide-react"
+import { MoreHorizontal, Pencil, Trash2, ArrowUpDown } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -32,7 +32,17 @@ export type MonitorData = {
 export const columns: ColumnDef<MonitorData>[] = [
   {
     accessorKey: "name",
-    header: "Name",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Name
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      )
+    },
     cell: ({ row }) => {
       const monitor = row.original
       return (
@@ -44,27 +54,61 @@ export const columns: ColumnDef<MonitorData>[] = [
         </div>
       )
     },
+    enableSorting: true,
+    enableColumnFilter: true,
   },
   {
     accessorKey: "formula",
-    header: "Formula",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Formula
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      )
+    },
     cell: ({ row }) => (
       <code className="text-xs bg-muted px-2 py-1 rounded">{row.getValue("formula")}</code>
     ),
+    enableSorting: true,
   },
   {
     accessorKey: "value",
-    header: "Current Value",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Current Value
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      )
+    },
     cell: ({ row }) => {
       const monitor = row.original
       if (monitor.value === null || monitor.value === undefined) return "N/A"
       const formatted = monitor.value.toFixed(monitor.decimal_places)
       return monitor.unit ? `${formatted} ${monitor.unit}` : formatted
     },
+    enableSorting: true,
   },
   {
     accessorKey: "enabled",
-    header: "Status",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Status
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      )
+    },
     cell: ({ row }) => {
       const enabled = row.getValue("enabled") as boolean
       return (
@@ -73,6 +117,7 @@ export const columns: ColumnDef<MonitorData>[] = [
         </Badge>
       )
     },
+    enableSorting: true,
   },
   {
     id: "actions",

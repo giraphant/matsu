@@ -403,6 +403,10 @@ export default function ChartsPage() {
                   onEdit: handleMonitorEdit,
                   onDelete: handleMonitorDelete,
                 }}
+                filterColumns={[
+                  { id: "name", placeholder: "Filter by name..." },
+                  { id: "formula", placeholder: "Filter by formula..." }
+                ]}
                 pageSize={15}
               />
             </CardContent>
@@ -427,6 +431,10 @@ export default function ChartsPage() {
                   onEdit: handleAlertRuleEdit,
                   onDelete: handleAlertRuleDelete,
                 }}
+                filterColumns={[
+                  { id: "name", placeholder: "Filter by name..." },
+                  { id: "condition", placeholder: "Filter by condition..." }
+                ]}
                 pageSize={15}
               />
             </CardContent>

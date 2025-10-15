@@ -39,6 +39,7 @@ interface DataTableProps<TData, TValue> {
   onViewDetails?: (data: TData) => void
   meta?: Record<string, any>
   pageSize?: number
+  filterColumns?: Array<{ id: string; placeholder: string }>
 }
 
 export function DataTable<TData, TValue>({
@@ -47,7 +48,8 @@ export function DataTable<TData, TValue>({
   onViewChart,
   onViewDetails,
   meta: additionalMeta,
-  pageSize = 10
+  pageSize = 10,
+  filterColumns
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
@@ -88,22 +90,42 @@ export function DataTable<TData, TValue>({
       {/* Toolbar */}
       <div className="flex items-center justify-between py-4 gap-4">
         <div className="flex-1 flex items-center gap-2">
-          <Input
-            placeholder="Filter by title..."
-            value={(table.getColumn("title")?.getFilterValue() as string) ?? ""}
-            onChange={(event) =>
-              table.getColumn("title")?.setFilterValue(event.target.value)
-            }
-            className="max-w-sm"
-          />
-          <Input
-            placeholder="Filter by monitor ID..."
-            value={(table.getColumn("uid")?.getFilterValue() as string) ?? ""}
-            onChange={(event) =>
-              table.getColumn("uid")?.setFilterValue(event.target.value)
-            }
-            className="max-w-sm"
-          />
+          {filterColumns && filterColumns.length > 0 ? (
+            filterColumns.map((filterCol) => {
+              const column = table.getColumn(filterCol.id)
+              if (!column) return null
+              return (
+                <Input
+                  key={filterCol.id}
+                  placeholder={filterCol.placeholder}
+                  value={(column.getFilterValue() as string) ?? ""}
+                  onChange={(event) =>
+                    column.setFilterValue(event.target.value)
+                  }
+                  className="max-w-sm"
+                />
+              )
+            })
+          ) : (
+            <>
+              <Input
+                placeholder="Filter by title..."
+                value={(table.getColumn("title")?.getFilterValue() as string) ?? ""}
+                onChange={(event) =>
+                  table.getColumn("title")?.setFilterValue(event.target.value)
+                }
+                className="max-w-sm"
+              />
+              <Input
+                placeholder="Filter by monitor ID..."
+                value={(table.getColumn("uid")?.getFilterValue() as string) ?? ""}
+                onChange={(event) =>
+                  table.getColumn("uid")?.setFilterValue(event.target.value)
+                }
+                className="max-w-sm"
+              />
+            </>
+          )}
         </div>
         <div className="flex items-center gap-2">
           <DropdownMenu>

@@ -110,7 +110,10 @@ class StartupManager:
     async def _start_background_services(self) -> None:
         """Start all background monitors and workers."""
         # Import monitors and workers
-        from app.background_tasks.lighter import LighterMonitor
+        from app.background_tasks import (
+            LighterMonitor, AsterMonitor, GRVTMonitor, BackpackMonitor,
+            BinanceSpotMonitor, OKXSpotMonitor, BybitSpotMonitor
+        )
         from app.workers.dex_cache_warmer import DexCacheWarmer
         from app.workers.alert_checker import AlertChecker
         from app.workers.monitor_alert_checker import MonitorAlertChecker
@@ -120,8 +123,16 @@ class StartupManager:
             self.monitors.append(DexCacheWarmer(interval=settings.DEX_CACHE_REFRESH_INTERVAL))
             self.monitors.append(AlertChecker(interval=settings.FUNDING_RATE_CHECK_INTERVAL))
 
-        if settings.ENABLE_LIGHTER_MONITORING:
-            self.monitors.append(LighterMonitor())
+        # Funding rate monitors (every 5 minutes)
+        self.monitors.append(LighterMonitor())
+        self.monitors.append(AsterMonitor())
+        self.monitors.append(GRVTMonitor())
+        self.monitors.append(BackpackMonitor())
+
+        # Spot price monitors (every 1 minute)
+        self.monitors.append(BinanceSpotMonitor())
+        self.monitors.append(OKXSpotMonitor())
+        self.monitors.append(BybitSpotMonitor())
 
         # DEPRECATED: WebhookMonitorAlertChecker removed (used old AlertConfig system)
         # Now only use Monitor Alert Checker for AlertRule system

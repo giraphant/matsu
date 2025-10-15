@@ -1,6 +1,6 @@
 """
 Lighter funding rate monitor.
-Fetches BTC, ETH, SOL funding rates from Lighter and stores them as monitoring data.
+Fetches BTC, ETH, SOL funding rates from Lighter and stores them in the database.
 """
 
 from datetime import datetime
@@ -8,7 +8,7 @@ from typing import List, Dict, Any
 import httpx
 
 from app.core.logger import get_logger
-from app.models.database import WebhookData, get_db_session
+from app.models.database import FundingRate, get_db_session
 from app.background_tasks.base import BaseMonitor
 
 logger = get_logger(__name__)
@@ -81,26 +81,24 @@ class LighterMonitor(BaseMonitor):
                 if rate is None:
                     continue
 
+                # Convert rate to float
+                rate_value = float(rate)
+
                 # Annualize the 8-hour rate
-                annualized_rate = self._annualize_rate(float(rate))
+                annualized_rate = self._annualize_rate(rate_value)
 
-                # Create monitoring data entry
-                monitor_id = f"lighter-{symbol.lower()}"
-                monitor_name = f"Lighter {symbol} Funding Rate"
-
-                new_data = WebhookData(
-                    monitor_id=monitor_id,
-                    monitor_name=monitor_name,
-                    monitor_type='monitor',
-                    url=f"https://lighter.xyz/trade/{symbol}USDT",
-                    value=annualized_rate,
-                    unit='%',
-                    status='active',
-                    timestamp=datetime.utcnow(),
-                    webhook_received_at=datetime.utcnow()
+                # Create funding rate entry
+                new_rate = FundingRate(
+                    exchange='lighter',
+                    symbol=symbol,
+                    rate=rate_value,
+                    annualized_rate=annualized_rate,
+                    next_funding_time=None,  # Lighter doesn't provide this in current API
+                    mark_price=None,  # Not available in current API response
+                    timestamp=datetime.utcnow()
                 )
 
-                db.add(new_data)
+                db.add(new_rate)
                 stored_count += 1
 
             db.commit()
