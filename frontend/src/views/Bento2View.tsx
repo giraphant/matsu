@@ -3,13 +3,13 @@
  * Displays selected monitors as cards with alert highlighting and sound
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import GridLayout from 'react-grid-layout';
-import { LineChart, Line, XAxis, ResponsiveContainer } from 'recharts';
-import { Plus, Trash2, Bell } from 'lucide-react';
+import { Plus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { NewMonitor, AlertRule } from '../api/newMonitors';
-import { formatValue, formatTimeSince } from '../utils/format';
 import AddCardModal from '../components/bento/AddCardModal';
+import { BentoCard } from '../components/bento/BentoCard';
 import { useNotification } from '../hooks/useNotification';
 import { AlertLevel } from '../types/alert';
 import { ALERT_LEVELS } from '../constants/alerts';
@@ -235,30 +235,16 @@ export function Bento2View({
 
   if (displayedCards.length === 0) {
     return (
-      <div className="bento-container">
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          minHeight: '60vh',
-          padding: '32px',
-          textAlign: 'center'
-        }}>
-          <h2 style={{ marginBottom: '12px' }}>No Cards Yet</h2>
-          <p style={{ color: 'var(--muted-foreground)', marginBottom: '24px', maxWidth: '400px' }}>
-            Add monitors to your Bento grid by clicking the button below.
-            You can create monitors in the Monitors tab.
-          </p>
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="btn-primary"
-            style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
-          >
-            <Plus size={16} />
-            Add Card
-          </button>
-        </div>
+      <div className="flex flex-col items-center justify-center min-h-[60vh] p-8 text-center">
+        <h2 className="text-2xl font-semibold mb-3">No Cards Yet</h2>
+        <p className="text-muted-foreground mb-6 max-w-md">
+          Add monitors to your Bento grid by clicking the button below.
+          You can create monitors in the Monitors tab.
+        </p>
+        <Button onClick={() => setShowAddModal(true)} size="lg">
+          <Plus className="mr-2 h-4 w-4" />
+          Add Card
+        </Button>
 
         <AddCardModal
           show={showAddModal}
@@ -307,193 +293,114 @@ export function Bento2View({
           }
 
           return (
-            <div
-              key={monitor.id}
-              className={`bento-item ${isAlert ? 'alert' : ''}`}
-            >
-              <div className="bento-header">
-                <div className="bento-title-section">
-                  <h3>{monitor.name}</h3>
-                  {monitor.description && (
-                    <p style={{
-                      fontSize: '12px',
-                      color: 'var(--muted-foreground)',
-                      margin: '4px 0 0 0'
-                    }}>
-                      {monitor.description}
-                    </p>
-                  )}
-                </div>
-                <div style={{ display: 'flex', gap: '4px', position: 'relative', zIndex: 100 }}>
-                  <button
-                    className="threshold-btn"
-                    onMouseDown={(e) => e.stopPropagation()}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      setShowAlertPopover(showAlertPopover === monitor.id ? null : monitor.id);
-                    }}
-                    title={hasAlert ? `Alert: ${alertRule.level}` : "Set alert"}
-                    style={{
-                      pointerEvents: 'auto',
-                      color: 'white',
-                      opacity: hasAlert ? 1 : 0.7
-                    }}
-                  >
-                    <Bell size={14} />
-                  </button>
-                  {showAlertPopover === monitor.id && (
-                    <div
-                      className="threshold-popover"
-                      onMouseDown={(e) => e.stopPropagation()}
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <h4>Alert Settings</h4>
-                      <div className="threshold-input-group">
-                        <label>Upper Limit</label>
-                        <input
-                          type="number"
-                          placeholder="Leave empty to disable"
-                          defaultValue={parseAlertRule(alertRule).upper}
-                          id={`upper-${monitor.id}`}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                              const upperInput = document.getElementById(`upper-${monitor.id}`) as HTMLInputElement;
-                              const lowerInput = document.getElementById(`lower-${monitor.id}`) as HTMLInputElement;
-                              const levelSelect = document.getElementById(`level-${monitor.id}`) as HTMLSelectElement;
-                              const upper = upperInput.value ? parseFloat(upperInput.value) : undefined;
-                              const lower = lowerInput.value ? parseFloat(lowerInput.value) : undefined;
-                              const level = levelSelect.value;
-                              handleAlertUpdate(monitor.id, upper, lower, level);
-                            }
-                          }}
-                        />
-                      </div>
-                      <div className="threshold-input-group">
-                        <label>Lower Limit</label>
-                        <input
-                          type="number"
-                          placeholder="Leave empty to disable"
-                          defaultValue={parseAlertRule(alertRule).lower}
-                          id={`lower-${monitor.id}`}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                              const upperInput = document.getElementById(`upper-${monitor.id}`) as HTMLInputElement;
-                              const lowerInput = document.getElementById(`lower-${monitor.id}`) as HTMLInputElement;
-                              const levelSelect = document.getElementById(`level-${monitor.id}`) as HTMLSelectElement;
-                              const upper = upperInput.value ? parseFloat(upperInput.value) : undefined;
-                              const lower = lowerInput.value ? parseFloat(lowerInput.value) : undefined;
-                              const level = levelSelect.value;
-                              handleAlertUpdate(monitor.id, upper, lower, level);
-                            }
-                          }}
-                        />
-                      </div>
-                      <div className="threshold-input-group">
-                        <label>Alert Level</label>
-                        <select
-                          id={`level-${monitor.id}`}
-                          defaultValue={parseAlertRule(alertRule).level || 'medium'}
-                          className="alert-level-select"
-                        >
-                          <option value="critical">🔴 Critical (30s)</option>
-                          <option value="high">🟠 High (2m)</option>
-                          <option value="medium">🟡 Medium (5m)</option>
-                          <option value="low">🟢 Low (15m)</option>
-                        </select>
-                      </div>
-                      <div className="threshold-popover-actions">
-                        <button
-                          className="btn-secondary"
-                          onMouseDown={(e) => e.stopPropagation()}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleAlertUpdate(monitor.id, undefined, undefined);
-                          }}
-                        >
-                          Clear
-                        </button>
-                        <button
-                          className="btn-primary"
-                          onMouseDown={(e) => e.stopPropagation()}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            const upperInput = document.getElementById(`upper-${monitor.id}`) as HTMLInputElement;
-                            const lowerInput = document.getElementById(`lower-${monitor.id}`) as HTMLInputElement;
-                            const levelSelect = document.getElementById(`level-${monitor.id}`) as HTMLSelectElement;
-                            const upper = upperInput.value ? parseFloat(upperInput.value) : undefined;
-                            const lower = lowerInput.value ? parseFloat(lowerInput.value) : undefined;
-                            const level = levelSelect.value;
-                            handleAlertUpdate(monitor.id, upper, lower, level);
-                          }}
-                        >
-                          Done
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                  <button
-                    className="threshold-btn"
-                    onMouseDown={(e) => e.stopPropagation()}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      onRemoveCard(monitor.id);
-                    }}
-                    title="Remove from Bento"
-                    style={{ color: 'white', opacity: 0.7, pointerEvents: 'auto' }}
-                  >
-                    <Trash2 size={14} />
-                  </button>
-                </div>
-              </div>
+            <div key={monitor.id} className="h-full">
+              <BentoCard
+                monitor={monitor}
+                isAlert={isAlert}
+                hasAlert={hasAlert}
+                alertLevel={alertRule?.level}
+                showChart={showChart}
+                chartData={chartPoints}
+                stats={{
+                  min: minValue,
+                  avg: avgValue,
+                  max: maxValue,
+                }}
+                onAlertClick={() => setShowAlertPopover(showAlertPopover === monitor.id ? null : monitor.id)}
+                onRemove={() => onRemoveCard(monitor.id)}
+              />
 
-              <div className={`bento-value ${isAlert ? 'alert' : ''}`}>
-                {formatValue(monitor.value ?? null, monitor.unit ?? null, monitor.decimal_places)}
-                {monitor.computed_at && (
-                  <div className="last-updated" title={new Date(monitor.computed_at).toLocaleString()}>
-                    {formatTimeSince(monitor.computed_at)}
+              {/* Alert Settings Popover */}
+              {showAlertPopover === monitor.id && (
+                <div
+                  className="threshold-popover"
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <h4>Alert Settings</h4>
+                  <div className="threshold-input-group">
+                    <label>Upper Limit</label>
+                    <input
+                      type="number"
+                      placeholder="Leave empty to disable"
+                      defaultValue={parseAlertRule(alertRule).upper}
+                      id={`upper-${monitor.id}`}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          const upperInput = document.getElementById(`upper-${monitor.id}`) as HTMLInputElement;
+                          const lowerInput = document.getElementById(`lower-${monitor.id}`) as HTMLInputElement;
+                          const levelSelect = document.getElementById(`level-${monitor.id}`) as HTMLSelectElement;
+                          const upper = upperInput.value ? parseFloat(upperInput.value) : undefined;
+                          const lower = lowerInput.value ? parseFloat(lowerInput.value) : undefined;
+                          const level = levelSelect.value;
+                          handleAlertUpdate(monitor.id, upper, lower, level);
+                        }
+                      }}
+                    />
                   </div>
-                )}
-              </div>
-
-              {showChart && chartPoints.length > 0 && (
-                <div className="bento-mini-chart">
-                  <ResponsiveContainer width="100%" height={120}>
-                    <LineChart data={chartPoints}>
-                      <XAxis
-                        dataKey="timestamp"
-                        hide={true}
-                        type="number"
-                        domain={['dataMin', 'dataMax']}
-                        scale="time"
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="value"
-                        stroke="var(--primary)"
-                        strokeWidth={2}
-                        dot={false}
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
+                  <div className="threshold-input-group">
+                    <label>Lower Limit</label>
+                    <input
+                      type="number"
+                      placeholder="Leave empty to disable"
+                      defaultValue={parseAlertRule(alertRule).lower}
+                      id={`lower-${monitor.id}`}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          const upperInput = document.getElementById(`upper-${monitor.id}`) as HTMLInputElement;
+                          const lowerInput = document.getElementById(`lower-${monitor.id}`) as HTMLInputElement;
+                          const levelSelect = document.getElementById(`level-${monitor.id}`) as HTMLSelectElement;
+                          const upper = upperInput.value ? parseFloat(upperInput.value) : undefined;
+                          const lower = lowerInput.value ? parseFloat(lowerInput.value) : undefined;
+                          const level = levelSelect.value;
+                          handleAlertUpdate(monitor.id, upper, lower, level);
+                        }
+                      }}
+                    />
+                  </div>
+                  <div className="threshold-input-group">
+                    <label>Alert Level</label>
+                    <select
+                      id={`level-${monitor.id}`}
+                      defaultValue={parseAlertRule(alertRule).level || 'medium'}
+                      className="alert-level-select"
+                    >
+                      <option value="critical">🔴 Critical (30s)</option>
+                      <option value="high">🟠 High (2m)</option>
+                      <option value="medium">🟡 Medium (5m)</option>
+                      <option value="low">🟢 Low (15m)</option>
+                    </select>
+                  </div>
+                  <div className="threshold-popover-actions">
+                    <button
+                      className="btn-secondary"
+                      onMouseDown={(e) => e.stopPropagation()}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleAlertUpdate(monitor.id, undefined, undefined);
+                      }}
+                    >
+                      Clear
+                    </button>
+                    <button
+                      className="btn-primary"
+                      onMouseDown={(e) => e.stopPropagation()}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const upperInput = document.getElementById(`upper-${monitor.id}`) as HTMLInputElement;
+                        const lowerInput = document.getElementById(`lower-${monitor.id}`) as HTMLInputElement;
+                        const levelSelect = document.getElementById(`level-${monitor.id}`) as HTMLSelectElement;
+                        const upper = upperInput.value ? parseFloat(upperInput.value) : undefined;
+                        const lower = lowerInput.value ? parseFloat(lowerInput.value) : undefined;
+                        const level = levelSelect.value;
+                        handleAlertUpdate(monitor.id, upper, lower, level);
+                      }}
+                    >
+                      Done
+                    </button>
+                  </div>
                 </div>
               )}
-
-              <div className="bento-stats">
-                <div className="bento-stat">
-                  <span className="label">Min</span>
-                  <span className="value">{formatValue(minValue, monitor.unit ?? null, monitor.decimal_places)}</span>
-                </div>
-                <div className="bento-stat">
-                  <span className="label">Avg</span>
-                  <span className="value">{formatValue(avgValue, monitor.unit ?? null, monitor.decimal_places)}</span>
-                </div>
-                <div className="bento-stat">
-                  <span className="label">Max</span>
-                  <span className="value">{formatValue(maxValue, monitor.unit ?? null, monitor.decimal_places)}</span>
-                </div>
-              </div>
             </div>
           );
         })}
@@ -501,13 +408,14 @@ export function Bento2View({
 
       {/* Floating Action Button for Adding Cards */}
       {!isMobile && (
-        <button
-          className="fab"
+        <Button
+          size="lg"
+          className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg"
           onClick={() => setShowAddModal(true)}
           title="Add card"
         >
-          <Plus size={20} />
-        </button>
+          <Plus className="h-6 w-6" />
+        </Button>
       )}
 
       <AddCardModal
