@@ -15,11 +15,31 @@ from app.core.config import settings
 # Ensure data directory exists
 os.makedirs(os.path.dirname(settings.DATABASE_PATH) if '/' in settings.DATABASE_PATH else "data", exist_ok=True)
 
-# SQLAlchemy setup
-engine = create_engine(
-    settings.DATABASE_URL,
-    connect_args={"check_same_thread": False} if settings.DATABASE_URL.startswith("sqlite") else {}
-)
+# SQLAlchemy setup with proper connection pool settings
+connect_args = {"check_same_thread": False} if settings.DATABASE_URL.startswith("sqlite") else {}
+
+# Configure connection pool
+# For SQLite: Use StaticPool to handle concurrent connections better
+# For other DBs: Use larger pool size
+if settings.DATABASE_URL.startswith("sqlite"):
+    from sqlalchemy.pool import StaticPool
+    engine = create_engine(
+        settings.DATABASE_URL,
+        connect_args=connect_args,
+        poolclass=StaticPool,  # Better for SQLite with many concurrent reads
+        echo=False
+    )
+else:
+    engine = create_engine(
+        settings.DATABASE_URL,
+        connect_args=connect_args,
+        pool_size=20,  # Increase from default 5
+        max_overflow=40,  # Increase from default 10
+        pool_timeout=60,  # Increase timeout from default 30
+        pool_pre_ping=True,  # Verify connections before use
+        echo=False
+    )
+
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
