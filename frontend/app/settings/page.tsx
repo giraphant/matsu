@@ -8,14 +8,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
-  getMonitors,
-  createMonitor,
-  updateMonitor,
-  deleteMonitor,
-  getAlertRules,
-  createAlertRule,
-  updateAlertRule,
-  deleteAlertRule,
   getPushoverConfig,
   savePushoverConfig,
   testPushover,
@@ -24,7 +16,7 @@ import {
   updateFundingRateAlert,
   deleteFundingRateAlert,
 } from '@/lib/api';
-import type { Monitor, AlertRule, PushoverConfig, FundingRateAlert } from '@/lib/api';
+import type { PushoverConfig, FundingRateAlert } from '@/lib/api';
 
 export default function SettingsPage() {
   // State for different tabs
@@ -36,20 +28,6 @@ export default function SettingsPage() {
   const [pushoverApiToken, setPushoverApiToken] = useState('');
   const [testingPushover, setTestingPushover] = useState(false);
   const [savingPushover, setSavingPushover] = useState(false);
-
-  // Monitors state
-  const [monitors, setMonitors] = useState<Monitor[]>([]);
-  const [newMonitorName, setNewMonitorName] = useState('');
-  const [newMonitorFormula, setNewMonitorFormula] = useState('');
-  const [newMonitorUnit, setNewMonitorUnit] = useState('');
-  const [creatingMonitor, setCreatingMonitor] = useState(false);
-
-  // Alert rules state
-  const [alertRules, setAlertRules] = useState<AlertRule[]>([]);
-  const [newAlertName, setNewAlertName] = useState('');
-  const [newAlertCondition, setNewAlertCondition] = useState('');
-  const [newAlertLevel, setNewAlertLevel] = useState('medium');
-  const [creatingAlert, setCreatingAlert] = useState(false);
 
   // Funding rate alerts state
   const [fundingAlerts, setFundingAlerts] = useState<FundingRateAlert[]>([]);
@@ -76,10 +54,8 @@ export default function SettingsPage() {
       setError(null);
 
       // Fetch all data in parallel
-      const [pushoverData, monitorsData, alertRulesData, fundingAlertsData] = await Promise.all([
+      const [pushoverData, fundingAlertsData] = await Promise.all([
         getPushoverConfig().catch(() => null),
-        getMonitors().catch(() => []),
-        getAlertRules().catch(() => []),
         getFundingRateAlerts().catch(() => []),
       ]);
 
@@ -89,8 +65,6 @@ export default function SettingsPage() {
         setPushoverApiToken(pushoverData.api_token || '');
       }
 
-      setMonitors(monitorsData);
-      setAlertRules(alertRulesData);
       setFundingAlerts(fundingAlertsData);
     } catch (err) {
       console.error('Failed to fetch data:', err);
@@ -141,106 +115,6 @@ export default function SettingsPage() {
       setError('Failed to send test notification');
     } finally {
       setTestingPushover(false);
-    }
-  }
-
-  // Monitor functions
-  async function handleCreateMonitor() {
-    try {
-      setCreatingMonitor(true);
-      setError(null);
-
-      await createMonitor({
-        name: newMonitorName,
-        formula: newMonitorFormula,
-        unit: newMonitorUnit || undefined,
-        decimal_places: 2,
-        enabled: true,
-      });
-
-      setNewMonitorName('');
-      setNewMonitorFormula('');
-      setNewMonitorUnit('');
-      setSuccessMessage('Monitor created successfully');
-      fetchAllData();
-    } catch (err) {
-      setError('Failed to create monitor');
-    } finally {
-      setCreatingMonitor(false);
-    }
-  }
-
-  async function handleToggleMonitor(monitor: Monitor) {
-    try {
-      await updateMonitor(monitor.id, { enabled: !monitor.enabled });
-      fetchAllData();
-    } catch (err) {
-      setError('Failed to update monitor');
-    }
-  }
-
-  async function handleDeleteMonitor(id: string) {
-    if (!confirm('Are you sure you want to delete this monitor?')) return;
-
-    try {
-      await deleteMonitor(id);
-      setSuccessMessage('Monitor deleted');
-      fetchAllData();
-    } catch (err) {
-      setError('Failed to delete monitor');
-    }
-  }
-
-  // Alert rule functions
-  async function handleCreateAlert() {
-    try {
-      setCreatingAlert(true);
-      setError(null);
-
-      await createAlertRule({
-        name: newAlertName,
-        condition: newAlertCondition,
-        level: newAlertLevel,
-        actions: ['pushover'],
-        cooldown_seconds: 300,
-      });
-
-      setNewAlertName('');
-      setNewAlertCondition('');
-      setSuccessMessage('Alert rule created successfully');
-      fetchAllData();
-    } catch (err) {
-      setError('Failed to create alert rule');
-    } finally {
-      setCreatingAlert(false);
-    }
-  }
-
-  async function handleToggleAlert(alert: AlertRule) {
-    try {
-      await updateAlertRule(alert.id, {
-        name: alert.name,
-        condition: alert.condition,
-        level: alert.level,
-        enabled: !alert.enabled,
-        cooldown_seconds: alert.cooldown_seconds,
-        actions: alert.actions,
-      });
-      fetchAllData();
-    } catch (err) {
-      setError('Failed to update alert rule');
-    }
-  }
-
-  async function handleDeleteAlert(id: string) {
-    if (!confirm('Are you sure you want to delete this alert rule?')) return;
-
-    try {
-      await deleteAlertRule(id);
-      setSuccessMessage('Alert rule deleted');
-      fetchAllData();
-    } catch (err) {
-      setError('Failed to delete alert rule');
     }
   }
 
@@ -316,10 +190,8 @@ export default function SettingsPage() {
       )}
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="general">General</TabsTrigger>
-          <TabsTrigger value="monitors">Monitors</TabsTrigger>
-          <TabsTrigger value="alerts">Alert Rules</TabsTrigger>
           <TabsTrigger value="funding">Funding Alerts</TabsTrigger>
         </TabsList>
 
@@ -370,167 +242,6 @@ export default function SettingsPage() {
                   {testingPushover ? 'Sending...' : 'Send Test'}
                 </Button>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="monitors" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Create Monitor</CardTitle>
-              <CardDescription>
-                Add a new monitor to track calculated values
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-4 sm:grid-cols-3">
-                <Input
-                  placeholder="Monitor name"
-                  value={newMonitorName}
-                  onChange={(e) => setNewMonitorName(e.target.value)}
-                />
-                <Input
-                  placeholder="Formula (e.g., value * 2)"
-                  value={newMonitorFormula}
-                  onChange={(e) => setNewMonitorFormula(e.target.value)}
-                />
-                <Input
-                  placeholder="Unit (optional)"
-                  value={newMonitorUnit}
-                  onChange={(e) => setNewMonitorUnit(e.target.value)}
-                />
-              </div>
-              <Button
-                onClick={handleCreateMonitor}
-                disabled={creatingMonitor || !newMonitorName || !newMonitorFormula}
-              >
-                {creatingMonitor ? 'Creating...' : 'Create Monitor'}
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Existing Monitors</CardTitle>
-              <CardDescription>
-                Manage your configured monitors
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {loading ? (
-                <div className="text-muted-foreground">Loading...</div>
-              ) : monitors.length === 0 ? (
-                <div className="text-muted-foreground">No monitors configured</div>
-              ) : (
-                <div className="space-y-2">
-                  {monitors.map((monitor) => (
-                    <div key={monitor.id} className="flex items-center justify-between rounded-lg border p-3">
-                      <div className="space-y-1">
-                        <div className="font-medium">{monitor.name}</div>
-                        <div className="text-sm text-muted-foreground">
-                          Formula: {monitor.formula} {monitor.unit && `(${monitor.unit})`}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Switch
-                          checked={monitor.enabled}
-                          onCheckedChange={() => handleToggleMonitor(monitor)}
-                        />
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDeleteMonitor(monitor.id)}
-                        >
-                          Delete
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="alerts" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Create Alert Rule</CardTitle>
-              <CardDescription>
-                Define conditions that trigger notifications
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-4 sm:grid-cols-3">
-                <Input
-                  placeholder="Alert name"
-                  value={newAlertName}
-                  onChange={(e) => setNewAlertName(e.target.value)}
-                />
-                <Input
-                  placeholder="Condition (e.g., value > 100)"
-                  value={newAlertCondition}
-                  onChange={(e) => setNewAlertCondition(e.target.value)}
-                />
-                <Select value={newAlertLevel} onValueChange={setNewAlertLevel}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Alert level" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="low">Low</SelectItem>
-                    <SelectItem value="medium">Medium</SelectItem>
-                    <SelectItem value="high">High</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button
-                onClick={handleCreateAlert}
-                disabled={creatingAlert || !newAlertName || !newAlertCondition}
-              >
-                {creatingAlert ? 'Creating...' : 'Create Alert Rule'}
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Existing Alert Rules</CardTitle>
-              <CardDescription>
-                Manage your alert rules
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {loading ? (
-                <div className="text-muted-foreground">Loading...</div>
-              ) : alertRules.length === 0 ? (
-                <div className="text-muted-foreground">No alert rules configured</div>
-              ) : (
-                <div className="space-y-2">
-                  {alertRules.map((alert) => (
-                    <div key={alert.id} className="flex items-center justify-between rounded-lg border p-3">
-                      <div className="space-y-1">
-                        <div className="font-medium">{alert.name}</div>
-                        <div className="text-sm text-muted-foreground">
-                          Condition: {alert.condition} | Level: {alert.level}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Switch
-                          checked={alert.enabled}
-                          onCheckedChange={() => handleToggleAlert(alert)}
-                        />
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDeleteAlert(alert.id)}
-                        >
-                          Delete
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
             </CardContent>
           </Card>
         </TabsContent>
