@@ -89,20 +89,20 @@ export function MonitorCard({ monitor, onEdit, onDelete, showChart = true }: Mon
     <Card className="relative overflow-hidden border border-transparent dark:border-border/50 p-0 gap-0">
       <section className="flex flex-col flex-nowrap">
         {/* Header Section */}
-        <div className="flex flex-col justify-between gap-y-2 px-4 pt-4">
-          <div className="flex flex-col gap-y-2">
+        <div className="flex flex-col justify-between gap-y-2 p-4">
+          <div className="flex flex-col gap-y-4">
             <div className="flex flex-col gap-y-0">
-              <dt className="text-sm font-medium text-muted-foreground/80 truncate">
+              <dt className="text-sm font-medium text-default-600 truncate">
                 {monitor.name}
               </dt>
               {monitor.description && (
-                <dt className="text-xs text-muted-foreground/50 font-normal truncate">
+                <dt className="text-xs text-default-400 font-normal truncate">
                   {monitor.description}
                 </dt>
               )}
             </div>
             <div className="flex items-baseline gap-x-2">
-              <dd className="text-xl font-semibold text-foreground">
+              <dd className="text-3xl font-semibold text-default-700">
                 {formatValue(monitor.value)}
               </dd>
               {changePercent !== 0 && (
