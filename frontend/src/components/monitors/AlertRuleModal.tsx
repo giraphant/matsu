@@ -75,115 +75,110 @@ export default function AlertRuleModal({
   if (!show) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="p-6">
-          <h2 className="text-2xl font-bold mb-4 dark:text-white">
-            {rule ? 'Edit Alert Rule' : 'Create Alert Rule'}
-          </h2>
+    <div className="modal-overlay">
+      <div className="modal-content" style={{ maxWidth: '600px' }}>
+        <h3>{rule ? 'Edit Alert Rule' : 'Create Alert Rule'}</h3>
 
-          {error && (
-            <div className="mb-4 p-3 bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-200 rounded">
-              {error}
-            </div>
-          )}
+        {error && (
+          <div style={{
+            marginBottom: '16px',
+            padding: '12px',
+            background: 'var(--destructive)',
+            color: 'white',
+            borderRadius: 'calc(var(--radius) - 2px)'
+          }}>
+            {error}
+          </div>
+        )}
 
-          <div className="mb-4">
-            <label className="block text-sm font-medium mb-2 dark:text-gray-300">
-              Alert Name *
-            </label>
+        <div className="monitor-modal-form">
+          <div className="form-group">
+            <label>Alert Name *</label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g., BTC Spread Too Low"
-              className="w-full px-3 py-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+              className="form-input"
             />
           </div>
 
-          <div className="mb-4">
-            <label className="block text-sm font-medium mb-2 dark:text-gray-300">
-              Condition *
-            </label>
+          <div className="form-group">
+            <label>Condition *</label>
             <textarea
               value={condition}
               onChange={(e) => setCondition(e.target.value)}
               placeholder="${monitor:id} < 50"
               rows={3}
-              className="w-full px-3 py-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white font-mono text-sm"
+              className="form-textarea"
+              style={{ fontFamily: 'monospace', fontSize: '13px' }}
             />
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            <p style={{ fontSize: '12px', color: 'var(--muted-foreground)', marginTop: '6px' }}>
               Supports: {'>'}, {'<'}, {'>='}, {'<='}, ==, !=. Use ${'${monitor:id}'} to reference monitors.
             </p>
           </div>
 
           {monitors.length > 0 && (
-            <div className="mb-4">
-              <label className="block text-sm font-medium mb-2 dark:text-gray-300">
-                Insert Monitor
-              </label>
-              <div className="border dark:border-gray-600 rounded p-2 max-h-32 overflow-y-auto">
+            <div className="form-group">
+              <label>Insert Monitor</label>
+              <div className="monitor-list-select">
                 {monitors.map(m => (
-                  <button
+                  <div
                     key={m.id}
                     onClick={() => insertMonitor(m.id)}
-                    className="block w-full text-left px-2 py-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded text-sm"
+                    className="monitor-list-item"
                   >
-                    <span className="font-medium dark:text-white">{m.name}</span>
-                    <span className="text-gray-500 dark:text-gray-400 ml-2">
+                    <span className="name">{m.name}</span>
+                    <span className="current-value">
                       (current: {m.value?.toFixed(m.decimal_places) || 'N/A'})
                     </span>
-                  </button>
+                  </div>
                 ))}
               </div>
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-4 mb-4">
-            <div>
-              <label className="block text-sm font-medium mb-2 dark:text-gray-300">
-                Alert Level
-              </label>
+          <div className="monitor-modal-row">
+            <div className="form-group">
+              <label>Alert Level</label>
               <select
                 value={level}
                 onChange={(e) => setLevel(e.target.value as any)}
-                className="w-full px-3 py-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                className="form-input"
               >
                 <option value="low">Low</option>
                 <option value="medium">Medium</option>
                 <option value="high">High</option>
               </select>
             </div>
-            <div>
-              <label className="block text-sm font-medium mb-2 dark:text-gray-300">
-                Cooldown (seconds)
-              </label>
+            <div className="form-group">
+              <label>Cooldown (seconds)</label>
               <input
                 type="number"
                 value={cooldownSeconds}
                 onChange={(e) => setCooldownSeconds(parseInt(e.target.value) || 0)}
                 min="0"
-                className="w-full px-3 py-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                className="form-input"
               />
             </div>
           </div>
+        </div>
 
-          <div className="flex justify-end gap-2">
-            <button
-              onClick={onClose}
-              disabled={saving}
-              className="px-4 py-2 border rounded hover:bg-gray-100 dark:border-gray-600 dark:hover:bg-gray-700 dark:text-white disabled:opacity-50"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleSave}
-              disabled={saving}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
-            >
-              {saving ? 'Saving...' : 'Save'}
-            </button>
-          </div>
+        <div className="modal-actions">
+          <button
+            onClick={onClose}
+            disabled={saving}
+            className="btn-secondary"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="btn-primary"
+          >
+            {saving ? 'Saving...' : 'Save'}
+          </button>
         </div>
       </div>
     </div>
