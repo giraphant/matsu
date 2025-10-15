@@ -7,7 +7,6 @@ import {
   LineChart,
   TrendingUp,
   Settings,
-  User,
   Activity,
 } from "lucide-react"
 
@@ -23,6 +22,8 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
+import { ThemeToggle } from "@/components/theme-toggle"
+import { LogoutButton } from "@/components/logout-button"
 
 const navItems = [
   {
@@ -94,13 +95,10 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton>
-              <User /> Account
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
+        <div className="flex items-center justify-between gap-2 p-2">
+          <LogoutButton />
+          <ThemeToggle />
+        </div>
       </SidebarFooter>
     </Sidebar>
   )

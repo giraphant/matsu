@@ -680,15 +680,6 @@ export default function MonitorsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {/* Floating refresh button */}
-      <Button
-        className="fixed bottom-6 right-6 rounded-full shadow-lg"
-        size="icon"
-        onClick={fetchMonitors}
-      >
-        <Activity className="h-4 w-4" />
-      </Button>
     </div>
   );
 }
