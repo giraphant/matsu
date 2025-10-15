@@ -88,19 +88,19 @@ export function MonitorCard({ monitor, onEdit, onDelete, showChart = true }: Mon
     <Card className="relative overflow-hidden border-transparent dark:border-default-100">
       <section className="flex flex-col">
         {/* Header Section */}
-        <CardHeader className="flex-row items-start justify-between gap-2 pb-2">
-          <div className="flex flex-col gap-1">
-            <div className="flex flex-col gap-0">
+        <div className="flex flex-col justify-between gap-y-2 px-4 pt-4">
+          <div className="flex flex-col gap-y-2">
+            <div className="flex flex-col gap-y-0">
               <h3 className="text-sm font-medium text-muted-foreground truncate">
                 {monitor.name}
               </h3>
               {monitor.description && (
-                <p className="text-xs text-muted-foreground/60 truncate">
+                <p className="text-xs text-muted-foreground/60 font-normal truncate">
                   {monitor.description}
                 </p>
               )}
             </div>
-            <div className="flex items-baseline gap-2 mt-1">
+            <div className="flex items-baseline gap-x-2">
               <span className="text-xl font-semibold text-foreground">
                 {formatValue(monitor.value)}
               </span>
@@ -115,42 +115,12 @@ export function MonitorCard({ monitor, onEdit, onDelete, showChart = true }: Mon
               )}
             </div>
           </div>
-
-          {/* Menu Button */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7 rounded-full"
-              >
-                <MoreVertical className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-32">
-              {onEdit && (
-                <DropdownMenuItem onClick={() => onEdit(monitor)}>
-                  <Edit className="mr-2 h-3 w-3" />
-                  <span className="text-xs">Edit</span>
-                </DropdownMenuItem>
-              )}
-              {onDelete && (
-                <DropdownMenuItem
-                  onClick={() => onDelete(monitor.id)}
-                  className="text-destructive focus:text-destructive"
-                >
-                  <Trash2 className="mr-2 h-3 w-3" />
-                  <span className="text-xs">Delete</span>
-                </DropdownMenuItem>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </CardHeader>
+        </div>
 
         {/* Chart Section */}
         {showChart && chartData.length > 0 && (
-          <div className="h-24 w-full">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="min-h-24 w-full">
+            <ResponsiveContainer width="100%" height={96}>
               <AreaChart
                 data={chartData}
                 className="translate-y-1 scale-105"
@@ -165,7 +135,7 @@ export function MonitorCard({ monitor, onEdit, onDelete, showChart = true }: Mon
                     <stop
                       offset="100%"
                       stopColor={monitor.color || 'hsl(var(--primary))'}
-                      stopOpacity={0.05}
+                      stopOpacity={0.1}
                     />
                   </linearGradient>
                 </defs>
@@ -191,10 +161,40 @@ export function MonitorCard({ monitor, onEdit, onDelete, showChart = true }: Mon
 
         {/* Empty state for no chart data */}
         {showChart && chartData.length === 0 && (
-          <div className="h-24 w-full flex items-center justify-center text-xs text-muted-foreground">
+          <div className="min-h-24 w-full flex items-center justify-center text-xs text-muted-foreground">
             No data available
           </div>
         )}
+
+        {/* Menu Button - Absolute positioned */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute top-2 right-2 h-7 w-7 rounded-full"
+            >
+              <MoreVertical className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="min-w-[120px]">
+            {onEdit && (
+              <DropdownMenuItem onClick={() => onEdit(monitor)}>
+                <Edit className="mr-2 h-3 w-3" />
+                <span className="text-xs">Edit</span>
+              </DropdownMenuItem>
+            )}
+            {onDelete && (
+              <DropdownMenuItem
+                onClick={() => onDelete(monitor.id)}
+                className="text-destructive focus:text-destructive"
+              >
+                <Trash2 className="mr-2 h-3 w-3" />
+                <span className="text-xs">Delete</span>
+              </DropdownMenuItem>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </section>
     </Card>
   );
