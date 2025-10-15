@@ -12,6 +12,23 @@ import { Plus, Activity } from 'lucide-react';
 import { toast } from "sonner";
 import { MonitorCard } from '@/components/monitor-card';
 import { getApiUrl } from '@/lib/api-config';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  rectSortingStrategy,
+} from '@dnd-kit/sortable';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 interface Monitor {
   id: string;
@@ -26,6 +43,43 @@ interface Monitor {
   computed_at?: string;
   created_at: string;
   updated_at: string;
+}
+
+// Sortable wrapper for MonitorCard
+function SortableMonitorCard({
+  monitor,
+  onEdit,
+  onDelete
+}: {
+  monitor: Monitor;
+  onEdit: (monitor: Monitor) => void;
+  onDelete: (id: string) => void;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: monitor.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+      <MonitorCard
+        monitor={monitor}
+        onEdit={onEdit}
+        onDelete={onDelete}
+        showChart={true}
+      />
+    </div>
+  );
 }
 
 export default function MonitorsPage() {
@@ -44,18 +98,65 @@ export default function MonitorsPage() {
     decimal_places: 2
   });
 
-  // Fetch monitors
+  // Drag and drop sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  // Fetch monitors and apply saved order
   const fetchMonitors = async () => {
     try {
       const response = await fetch(getApiUrl('/api/monitors'));
       if (!response.ok) throw new Error('Failed to fetch monitors');
       const data = await response.json();
-      setMonitors(data);
+
+      // Apply saved order from localStorage
+      const savedOrder = localStorage.getItem('monitor-order');
+      if (savedOrder) {
+        try {
+          const orderMap = JSON.parse(savedOrder);
+          const ordered = data.sort((a: Monitor, b: Monitor) => {
+            const indexA = orderMap[a.id] ?? 999;
+            const indexB = orderMap[b.id] ?? 999;
+            return indexA - indexB;
+          });
+          setMonitors(ordered);
+        } catch {
+          setMonitors(data);
+        }
+      } else {
+        setMonitors(data);
+      }
     } catch (error) {
       console.error('Error fetching monitors:', error);
       toast.error('Failed to load monitors');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Handle drag end
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      setMonitors((items) => {
+        const oldIndex = items.findIndex((item) => item.id === active.id);
+        const newIndex = items.findIndex((item) => item.id === over.id);
+        const newOrder = arrayMove(items, oldIndex, newIndex);
+
+        // Save order to localStorage
+        const orderMap = newOrder.reduce((acc, monitor, index) => {
+          acc[monitor.id] = index;
+          return acc;
+        }, {} as Record<string, number>);
+        localStorage.setItem('monitor-order', JSON.stringify(orderMap));
+
+        return newOrder;
+      });
     }
   };
 
@@ -282,17 +383,27 @@ export default function MonitorsPage() {
           </div>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {monitors.map((monitor) => (
-            <MonitorCard
-              key={monitor.id}
-              monitor={monitor}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-              showChart={true}
-            />
-          ))}
-        </div>
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext
+            items={monitors.map((m) => m.id)}
+            strategy={rectSortingStrategy}
+          >
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+              {monitors.map((monitor) => (
+                <SortableMonitorCard
+                  key={monitor.id}
+                  monitor={monitor}
+                  onEdit={handleEdit}
+                  onDelete={handleDelete}
+                />
+              ))}
+            </div>
+          </SortableContext>
+        </DndContext>
       )}
 
       {/* Floating refresh button */}
