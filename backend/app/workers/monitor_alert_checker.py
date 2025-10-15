@@ -8,8 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.core.logger import get_logger
 from app.monitors.base import BaseMonitor
-from app.models.database import get_db_session
-from app.models.monitor import Monitor, AlertRule
+from app.models.database import get_db_session, Monitor, AlertRule, MonitorValue
 from app.services.pushover import PushoverService
 
 logger = get_logger(__name__)
@@ -96,7 +95,6 @@ class MonitorAlertChecker(BaseMonitor):
                 return False
 
             # Get latest value
-            from app.models.monitor import MonitorValue
             latest_value = db.query(MonitorValue).filter(
                 MonitorValue.monitor_id == monitor_id
             ).order_by(MonitorValue.computed_at.desc()).first()
