@@ -152,7 +152,7 @@ export function MonitorCard({ monitor, onEdit, onDelete, onSetAlert, showChart =
               </div>
               {timeAgo && (
                 <p className="text-xs text-muted-foreground">
-                  Updated {timeAgo}
+                  {timeAgo}
                 </p>
               )}
             </div>
