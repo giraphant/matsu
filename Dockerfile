@@ -11,7 +11,7 @@ COPY frontend/package*.json ./
 RUN npm ci
 
 # Force cache bust - change this value to force rebuild
-ARG CACHE_BUST=2025-10-15-v2
+ARG CACHE_BUST=2025-10-15-v3-shadcn-sidebar
 
 # Copy frontend source
 COPY frontend/ ./
