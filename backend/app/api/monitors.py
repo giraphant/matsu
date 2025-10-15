@@ -9,10 +9,9 @@ from pydantic import BaseModel
 from typing import List, Optional
 from datetime import datetime
 
-from app.database import get_db
+from app.models.database import get_db, AlertRule
 from app.services.monitor_service import MonitorService
 from app.services.alert_engine import AlertEngine
-from app.models.database import AlertRule
 from app.core.logger import get_logger
 import json
 
