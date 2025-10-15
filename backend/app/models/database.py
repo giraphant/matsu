@@ -68,10 +68,10 @@ class User(Base):
         return self.password_hash == User.hash_password(password)
 
 
-class MonitoringData(Base):
-    """Database model for storing Distill monitoring data."""
+class WebhookData(Base):
+    """Database model for storing webhook data from Distill Web Monitor."""
 
-    __tablename__ = "monitoring_data"
+    __tablename__ = "monitoring_data"  # Keep table name for backward compatibility
 
     id = Column(Integer, primary_key=True, index=True)
     monitor_id = Column(String, index=True, nullable=False)
@@ -92,7 +92,7 @@ class MonitoringData(Base):
     previous_value = Column(Float, nullable=True)
 
     def __repr__(self):
-        return f"<MonitoringData(monitor_id='{self.monitor_id}', timestamp='{self.timestamp}', value='{self.value}')>"
+        return f"<WebhookData(monitor_id='{self.monitor_id}', timestamp='{self.timestamp}', value='{self.value}')>"
 
 
 class AlertState(Base):

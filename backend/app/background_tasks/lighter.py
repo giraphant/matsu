@@ -8,8 +8,8 @@ from typing import List, Dict, Any
 import httpx
 
 from app.core.logger import get_logger
-from app.models.database import MonitoringData, get_db_session
-from app.monitors.base import BaseMonitor
+from app.models.database import WebhookData, get_db_session
+from app.background_tasks.base import BaseMonitor
 
 logger = get_logger(__name__)
 
@@ -88,7 +88,7 @@ class LighterMonitor(BaseMonitor):
                 monitor_id = f"lighter-{symbol.lower()}"
                 monitor_name = f"Lighter {symbol} Funding Rate"
 
-                new_data = MonitoringData(
+                new_data = WebhookData(
                     monitor_id=monitor_id,
                     monitor_name=monitor_name,
                     monitor_type='monitor',

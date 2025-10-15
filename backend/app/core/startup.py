@@ -10,7 +10,7 @@ from typing import List
 from app.core.config import settings
 from app.core.logger import get_logger
 from app.models.database import create_tables, get_db_session, User
-from app.monitors.base import BaseMonitor
+from app.background_tasks.base import BaseMonitor
 
 logger = get_logger(__name__)
 
@@ -110,7 +110,7 @@ class StartupManager:
     async def _start_background_services(self) -> None:
         """Start all background monitors and workers."""
         # Import monitors and workers
-        from app.monitors.lighter import LighterMonitor
+        from app.background_tasks.lighter import LighterMonitor
         from app.workers.dex_cache_warmer import DexCacheWarmer
         from app.workers.alert_checker import AlertChecker
         from app.workers.monitor_alert_checker import MonitorAlertChecker

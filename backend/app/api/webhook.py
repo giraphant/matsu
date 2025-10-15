@@ -10,10 +10,10 @@ from typing import Dict, Any, Optional
 import json
 import os
 
-from app.models.database import MonitoringData, get_db_session
+from app.models.database import WebhookData, get_db_session
 from app.schemas.monitoring import DistillWebhookPayload
-from app.services.monitoring import MonitoringService
-from app.repositories.monitoring import MonitoringRepository
+from app.services.webhook import WebhookService
+from app.repositories.webhook_repo import WebhookRepository
 from app.core.logger import get_logger
 
 logger = get_logger(__name__)
@@ -164,8 +164,8 @@ async def receive_distill_webhook(
             raise HTTPException(status_code=400, detail="text or text_value is required")
 
         # Use service layer to process webhook (all business logic)
-        monitoring_service = MonitoringService(db)
-        saved_record = monitoring_service.process_webhook(payload)
+        webhook_service = WebhookService(db)
+        saved_record = webhook_service.process_webhook(payload)
 
         return {
             "status": "success",
@@ -213,10 +213,10 @@ async def webhook_status() -> Dict[str, Any]:
 
     try:
         # Use repository for data access
-        monitoring_repo = MonitoringRepository(db)
+        webhook_repo = WebhookRepository(db)
 
         # Get all monitors summary
-        summaries = monitoring_repo.get_all_monitors_summary()
+        summaries = webhook_repo.get_all_monitors_summary()
 
         # Calculate totals
         total_records = sum(s['total_records'] for s in summaries)

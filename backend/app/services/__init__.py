@@ -1,6 +1,6 @@
 """Service layer for business logic."""
 
-from .monitoring import MonitoringService
+from .webhook import WebhookService
 from .pushover import (
     PushoverService,
     send_pushover_notification,
@@ -9,7 +9,7 @@ from .pushover import (
 )
 
 __all__ = [
-    "MonitoringService",
+    "WebhookService",
     "PushoverService",
     "send_pushover_notification",
     "format_alert_message",

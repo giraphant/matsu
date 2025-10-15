@@ -10,7 +10,7 @@ from datetime import datetime
 from sqlalchemy.orm import Session
 
 from app.core.logger import get_logger
-from app.models.database import Monitor, MonitorValue, MonitoringData, ConstantCard
+from app.models.database import Monitor, MonitorValue, WebhookData, ConstantCard
 
 logger = get_logger(__name__)
 
@@ -89,9 +89,9 @@ class FormulaEngine:
 
             elif dep_type == 'webhook':
                 # Direct access to webhook data
-                latest = self.db.query(MonitoringData).filter(
-                    MonitoringData.monitor_id == dep_id
-                ).order_by(MonitoringData.timestamp.desc()).first()
+                latest = self.db.query(WebhookData).filter(
+                    WebhookData.monitor_id == dep_id
+                ).order_by(WebhookData.timestamp.desc()).first()
                 values[var_name] = latest.value if latest else None
 
             elif dep_type == 'constant':

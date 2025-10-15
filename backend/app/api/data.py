@@ -10,10 +10,10 @@ from sqlalchemy.orm import Session
 from sqlalchemy import desc
 import json
 
-from app.models.database import MonitoringData, get_db_session
+from app.models.database import WebhookData, get_db_session
 from app.schemas.monitoring import MonitoringDataResponse, MonitorSummary
-from app.repositories.monitoring import MonitoringRepository
-from app.services.monitoring import MonitoringService
+from app.repositories.webhook_repo import WebhookRepository
+from app.services.webhook import WebhookService
 from app.core.logger import get_logger
 from pydantic import BaseModel
 
@@ -38,7 +38,7 @@ async def get_monitoring_data(
     db = get_db_session()
 
     try:
-        repo = MonitoringRepository(db)
+        repo = WebhookRepository(db)
 
         # Parse date filters
         start_dt = None
@@ -104,7 +104,7 @@ async def get_monitor_summaries() -> List[MonitorSummary]:
 
     try:
         # Use service to get enriched summaries
-        service = MonitoringService(db)
+        service = WebhookService(db)
         summaries = service.get_all_monitors_summary()
 
         # Convert to Pydantic models
@@ -138,7 +138,7 @@ async def get_chart_data(
         start_date = end_date - timedelta(days=days)
 
         # Use repository to get data
-        repo = MonitoringRepository(db)
+        repo = WebhookRepository(db)
         records = repo.get_by_date_range(
             start_date=start_date,
             end_date=end_date,
@@ -221,7 +221,7 @@ async def delete_monitoring_record(record_id: int) -> Dict[str, Any]:
     db = get_db_session()
 
     try:
-        repo = MonitoringRepository(db)
+        repo = WebhookRepository(db)
         record = repo.get_by_id(record_id)
 
         if not record:
@@ -253,8 +253,8 @@ async def update_monitor_unit(monitor_id: str, unit: str = None) -> Dict[str, An
     db = get_db_session()
 
     try:
-        updated_count = db.query(MonitoringData).filter(
-            MonitoringData.monitor_id == monitor_id
+        updated_count = db.query(WebhookData).filter(
+            WebhookData.monitor_id == monitor_id
         ).update({"unit": unit})
 
         db.commit()
@@ -281,8 +281,8 @@ async def update_monitor_decimal_places(monitor_id: str, decimal_places: int = Q
     db = get_db_session()
 
     try:
-        updated_count = db.query(MonitoringData).filter(
-            MonitoringData.monitor_id == monitor_id
+        updated_count = db.query(WebhookData).filter(
+            WebhookData.monitor_id == monitor_id
         ).update({"decimal_places": decimal_places})
 
         db.commit()
@@ -309,8 +309,8 @@ async def delete_monitor_data(monitor_id: str) -> Dict[str, Any]:
     db = get_db_session()
 
     try:
-        deleted_count = db.query(MonitoringData).filter(
-            MonitoringData.monitor_id == monitor_id
+        deleted_count = db.query(WebhookData).filter(
+            WebhookData.monitor_id == monitor_id
         ).delete()
 
         db.commit()
@@ -362,7 +362,7 @@ async def generate_sample_data() -> Dict[str, Any]:
                 # Randomly mark some as changes
                 is_change = random.random() < 0.1  # 10% chance of change
 
-                record = MonitoringData(
+                record = WebhookData(
                     monitor_id=monitor["id"],
                     monitor_name=monitor["name"],
                     url=monitor["url"],
@@ -399,7 +399,7 @@ async def clear_all_data() -> Dict[str, Any]:
     db = get_db_session()
 
     try:
-        deleted_count = db.query(MonitoringData).delete()
+        deleted_count = db.query(WebhookData).delete()
         db.commit()
 
         return {
@@ -519,7 +519,7 @@ async def create_constant(constant: ConstantCreate):
         monitor_id = f"const-{uuid.uuid4()}"
 
         # Create new constant as monitoring_data entry
-        new_constant = MonitoringData(
+        new_constant = WebhookData(
             monitor_id=monitor_id,
             monitor_name=constant.name,
             monitor_type='constant',
@@ -554,10 +554,10 @@ async def update_constant(monitor_id: str, update: ConstantUpdate):
     db = get_db_session()
     try:
         # Get the constant's latest record
-        constant = db.query(MonitoringData).filter(
-            MonitoringData.monitor_id == monitor_id,
-            MonitoringData.monitor_type == 'constant'
-        ).order_by(desc(MonitoringData.timestamp)).first()
+        constant = db.query(WebhookData).filter(
+            WebhookData.monitor_id == monitor_id,
+            WebhookData.monitor_type == 'constant'
+        ).order_by(desc(WebhookData.timestamp)).first()
 
         if not constant:
             raise HTTPException(status_code=404, detail="Constant not found")
@@ -593,9 +593,9 @@ async def delete_constant(monitor_id: str):
     db = get_db_session()
     try:
         # Delete all records for this constant
-        deleted = db.query(MonitoringData).filter(
-            MonitoringData.monitor_id == monitor_id,
-            MonitoringData.monitor_type == 'constant'
+        deleted = db.query(WebhookData).filter(
+            WebhookData.monitor_id == monitor_id,
+            WebhookData.monitor_type == 'constant'
         ).delete()
 
         if deleted == 0:

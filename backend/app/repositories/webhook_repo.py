@@ -1,6 +1,6 @@
 """
-Repository for monitoring data operations.
-Encapsulates all database queries for MonitoringData model.
+Repository for webhook data operations.
+Encapsulates all database queries for WebhookData model.
 """
 
 from datetime import datetime
@@ -8,14 +8,14 @@ from typing import List, Optional, Dict, Any
 from sqlalchemy.orm import Session
 from sqlalchemy import func, desc, asc, Integer
 
-from app.models.database import MonitoringData
+from app.models.database import WebhookData
 from app.core.logger import get_logger
 
 logger = get_logger(__name__)
 
 
-class MonitoringRepository:
-    """Repository for MonitoringData model with specialized queries."""
+class WebhookRepository:
+    """Repository for WebhookData model with specialized queries."""
 
     def __init__(self, db: Session):
         """
@@ -26,9 +26,9 @@ class MonitoringRepository:
         """
         self.db = db
 
-    def get_by_id(self, data_id: int) -> Optional[MonitoringData]:
+    def get_by_id(self, data_id: int) -> Optional[WebhookData]:
         """Get monitoring data by ID."""
-        return self.db.query(MonitoringData).filter(MonitoringData.id == data_id).first()
+        return self.db.query(WebhookData).filter(WebhookData.id == data_id).first()
 
     def get_by_monitor_id(
         self,
@@ -37,7 +37,7 @@ class MonitoringRepository:
         offset: int = 0,
         order_by: str = "timestamp",
         order_dir: str = "desc"
-    ) -> List[MonitoringData]:
+    ) -> List[WebhookData]:
         """
         Get monitoring data for a specific monitor.
 
@@ -49,14 +49,14 @@ class MonitoringRepository:
             order_dir: Order direction (asc/desc)
 
         Returns:
-            List of MonitoringData records
+            List of WebhookData records
         """
-        query = self.db.query(MonitoringData).filter(
-            MonitoringData.monitor_id == monitor_id
+        query = self.db.query(WebhookData).filter(
+            WebhookData.monitor_id == monitor_id
         )
 
         # Apply ordering
-        order_field = getattr(MonitoringData, order_by, MonitoringData.timestamp)
+        order_field = getattr(WebhookData, order_by, WebhookData.timestamp)
         if order_dir.lower() == "asc":
             query = query.order_by(asc(order_field))
         else:
@@ -70,7 +70,7 @@ class MonitoringRepository:
         end_date: datetime,
         monitor_id: Optional[str] = None,
         limit: int = 100
-    ) -> List[MonitoringData]:
+    ) -> List[WebhookData]:
         """
         Get monitoring data within a date range.
 
@@ -81,19 +81,19 @@ class MonitoringRepository:
             limit: Maximum number of records
 
         Returns:
-            List of MonitoringData records
+            List of WebhookData records
         """
-        query = self.db.query(MonitoringData).filter(
-            MonitoringData.timestamp >= start_date,
-            MonitoringData.timestamp <= end_date
+        query = self.db.query(WebhookData).filter(
+            WebhookData.timestamp >= start_date,
+            WebhookData.timestamp <= end_date
         )
 
         if monitor_id:
-            query = query.filter(MonitoringData.monitor_id == monitor_id)
+            query = query.filter(WebhookData.monitor_id == monitor_id)
 
-        return query.order_by(desc(MonitoringData.timestamp)).limit(limit).all()
+        return query.order_by(desc(WebhookData.timestamp)).limit(limit).all()
 
-    def get_latest(self, monitor_id: str) -> Optional[MonitoringData]:
+    def get_latest(self, monitor_id: str) -> Optional[WebhookData]:
         """
         Get the latest record for a monitor.
 
@@ -101,11 +101,11 @@ class MonitoringRepository:
             monitor_id: Monitor identifier
 
         Returns:
-            Latest MonitoringData record or None
+            Latest WebhookData record or None
         """
-        return self.db.query(MonitoringData).filter(
-            MonitoringData.monitor_id == monitor_id
-        ).order_by(desc(MonitoringData.timestamp)).first()
+        return self.db.query(WebhookData).filter(
+            WebhookData.monitor_id == monitor_id
+        ).order_by(desc(WebhookData.timestamp)).first()
 
     def get_summary_statistics(self, monitor_id: str) -> Dict[str, Any]:
         """
@@ -118,13 +118,13 @@ class MonitoringRepository:
             Dictionary with statistics (min, max, avg, count, etc.)
         """
         stats = self.db.query(
-            func.count(MonitoringData.id).label('total_records'),
-            func.min(MonitoringData.value).label('min_value'),
-            func.max(MonitoringData.value).label('max_value'),
-            func.avg(MonitoringData.value).label('avg_value'),
-            func.sum(func.cast(MonitoringData.is_change, Integer)).label('change_count')
+            func.count(WebhookData.id).label('total_records'),
+            func.min(WebhookData.value).label('min_value'),
+            func.max(WebhookData.value).label('max_value'),
+            func.avg(WebhookData.value).label('avg_value'),
+            func.sum(func.cast(WebhookData.is_change, Integer)).label('change_count')
         ).filter(
-            MonitoringData.monitor_id == monitor_id
+            WebhookData.monitor_id == monitor_id
         ).first()
 
         latest = self.get_latest(monitor_id)
@@ -155,7 +155,7 @@ class MonitoringRepository:
             List of dictionaries with statistics for each monitor
         """
         # Get unique monitor IDs
-        monitor_ids = self.db.query(MonitoringData.monitor_id).distinct().all()
+        monitor_ids = self.db.query(WebhookData.monitor_id).distinct().all()
 
         summaries = []
         for (monitor_id,) in monitor_ids:
@@ -164,15 +164,15 @@ class MonitoringRepository:
 
         return summaries
 
-    def create(self, data: MonitoringData) -> MonitoringData:
+    def create(self, data: WebhookData) -> WebhookData:
         """
         Create a new monitoring data record.
 
         Args:
-            data: MonitoringData instance
+            data: WebhookData instance
 
         Returns:
-            Created MonitoringData record
+            Created WebhookData record
         """
         self.db.add(data)
         self.db.commit()
@@ -193,8 +193,8 @@ class MonitoringRepository:
         from datetime import timedelta
         cutoff_date = datetime.utcnow() - timedelta(days=days)
 
-        count = self.db.query(MonitoringData).filter(
-            MonitoringData.timestamp < cutoff_date
+        count = self.db.query(WebhookData).filter(
+            WebhookData.timestamp < cutoff_date
         ).delete()
 
         self.db.commit()

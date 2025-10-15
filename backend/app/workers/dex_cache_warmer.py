@@ -4,7 +4,7 @@ Periodically refreshes the cached DEX funding rates to ensure fresh data.
 """
 
 from app.core.logger import get_logger
-from app.monitors.base import BaseMonitor
+from app.background_tasks.base import BaseMonitor
 
 logger = get_logger(__name__)
 

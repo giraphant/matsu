@@ -1,13 +1,11 @@
 """Repository modules for data access layer."""
 
-from .monitoring import MonitoringRepository
-from .alert import AlertStateRepository
+from .webhook_repo import WebhookRepository
 from .pushover import PushoverRepository
 from .user import UserRepository
 
 __all__ = [
-    "MonitoringRepository",
-    "AlertStateRepository",
+    "WebhookRepository",
     "PushoverRepository",
     "UserRepository"
 ]

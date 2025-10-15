@@ -1,43 +1,39 @@
 """
-Monitoring service for business logic.
-Handles webhook processing, alert checking, and data management.
+Webhook service for business logic.
+Handles webhook processing from Distill Web Monitor and data management.
 """
 
 from datetime import datetime, timedelta
 from typing import Optional, Dict, Any, List
 from sqlalchemy.orm import Session
 
-from app.models.database import MonitoringData, AlertState
+from app.models.database import WebhookData
 from app.schemas.monitoring import DistillWebhookPayload
-from app.repositories.monitoring import MonitoringRepository
-from app.repositories.alert import AlertStateRepository
-from app.services.pushover import PushoverService, format_alert_message
+from app.repositories.webhook_repo import WebhookRepository
 from app.services.monitor_service import MonitorService
 from app.core.logger import get_logger
 
 logger = get_logger(__name__)
 
 
-class MonitoringService:
+class WebhookService:
     """
-    Service class for monitoring data business logic.
+    Service class for webhook data business logic.
     Coordinates repositories and implements complex business flows.
     """
 
     def __init__(self, db: Session):
         """
-        Initialize monitoring service.
+        Initialize webhook service.
 
         Args:
             db: Database session
         """
         self.db = db
-        self.monitoring_repo = MonitoringRepository(db)
-        self.alert_state_repo = AlertStateRepository(db)
-        self.pushover_service = PushoverService(db)
+        self.webhook_repo = WebhookRepository(db)
         self.monitor_service = MonitorService(db)
 
-    def process_webhook(self, payload: DistillWebhookPayload) -> MonitoringData:
+    def process_webhook(self, payload: DistillWebhookPayload) -> WebhookData:
         """
         Process webhook data - main business logic entry point.
 
@@ -52,7 +48,7 @@ class MonitoringService:
             payload: Webhook payload from Distill
 
         Returns:
-            Created MonitoringData record
+            Created WebhookData record
         """
         # 1. Parse and create monitoring data
         data = self._create_monitoring_data(payload)
@@ -68,7 +64,7 @@ class MonitoringService:
 
         return data
 
-    def _create_monitoring_data(self, payload: DistillWebhookPayload) -> MonitoringData:
+    def _create_monitoring_data(self, payload: DistillWebhookPayload) -> WebhookData:
         """
         Parse webhook payload and create monitoring data record.
 
@@ -76,7 +72,7 @@ class MonitoringService:
             payload: Webhook payload
 
         Returns:
-            Created MonitoringData
+            Created WebhookData
         """
         # Map Distill fields to our database fields
         monitor_id = payload.id or payload.monitor_id
@@ -100,7 +96,7 @@ class MonitoringService:
         status = payload.status or "monitored"
 
         # Get existing monitor settings to preserve them
-        existing_record = self.monitoring_repo.get_latest(monitor_id)
+        existing_record = self.webhook_repo.get_latest(monitor_id)
 
         # Preserve existing settings
         decimal_places = 2
@@ -116,7 +112,7 @@ class MonitoringService:
             description = existing_record.description
 
         # Create database record
-        data = MonitoringData(
+        data = WebhookData(
             monitor_id=monitor_id,
             monitor_name=monitor_name,
             monitor_type=monitor_type,
@@ -136,7 +132,7 @@ class MonitoringService:
         )
 
         # Save to database
-        created_data = self.monitoring_repo.create(data)
+        created_data = self.webhook_repo.create(data)
         logger.info(f"Created monitoring data: monitor_id={monitor_id}, value={value}")
 
         return created_data
@@ -236,7 +232,7 @@ class MonitoringService:
         Returns:
             Dictionary with summary statistics and status
         """
-        summary = self.monitoring_repo.get_summary_statistics(monitor_id)
+        summary = self.webhook_repo.get_summary_statistics(monitor_id)
 
         # Add business logic: determine status
         if summary['total_records'] == 0:
@@ -262,7 +258,7 @@ class MonitoringService:
         Returns:
             List of monitor summaries
         """
-        summaries = self.monitoring_repo.get_all_monitors_summary()
+        summaries = self.webhook_repo.get_all_monitors_summary()
 
         # Enrich each summary with business logic
         for summary in summaries:

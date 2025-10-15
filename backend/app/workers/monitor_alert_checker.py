@@ -7,7 +7,7 @@ from datetime import datetime
 from sqlalchemy.orm import Session
 
 from app.core.logger import get_logger
-from app.monitors.base import BaseMonitor
+from app.background_tasks.base import BaseMonitor
 from app.models.database import get_db_session, Monitor, AlertRule, MonitorValue
 from app.services.pushover import PushoverService
 
