@@ -4,6 +4,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { NewMonitor, MonitorCreate } from '../../api/newMonitors';
+import { monitorApi } from '../../api/monitors';
 
 interface NewMonitorModalProps {
   show: boolean;
@@ -11,6 +12,13 @@ interface NewMonitorModalProps {
   existingMonitors: NewMonitor[];
   onClose: () => void;
   onSave: (data: MonitorCreate) => Promise<void>;
+}
+
+interface WebhookMonitor {
+  monitor_id: string;
+  monitor_name: string;
+  latest_value: number | null;
+  unit?: string;
 }
 
 export default function NewMonitorModal({
@@ -28,6 +36,18 @@ export default function NewMonitorModal({
   const [decimalPlaces, setDecimalPlaces] = useState(2);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [webhookMonitors, setWebhookMonitors] = useState<WebhookMonitor[]>([]);
+
+  // Load webhook monitors when modal opens
+  useEffect(() => {
+    if (show) {
+      monitorApi.getAll().then(monitors => {
+        setWebhookMonitors(monitors as any);
+      }).catch(err => {
+        console.error('Failed to load webhook monitors:', err);
+      });
+    }
+  }, [show]);
 
   useEffect(() => {
     if (show && monitor) {
@@ -79,6 +99,11 @@ export default function NewMonitorModal({
     setFormula(prev => prev + variable);
   };
 
+  const insertWebhook = (webhookId: string) => {
+    const variable = `\${webhook:${webhookId}}`;
+    setFormula(prev => prev + variable);
+  };
+
   if (!show) return null;
 
   return (
@@ -124,6 +149,26 @@ export default function NewMonitorModal({
               Use ${'{monitor:id}'} to reference other monitors. Supports +, -, *, /, abs(), max(), min()
             </p>
           </div>
+
+          {webhookMonitors.length > 0 && (
+            <div className="form-group">
+              <label>Insert Webhook Reference</label>
+              <div className="monitor-list-select">
+                {webhookMonitors.map(wm => (
+                  <div
+                    key={wm.monitor_id}
+                    onClick={() => insertWebhook(wm.monitor_id)}
+                    className="monitor-list-item"
+                  >
+                    <span className="name">{wm.monitor_name}</span>
+                    <span className="current-value">
+                      (current: {wm.latest_value !== null ? wm.latest_value.toFixed(2) : 'N/A'} {wm.unit || ''})
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {existingMonitors.length > 0 && (
             <div className="form-group">
