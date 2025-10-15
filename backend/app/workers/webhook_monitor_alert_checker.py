@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.core.logger import get_logger
 from app.monitors.base import BaseMonitor
-from app.models.database import get_db_session, AlertConfig, AlertState, Monitor
+from app.models.database import get_db_session, AlertConfig, AlertState, MonitoringData
 from app.services.pushover import PushoverService, format_alert_message
 
 logger = get_logger(__name__)
@@ -46,18 +46,20 @@ class WebhookMonitorAlertChecker(BaseMonitor):
                 if config.upper_threshold is None and config.lower_threshold is None:
                     continue
 
-                # Get the monitor data
-                monitor = db.query(Monitor).filter(Monitor.monitor_id == config.monitor_id).first()
+                # Get the latest monitor data for this monitor_id
+                monitor = db.query(MonitoringData).filter(
+                    MonitoringData.monitor_id == config.monitor_id
+                ).order_by(MonitoringData.timestamp.desc()).first()
 
-                if not monitor or monitor.latest_value is None:
+                if not monitor or monitor.value is None:
                     logger.debug(f"[WebhookMonitorAlertChecker] No data for monitor {config.monitor_id}, skipping")
                     continue
 
                 # Check if value is out of range
                 is_breached = False
-                if config.upper_threshold is not None and monitor.latest_value > config.upper_threshold:
+                if config.upper_threshold is not None and monitor.value > config.upper_threshold:
                     is_breached = True
-                if config.lower_threshold is not None and monitor.latest_value < config.lower_threshold:
+                if config.lower_threshold is not None and monitor.value < config.lower_threshold:
                     is_breached = True
 
                 if not is_breached:
@@ -98,7 +100,7 @@ class WebhookMonitorAlertChecker(BaseMonitor):
                         continue
 
                 # Trigger alert!
-                logger.info(f"[WebhookMonitorAlertChecker] 🚨 Alert triggered for {monitor.monitor_name}: value={monitor.latest_value}, upper={config.upper_threshold}, lower={config.lower_threshold}")
+                logger.info(f"[WebhookMonitorAlertChecker] 🚨 Alert triggered for {monitor.monitor_name}: value={monitor.value}, upper={config.upper_threshold}, lower={config.lower_threshold}")
 
                 # Create alert state record
                 alert_state = AlertState(
@@ -120,7 +122,7 @@ class WebhookMonitorAlertChecker(BaseMonitor):
                         # For now, just send without tags
                         message = format_alert_message(
                             monitor_name=monitor.monitor_name,
-                            current_value=monitor.latest_value,
+                            current_value=monitor.value,
                             threshold_upper=config.upper_threshold,
                             threshold_lower=config.lower_threshold,
                             unit=monitor.unit,
