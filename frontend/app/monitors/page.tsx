@@ -103,9 +103,9 @@ export default function MonitorsPage() {
     }));
   };
 
-  // Get default size based on index
+  // Get default size based on index (more varied pattern for 4-column grid)
   const getDefaultSize = (index: number): CardSize => {
-    const pattern: CardSize[] = ['large', 'small', 'medium', 'small', 'medium'];
+    const pattern: CardSize[] = ['medium', 'small', 'vertical', 'tiny', 'small', 'large', 'vertical', 'tiny'];
     return pattern[index % pattern.length];
   };
 
@@ -412,7 +412,7 @@ export default function MonitorsPage() {
             items={layout.map(l => l.id)}
             strategy={rectSortingStrategy}
           >
-            <div className="grid grid-cols-3 gap-4 auto-rows-[200px]">
+            <div className="grid grid-cols-4 gap-4 auto-rows-[200px]">
               {sortedMonitors.map(({ monitor, size }) => (
                 <ResizableMonitorCard
                   key={monitor.id}

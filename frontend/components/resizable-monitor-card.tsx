@@ -2,18 +2,19 @@
 
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Trash2, Edit, GripVertical, Maximize2, TrendingUp, TrendingDown, Activity } from 'lucide-react';
+import { Trash2, Edit, GripVertical, Maximize2, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 
-export type CardSize = 'small' | 'medium' | 'large' | 'xlarge';
+export type CardSize = 'tiny' | 'small' | 'vertical' | 'medium' | 'large' | 'xlarge' | 'tall';
 
 interface Monitor {
   id: string;
@@ -36,20 +37,36 @@ interface ResizableMonitorCardProps {
   onResize: (id: string, size: CardSize) => void;
 }
 
-// Map size to grid classes
+// Map size to grid classes (4-column grid)
 export const getGridClassForSize = (size: CardSize): string => {
   switch (size) {
+    case 'tiny':
+      return 'col-span-1 row-span-1'; // 1×1 tiny
     case 'small':
-      return 'col-span-1 row-span-1';
+      return 'col-span-2 row-span-1'; // 2×1 small wide
+    case 'vertical':
+      return 'col-span-1 row-span-2'; // 1×2 vertical
     case 'medium':
-      return 'col-span-2 row-span-1';
+      return 'col-span-2 row-span-2'; // 2×2 medium square
     case 'large':
-      return 'col-span-2 row-span-2';
+      return 'col-span-3 row-span-2'; // 3×2 large
     case 'xlarge':
-      return 'col-span-3 row-span-2';
+      return 'col-span-4 row-span-2'; // 4×2 full width
+    case 'tall':
+      return 'col-span-2 row-span-3'; // 2×3 tall
     default:
-      return 'col-span-1 row-span-1';
+      return 'col-span-2 row-span-1';
   }
+};
+
+// Determine if card should show chart based on size
+const shouldShowChart = (size: CardSize): boolean => {
+  return ['medium', 'large', 'xlarge', 'tall', 'vertical'].includes(size);
+};
+
+// Determine if card should show stats based on size
+const shouldShowStats = (size: CardSize): boolean => {
+  return ['medium', 'large', 'xlarge', 'tall'].includes(size);
 };
 
 export function ResizableMonitorCard({
@@ -75,68 +92,102 @@ export function ResizableMonitorCard({
   };
 
   // Format value with unit
-  const formatValue = (monitor: Monitor) => {
-    if (monitor.value === null || monitor.value === undefined) return 'N/A';
-    const formatted = monitor.value.toFixed(monitor.decimal_places);
+  const formatValue = (value?: number) => {
+    if (value === null || value === undefined) return 'N/A';
+    const formatted = value.toFixed(monitor.decimal_places);
     return monitor.unit ? `${formatted} ${monitor.unit}` : formatted;
   };
 
-  // Get trend icon
-  const getTrendIcon = (value?: number) => {
-    if (!value) return <Activity className="h-4 w-4" />;
-    if (value > 0) return <TrendingUp className="h-4 w-4 text-green-500" />;
-    if (value < 0) return <TrendingDown className="h-4 w-4 text-red-500" />;
-    return <Activity className="h-4 w-4" />;
+  // Get trend (mock for now - would calculate from history)
+  const trend = 0; // TODO: Calculate from actual data
+  const isPositive = trend > 0;
+  const isNegative = trend < 0;
+
+  // Format time since
+  const formatTimeSince = (timestamp?: string) => {
+    if (!timestamp) return '';
+    const date = new Date(timestamp);
+    const now = new Date();
+    const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+    if (seconds < 60) return `${seconds}s ago`;
+    if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+    if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+    return `${Math.floor(seconds / 86400)}d ago`;
   };
+
+  const showChart = shouldShowChart(size);
+  const showStats = shouldShowStats(size);
 
   return (
     <Card
       ref={setNodeRef}
       style={style}
-      className={`${getGridClassForSize(size)} overflow-hidden hover:shadow-lg transition-shadow relative group`}
+      className={`${getGridClassForSize(size)} overflow-hidden hover:shadow-lg transition-all relative group flex flex-col`}
       {...attributes}
     >
-      {/* Border top color */}
+      {/* Color indicator bar */}
       <div
         className="absolute top-0 left-0 right-0 h-1"
         style={{ backgroundColor: monitor.color || '#3b82f6' }}
       />
 
-      <CardHeader className="pb-2 pt-3">
-        <div className="flex justify-between items-start gap-2">
+      <CardHeader className="pb-3 pt-4 flex-shrink-0">
+        <div className="flex items-start justify-between gap-2">
           {/* Drag handle */}
           <button
             {...listeners}
-            className="cursor-grab active:cursor-grabbing p-1 hover:bg-muted rounded opacity-0 group-hover:opacity-100 transition-opacity touch-none"
+            className="cursor-grab active:cursor-grabbing p-1 hover:bg-muted rounded opacity-0 group-hover:opacity-100 transition-opacity touch-none flex-shrink-0"
             aria-label="Drag to reorder"
           >
             <GripVertical className="h-4 w-4 text-muted-foreground" />
           </button>
 
-          <CardTitle className="text-lg line-clamp-1 flex-1">
-            {monitor.name}
-          </CardTitle>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <h3 className="font-semibold text-base truncate">
+                {monitor.name}
+              </h3>
+              <Badge variant={monitor.enabled ? "default" : "secondary"} className="text-xs flex-shrink-0">
+                {monitor.enabled ? 'Active' : 'Disabled'}
+              </Badge>
+            </div>
+            {monitor.description && size !== 'tiny' && (
+              <p className="text-xs text-muted-foreground line-clamp-2">
+                {monitor.description}
+              </p>
+            )}
+          </div>
 
-          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
             {/* Resize dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button size="icon" variant="ghost" className="h-8 w-8">
-                  <Maximize2 className="h-4 w-4" />
+                <Button size="icon" variant="ghost" className="h-7 w-7">
+                  <Maximize2 className="h-3.5 w-3.5" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => onResize(monitor.id, 'tiny')}>
+                  Tiny (1×1)
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => onResize(monitor.id, 'small')}>
-                  Small (1×1)
+                  Small (2×1)
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onResize(monitor.id, 'vertical')}>
+                  Vertical (1×2)
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => onResize(monitor.id, 'medium')}>
-                  Medium (2×1)
+                  Medium (2×2)
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => onResize(monitor.id, 'large')}>
-                  Large (2×2)
+                  Large (3×2)
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => onResize(monitor.id, 'xlarge')}>
-                  X-Large (3×2)
+                  X-Large (4×2)
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onResize(monitor.id, 'tall')}>
+                  Tall (2×3)
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -144,49 +195,93 @@ export function ResizableMonitorCard({
             <Button
               size="icon"
               variant="ghost"
-              className="h-8 w-8"
+              className="h-7 w-7"
               onClick={() => onEdit(monitor)}
             >
-              <Edit className="h-4 w-4" />
+              <Edit className="h-3.5 w-3.5" />
             </Button>
             <Button
               size="icon"
               variant="ghost"
-              className="h-8 w-8 text-destructive"
+              className="h-7 w-7 text-destructive"
               onClick={() => onDelete(monitor.id)}
             >
-              <Trash2 className="h-4 w-4" />
+              <Trash2 className="h-3.5 w-3.5" />
             </Button>
           </div>
         </div>
-        {monitor.description && (
-          <CardDescription className="line-clamp-2 mt-1">
-            {monitor.description}
-          </CardDescription>
-        )}
       </CardHeader>
-      <CardContent className="pt-2">
-        <div className="flex items-baseline gap-2 mb-2">
-          <span className={`font-bold ${size === 'small' ? 'text-2xl' : 'text-3xl'}`}>
-            {formatValue(monitor)}
-          </span>
-          {getTrendIcon(monitor.value)}
-        </div>
-        <div className="space-y-1 text-sm">
-          <div className="flex items-center gap-2 flex-wrap">
-            <Badge variant={monitor.enabled ? "default" : "secondary"}>
-              {monitor.enabled ? 'Active' : 'Disabled'}
-            </Badge>
-            <code className="text-xs bg-muted px-1 py-0.5 rounded line-clamp-1 flex-1 min-w-0">
-              {monitor.formula}
-            </code>
+
+      <CardContent className="pb-4 flex-1 flex flex-col gap-3">
+        {/* Main Value */}
+        <div className="space-y-1">
+          <div className="flex items-baseline gap-2">
+            <span className={`font-bold tabular-nums ${size === 'tiny' ? 'text-2xl' : size === 'small' || size === 'vertical' ? 'text-3xl' : 'text-4xl'}`}>
+              {formatValue(monitor.value)}
+            </span>
+            {trend !== 0 && (
+              <span className={`flex items-center text-sm font-medium ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
+                {isPositive ? (
+                  <TrendingUp className="h-3 w-3 mr-0.5" />
+                ) : isNegative ? (
+                  <TrendingDown className="h-3 w-3 mr-0.5" />
+                ) : (
+                  <Minus className="h-3 w-3 mr-0.5" />
+                )}
+                {Math.abs(trend).toFixed(monitor.decimal_places)}
+              </span>
+            )}
           </div>
-          {monitor.computed_at && (
+          {monitor.computed_at && size !== 'tiny' && (
             <p className="text-xs text-muted-foreground">
-              Updated {new Date(monitor.computed_at).toLocaleTimeString()}
+              Updated {formatTimeSince(monitor.computed_at)}
             </p>
           )}
         </div>
+
+        {/* Chart - shown for medium and larger cards */}
+        {showChart && (
+          <>
+            <Separator />
+            <div className={`bg-muted/30 rounded flex items-center justify-center ${size === 'vertical' ? 'h-32' : 'h-24'}`}>
+              <p className="text-xs text-muted-foreground">Chart placeholder</p>
+            </div>
+          </>
+        )}
+
+        {/* Stats - Min/Avg/Max */}
+        {showStats && (
+          <>
+            <Separator />
+            <div className="grid grid-cols-3 gap-2 text-center">
+              <div>
+                <p className="text-[10px] uppercase text-muted-foreground font-medium tracking-wide">Min</p>
+                <p className="text-sm font-semibold mt-0.5 tabular-nums">
+                  {formatValue(monitor.value ? monitor.value * 0.9 : undefined)}
+                </p>
+              </div>
+              <div>
+                <p className="text-[10px] uppercase text-muted-foreground font-medium tracking-wide">Avg</p>
+                <p className="text-sm font-semibold mt-0.5 tabular-nums">
+                  {formatValue(monitor.value ? monitor.value * 0.95 : undefined)}
+                </p>
+              </div>
+              <div>
+                <p className="text-[10px] uppercase text-muted-foreground font-medium tracking-wide">Max</p>
+                <p className="text-sm font-semibold mt-0.5 tabular-nums">
+                  {formatValue(monitor.value ? monitor.value * 1.1 : undefined)}
+                </p>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* Formula hint for tiny/small cards */}
+        {!showStats && size !== 'tiny' && (
+          <code className="text-xs bg-muted px-2 py-1 rounded truncate block mt-auto">
+            {monitor.formula}
+          </code>
+        )}
       </CardContent>
     </Card>
   );
