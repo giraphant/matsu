@@ -10,6 +10,7 @@ from .backpack_funding import BackpackMonitor
 from .binance_spot import BinanceSpotMonitor
 from .okx_spot import OKXSpotMonitor
 from .bybit_spot import BybitSpotMonitor
+from .jupiter_spot import JupiterSpotMonitor
 
 __all__ = [
     "BaseMonitor",
@@ -22,4 +23,5 @@ __all__ = [
     "BinanceSpotMonitor",
     "OKXSpotMonitor",
     "BybitSpotMonitor",
+    "JupiterSpotMonitor",
 ]
