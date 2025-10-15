@@ -146,8 +146,8 @@ class MonitorAlertChecker(BaseMonitor):
                 logger.debug(f"[MonitorAlertChecker] Alert '{rule.name}' in cooldown ({time_since_last:.0f}s < {rule.cooldown_seconds}s)")
                 return
 
-        # Build human-readable message with actual values
-        message = await self._format_alert_message(rule, db)
+        # Build message with title and body
+        title, message = await self._format_alert_message(rule, db)
 
         # Send notification
         logger.info(f"[MonitorAlertChecker] 🚨 Alert triggered: {rule.name}")
@@ -155,7 +155,7 @@ class MonitorAlertChecker(BaseMonitor):
         try:
             sent = pushover_service.send_alert(
                 message=message,
-                title=f"🚨 {rule.name}",
+                title=title,
                 level=rule.level,
                 url="https://distill.baa.one/monitors"
             )
@@ -172,14 +172,14 @@ class MonitorAlertChecker(BaseMonitor):
         except Exception as e:
             logger.error(f"[MonitorAlertChecker] Error sending notification for '{rule.name}': {e}")
 
-    async def _format_alert_message(self, rule: AlertRule, db: Session) -> str:
+    async def _format_alert_message(self, rule: AlertRule, db: Session) -> tuple[str, str]:
         """
-        Format a human-readable alert message with actual values.
+        Format alert message with title and body.
 
-        Example output:
-        Monitor: Drift Loop
-        Current value: 36.0%
-        Condition: Value must be between 30% and 50%
+        Returns:
+            tuple: (title, message)
+            - title: Monitor name (e.g., "DRIFT 健康度")
+            - message: "当前: 36.0%\n边界: <30 OR >50"
         """
         import re
 
@@ -187,14 +187,14 @@ class MonitorAlertChecker(BaseMonitor):
         monitor_refs = re.findall(r'\$\{monitor:([^}]+)\}', rule.condition)
 
         if not monitor_refs:
-            return f"Condition: {rule.condition}"
+            return ("Alert", f"Condition: {rule.condition}")
 
         # Get info for the first monitor (most alerts reference one monitor)
         monitor_id = monitor_refs[0]
         monitor = db.query(Monitor).filter(Monitor.id == monitor_id).first()
 
         if not monitor:
-            return f"Condition: {rule.condition}"
+            return ("Alert", f"Condition: {rule.condition}")
 
         # Get latest value
         latest_value = db.query(MonitorValue).filter(
@@ -202,40 +202,41 @@ class MonitorAlertChecker(BaseMonitor):
         ).order_by(MonitorValue.computed_at.desc()).first()
 
         if not latest_value or latest_value.value is None:
-            return f"Monitor: {monitor.name}\nNo value available"
+            return (monitor.name, "No value available")
 
         # Format value with unit
         value_str = f"{latest_value.value:.{monitor.decimal_places}f}"
         if monitor.unit:
             value_str += monitor.unit
 
-        # Parse condition to extract thresholds
-        condition_human = self._parse_condition_to_human(rule.condition, monitor.unit or '')
+        # Parse condition to simple boundary format
+        boundary = self._parse_condition_to_boundary(rule.condition)
 
         # Build message
         message_parts = [
-            f"📊 Monitor: {monitor.name}",
-            f"📈 Current value: {value_str}",
-            f"⚠️  {condition_human}"
+            f"当前: {value_str}",
+            f"边界: {boundary}"
         ]
 
-        return "\n".join(message_parts)
+        return (monitor.name, "\n".join(message_parts))
 
-    def _parse_condition_to_human(self, condition: str, unit: str) -> str:
-        """Parse condition formula to human-readable text."""
+    def _parse_condition_to_boundary(self, condition: str) -> str:
+        """
+        Parse condition formula to simple boundary format.
+
+        Examples:
+            ${monitor:xxx} > 50 or ${monitor:xxx} < 30  ->  <30 OR >50
+            ${monitor:xxx} > 100  ->  >100
+        """
         import re
 
-        # Replace monitor placeholders with "Value"
-        readable = re.sub(r'\$\{monitor:[^}]+\}', 'Value', condition)
+        # Remove monitor placeholders
+        simplified = re.sub(r'\$\{monitor:[^}]+\}\s*', '', condition)
 
         # Replace operators
-        readable = readable.replace(' or ', ' OR ')
-        readable = readable.replace(' and ', ' AND ')
-        readable = readable.replace('||', ' OR ')
-        readable = readable.replace('&&', ' AND ')
+        simplified = simplified.replace(' or ', ' OR ')
+        simplified = simplified.replace(' and ', ' AND ')
+        simplified = simplified.replace('||', ' OR ')
+        simplified = simplified.replace('&&', ' AND ')
 
-        # Add unit to numbers if provided
-        if unit:
-            readable = re.sub(r'(\d+\.?\d*)', r'\1' + unit, readable)
-
-        return f"Threshold: {readable}"
+        return simplified

@@ -121,11 +121,20 @@ export function MonitorCard({ monitor, onEdit, onDelete, onSetAlert, showChart =
     return <Minus className="h-3 w-3" />;
   };
 
+  // Get the custom color or fallback to primary
+  const alertBgColor = monitor.color || 'hsl(var(--primary))';
+
   return (
-    <Card className={cn(
-      "relative overflow-hidden border border-transparent dark:border-border/50 p-0 gap-0 transition-all duration-300",
-      isAlert && "bg-primary border-primary border-2"
-    )}>
+    <Card
+      className={cn(
+        "relative overflow-hidden border border-transparent dark:border-border/50 p-0 gap-0 transition-all duration-300",
+        isAlert && "border-2"
+      )}
+      style={isAlert ? {
+        backgroundColor: alertBgColor,
+        borderColor: alertBgColor
+      } : undefined}
+    >
       <section className="flex flex-col flex-nowrap">
         {/* Header Section */}
         <div className="flex flex-col justify-between gap-y-2 p-4">
@@ -133,14 +142,14 @@ export function MonitorCard({ monitor, onEdit, onDelete, onSetAlert, showChart =
             <div className="flex flex-col gap-y-0">
               <dt className={cn(
                 "text-sm font-medium truncate",
-                isAlert ? "text-primary-foreground" : "text-default-600"
+                isAlert ? "text-white" : "text-default-600"
               )}>
                 {monitor.name}
               </dt>
               {monitor.description && (
                 <dt className={cn(
                   "text-xs font-normal truncate",
-                  isAlert ? "text-primary-foreground/80" : "text-default-400"
+                  isAlert ? "text-white/80" : "text-default-400"
                 )}>
                   {monitor.description}
                 </dt>
@@ -150,7 +159,7 @@ export function MonitorCard({ monitor, onEdit, onDelete, onSetAlert, showChart =
               <div className="flex items-baseline gap-x-2">
                 <dd className={cn(
                   "text-3xl font-semibold",
-                  isAlert ? "text-primary-foreground" : "text-default-700"
+                  isAlert ? "text-white" : "text-default-700"
                 )}>
                   {formatValue(monitor.value)}
                 </dd>
@@ -167,7 +176,7 @@ export function MonitorCard({ monitor, onEdit, onDelete, onSetAlert, showChart =
               {timeAgo && (
                 <p className={cn(
                   "text-xs",
-                  isAlert ? "text-primary-foreground/70" : "text-muted-foreground"
+                  isAlert ? "text-white/70" : "text-muted-foreground"
                 )}>
                   {timeAgo}
                 </p>
@@ -208,7 +217,7 @@ export function MonitorCard({ monitor, onEdit, onDelete, onSetAlert, showChart =
                 />
                 <Area
                   dataKey="value"
-                  stroke={isAlert ? 'hsl(var(--primary-foreground))' : (monitor.color || 'hsl(var(--primary))')}
+                  stroke={isAlert ? 'rgba(255, 255, 255, 0.9)' : (monitor.color || 'hsl(var(--primary))')}
                   strokeWidth={2}
                   fill={`url(#gradient-${monitor.id})`}
                   animationDuration={300}
