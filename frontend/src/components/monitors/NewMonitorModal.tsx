@@ -152,19 +152,26 @@ export default function NewMonitorModal({
             <div className="form-group">
               <label>Insert Monitor Reference</label>
               <div className="monitor-list-select">
-                {existingMonitors.map(m => (
-                  <div
-                    key={m.id}
-                    onClick={() => insertMonitor(m.id)}
-                    className="monitor-list-item"
-                  >
-                    <span className="name">{m.name}</span>
-                    <span className="current-value">
-                      (current: {m.value?.toFixed(m.decimal_places) || 'N/A'})
-                    </span>
-                  </div>
-                ))}
+                {existingMonitors
+                  .filter(m => !monitor || m.id !== monitor.id)
+                  .map(m => (
+                    <div
+                      key={m.id}
+                      onClick={() => insertMonitor(m.id)}
+                      className="monitor-list-item"
+                    >
+                      <span className="name">{m.name}</span>
+                      <span className="current-value">
+                        (current: {m.value?.toFixed(m.decimal_places) || 'N/A'})
+                      </span>
+                    </div>
+                  ))}
               </div>
+              {existingMonitors.filter(m => !monitor || m.id !== monitor.id).length === 0 && (
+                <p style={{ fontSize: '12px', color: 'var(--muted-foreground)', padding: '8px', textAlign: 'center' }}>
+                  No other monitors available to reference
+                </p>
+              )}
             </div>
           )}
 
