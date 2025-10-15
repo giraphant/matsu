@@ -1,7 +1,8 @@
 import type { Metadata } from "next"
 import "./globals.css"
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
+import { SidebarTrigger } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/app-sidebar"
+import { SidebarWrapper } from "@/components/sidebar-wrapper"
 import { Toaster } from "sonner"
 import { ThemeProvider } from "@/components/theme-provider"
 import { ThemeToggle } from "@/components/theme-toggle"
@@ -25,7 +26,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <SidebarProvider defaultOpen={true}>
+          <SidebarWrapper>
             <AppSidebar />
             <main className="flex-1 w-full">
               <div className="border-b">
@@ -38,7 +39,7 @@ export default function RootLayout({
                 {children}
               </div>
             </main>
-          </SidebarProvider>
+          </SidebarWrapper>
           <Toaster position="bottom-right" />
         </ThemeProvider>
       </body>
