@@ -99,40 +99,79 @@ async def health_check():
     return {"status": "healthy", "service": "distill-webhook-visualiser"}
 
 
-# Mount static files and serve React app
+# Mount static files and serve Next.js app
 import os
 from fastapi.responses import FileResponse
 
-# Mount the nested static directory from React build (old CRA structure)
-if os.path.exists("static/static"):
-    app.mount("/static", StaticFiles(directory="static/static"), name="static")
+# Mount Next.js static files
+if os.path.exists("static/_next"):
+    app.mount("/_next", StaticFiles(directory="static/_next"), name="next_static")
 
-# Mount assets directory from Vite build
-if os.path.exists("static/assets"):
-    app.mount("/assets", StaticFiles(directory="static/assets"), name="assets")
+# Serve static assets
+@app.get("/favicon.ico")
+async def serve_favicon():
+    return FileResponse("static/favicon.ico") if os.path.exists("static/favicon.ico") else HTMLResponse("", 404)
 
-# Mount sounds directory
+@app.get("/next.svg")
+async def serve_next_svg():
+    return FileResponse("static/next.svg") if os.path.exists("static/next.svg") else HTMLResponse("", 404)
+
+@app.get("/vercel.svg")
+async def serve_vercel_svg():
+    return FileResponse("static/vercel.svg") if os.path.exists("static/vercel.svg") else HTMLResponse("", 404)
+
+@app.get("/file.svg")
+async def serve_file_svg():
+    return FileResponse("static/file.svg") if os.path.exists("static/file.svg") else HTMLResponse("", 404)
+
+@app.get("/globe.svg")
+async def serve_globe_svg():
+    return FileResponse("static/globe.svg") if os.path.exists("static/globe.svg") else HTMLResponse("", 404)
+
+@app.get("/window.svg")
+async def serve_window_svg():
+    return FileResponse("static/window.svg") if os.path.exists("static/window.svg") else HTMLResponse("", 404)
+
+# Mount sounds directory (if exists)
 if os.path.exists("static/sounds"):
     app.mount("/sounds", StaticFiles(directory="static/sounds"), name="sounds")
 
-# Serve favicon
-@app.get("/favicon.ico")
-async def serve_favicon():
-    """Serve favicon."""
-    favicon_path = "static/favicon.ico"
-    if os.path.exists(favicon_path):
-        return FileResponse(favicon_path)
-    return HTMLResponse(content="", status_code=404)
-
-# Serve React app for specific frontend routes only
+# Serve Next.js pages
 @app.get("/", response_class=HTMLResponse)
 async def serve_home():
-    """Serve React app home page."""
+    """Serve home page."""
     index_path = "static/index.html"
     if os.path.exists(index_path):
         with open(index_path, "r") as f:
             return f.read()
     return HTMLResponse(content="<h1>App not found</h1>", status_code=404)
+
+@app.get("/charts", response_class=HTMLResponse)
+async def serve_charts():
+    """Serve charts page."""
+    page_path = "static/charts.html"
+    if os.path.exists(page_path):
+        with open(page_path, "r") as f:
+            return f.read()
+    return HTMLResponse(content="<h1>Page not found</h1>", status_code=404)
+
+@app.get("/dex-rates", response_class=HTMLResponse)
+async def serve_dex_rates():
+    """Serve DEX rates page."""
+    page_path = "static/dex-rates.html"
+    if os.path.exists(page_path):
+        with open(page_path, "r") as f:
+            return f.read()
+    return HTMLResponse(content="<h1>Page not found</h1>", status_code=404)
+
+@app.get("/settings", response_class=HTMLResponse)
+async def serve_settings():
+    """Serve settings page."""
+    page_path = "static/settings.html"
+    if os.path.exists(page_path):
+        with open(page_path, "r") as f:
+            return f.read()
+    return HTMLResponse(content="<h1>Page not found</h1>", status_code=404)
 
 
 if __name__ == "__main__":
