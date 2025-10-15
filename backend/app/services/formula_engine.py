@@ -1,0 +1,296 @@
+"""
+Formula Engine
+Parses and evaluates formulas with variable substitution.
+"""
+
+import re
+import json
+from typing import Dict, List, Set, Optional, Any, Tuple
+from datetime import datetime
+from sqlalchemy.orm import Session
+
+from app.core.logger import get_logger
+from app.models.database import Monitor, MonitorValue, MonitoringData, ConstantCard
+
+logger = get_logger(__name__)
+
+
+class FormulaEngine:
+    """
+    Engine for parsing and evaluating monitor formulas.
+
+    Supported syntax:
+    - Variables: ${monitor:id}, ${webhook:id}, ${constant:id}
+    - Operators: +, -, *, /, %, ()
+    - Functions: abs(), max(), min()
+
+    Examples:
+    - "${monitor:btc} - ${monitor:eth}"
+    - "abs(${monitor:a} - ${monitor:b}) / 100"
+    - "max(${monitor:x}, ${monitor:y})"
+    """
+
+    # Variable pattern: ${type:id}
+    VAR_PATTERN = re.compile(r'\$\{([^:]+):([^}]+)\}')
+
+    def __init__(self, db: Session):
+        self.db = db
+
+    def parse_formula(self, formula: str) -> Tuple[str, Set[str]]:
+        """
+        Parse formula and extract dependencies.
+
+        Args:
+            formula: Formula string
+
+        Returns:
+            Tuple of (parsed_expression, dependencies)
+            - parsed_expression: Formula with variables replaced by placeholders
+            - dependencies: Set of dependency identifiers (e.g., "monitor:btc")
+        """
+        dependencies = set()
+
+        def replace_var(match):
+            var_type = match.group(1)
+            var_id = match.group(2)
+            dep_id = f"{var_type}:{var_id}"
+            dependencies.add(dep_id)
+            # Replace with Python variable name
+            return f"_v_{var_type}_{var_id.replace('-', '_').replace('.', '_')}"
+
+        parsed = self.VAR_PATTERN.sub(replace_var, formula)
+        return parsed, dependencies
+
+    def resolve_dependencies(self, dependencies: Set[str]) -> Dict[str, Optional[float]]:
+        """
+        Resolve all dependencies to their current values.
+
+        Args:
+            dependencies: Set of dependency identifiers
+
+        Returns:
+            Dictionary mapping variable names to values
+        """
+        values = {}
+
+        for dep in dependencies:
+            dep_type, dep_id = dep.split(':', 1)
+            var_name = f"_v_{dep_type}_{dep_id.replace('-', '_').replace('.', '_')}"
+
+            if dep_type == 'monitor':
+                # Get value from another monitor
+                monitor = self.db.query(Monitor).filter(Monitor.id == dep_id).first()
+                if monitor:
+                    if monitor.type == 'constant':
+                        # Constant monitor: parse formula as literal value
+                        try:
+                            values[var_name] = float(monitor.formula)
+                        except:
+                            values[var_name] = None
+                    elif monitor.type == 'direct':
+                        # Direct monitor: get latest webhook data
+                        # Extract webhook ID from formula: ${webhook:xxx}
+                        webhook_match = self.VAR_PATTERN.match(monitor.formula)
+                        if webhook_match:
+                            webhook_id = webhook_match.group(2)
+                            latest = self.db.query(MonitoringData).filter(
+                                MonitoringData.monitor_id == webhook_id
+                            ).order_by(MonitoringData.timestamp.desc()).first()
+                            values[var_name] = latest.value if latest else None
+                        else:
+                            values[var_name] = None
+                    elif monitor.type == 'computed':
+                        # Computed monitor: recursively evaluate
+                        result = self.evaluate(monitor.formula)
+                        values[var_name] = result
+                    else:
+                        values[var_name] = None
+                else:
+                    values[var_name] = None
+
+            elif dep_type == 'webhook':
+                # Direct access to webhook data
+                latest = self.db.query(MonitoringData).filter(
+                    MonitoringData.monitor_id == dep_id
+                ).order_by(MonitoringData.timestamp.desc()).first()
+                values[var_name] = latest.value if latest else None
+
+            elif dep_type == 'constant':
+                # Get constant card value
+                constant = self.db.query(ConstantCard).filter(ConstantCard.id == dep_id).first()
+                values[var_name] = constant.value if constant else None
+
+            else:
+                logger.warning(f"Unknown dependency type: {dep_type}")
+                values[var_name] = None
+
+        return values
+
+    def evaluate(self, formula: str) -> Optional[float]:
+        """
+        Evaluate a formula and return the result.
+
+        Args:
+            formula: Formula string
+
+        Returns:
+            Calculated value or None if evaluation fails
+        """
+        try:
+            # Parse formula
+            parsed_expr, dependencies = self.parse_formula(formula)
+
+            # Resolve dependencies
+            values = self.resolve_dependencies(dependencies)
+
+            # Check if any value is None
+            if any(v is None for v in values.values()):
+                logger.debug(f"Cannot evaluate formula, missing values: {formula}")
+                return None
+
+            # Build safe evaluation context
+            safe_context = {
+                'abs': abs,
+                'max': max,
+                'min': min,
+                '__builtins__': {}  # Disable built-in functions for security
+            }
+            safe_context.update(values)
+
+            # Evaluate expression
+            result = eval(parsed_expr, safe_context, {})
+            return float(result)
+
+        except Exception as e:
+            logger.error(f"Error evaluating formula '{formula}': {e}")
+            return None
+
+    def check_circular_dependency(self, monitor_id: str, formula: str) -> bool:
+        """
+        Check if a formula would create circular dependency.
+
+        Args:
+            monitor_id: ID of the monitor being checked
+            formula: Formula to check
+
+        Returns:
+            True if circular dependency detected, False otherwise
+        """
+        visited = set()
+
+        def check_deps(current_formula: str, path: Set[str]) -> bool:
+            _, dependencies = self.parse_formula(current_formula)
+
+            for dep in dependencies:
+                dep_type, dep_id = dep.split(':', 1)
+
+                # Only check monitor dependencies
+                if dep_type != 'monitor':
+                    continue
+
+                # Circular dependency detected
+                if dep_id == monitor_id or dep_id in path:
+                    logger.warning(f"Circular dependency detected: {monitor_id} -> {dep_id}")
+                    return True
+
+                # Check this monitor's dependencies
+                if dep_id not in visited:
+                    visited.add(dep_id)
+                    monitor = self.db.query(Monitor).filter(Monitor.id == dep_id).first()
+                    if monitor and monitor.type == 'computed':
+                        if check_deps(monitor.formula, path | {dep_id}):
+                            return True
+
+            return False
+
+        return check_deps(formula, {monitor_id})
+
+    def get_dependencies(self, formula: str) -> List[str]:
+        """
+        Get list of dependency identifiers from a formula.
+
+        Args:
+            formula: Formula string
+
+        Returns:
+            List of dependency identifiers
+        """
+        _, dependencies = self.parse_formula(formula)
+        return sorted(list(dependencies))
+
+    def compute_monitor_value(self, monitor_id: str) -> Optional[float]:
+        """
+        Compute and cache value for a monitor.
+
+        Args:
+            monitor_id: Monitor ID
+
+        Returns:
+            Computed value or None
+        """
+        monitor = self.db.query(Monitor).filter(Monitor.id == monitor_id).first()
+        if not monitor or not monitor.enabled:
+            return None
+
+        value = None
+        dependencies = []
+
+        if monitor.type == 'constant':
+            # Constant: parse as literal
+            try:
+                value = float(monitor.formula)
+            except:
+                value = None
+
+        elif monitor.type == 'direct':
+            # Direct: get from webhook
+            webhook_match = self.VAR_PATTERN.match(monitor.formula)
+            if webhook_match:
+                webhook_id = webhook_match.group(2)
+                dependencies = [f"webhook:{webhook_id}"]
+                latest = self.db.query(MonitoringData).filter(
+                    MonitoringData.monitor_id == webhook_id
+                ).order_by(MonitoringData.timestamp.desc()).first()
+                value = latest.value if latest else None
+
+        elif monitor.type == 'computed':
+            # Computed: evaluate formula
+            dependencies = self.get_dependencies(monitor.formula)
+            value = self.evaluate(monitor.formula)
+
+        # Cache the computed value
+        if value is not None:
+            cached = MonitorValue(
+                monitor_id=monitor_id,
+                value=value,
+                computed_at=datetime.utcnow(),
+                dependencies=json.dumps(dependencies)
+            )
+            self.db.add(cached)
+            self.db.commit()
+
+        return value
+
+    def recompute_dependent_monitors(self, changed_dependency: str):
+        """
+        Recompute all monitors that depend on a changed data source.
+
+        Args:
+            changed_dependency: Dependency identifier that changed (e.g., "webhook:xxx")
+        """
+        # Find all monitors that depend on this
+        all_monitors = self.db.query(Monitor).filter(
+            Monitor.enabled == True,
+            Monitor.type.in_(['direct', 'computed'])
+        ).all()
+
+        recomputed = []
+        for monitor in all_monitors:
+            deps = self.get_dependencies(monitor.formula)
+            if changed_dependency in deps:
+                value = self.compute_monitor_value(monitor.id)
+                if value is not None:
+                    recomputed.append(monitor.id)
+                    logger.debug(f"Recomputed monitor {monitor.id}: {value}")
+
+        return recomputed

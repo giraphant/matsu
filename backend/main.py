@@ -21,6 +21,7 @@ from app.api.alerts import router as alerts_router
 from app.api.constants import router as constants_router
 from app.api.auth import router as auth_router
 from app.api.dex import router as dex_router
+from app.api.monitors import router as monitors_router
 
 logger = get_logger(__name__)
 
@@ -70,6 +71,7 @@ app.include_router(data_router, prefix="/api", tags=["data"])
 app.include_router(alerts_router, prefix="/api", tags=["alerts"])
 app.include_router(constants_router, prefix="/api", tags=["constants"])
 app.include_router(dex_router, prefix="/api", tags=["dex"])
+app.include_router(monitors_router, prefix="/api", tags=["monitors"])
 
 
 # Old HTML template pages (kept for reference)
