@@ -582,7 +582,7 @@ export default function MonitorsPage() {
     <div className="container mx-auto p-6 max-w-7xl">
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Monitors Dashboard</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Monitors</h1>
           <p className="text-muted-foreground mt-1">
             Track your custom metrics with real-time updates
           </p>

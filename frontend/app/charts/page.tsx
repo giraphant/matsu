@@ -39,7 +39,7 @@ export default function ChartsPage() {
         const data = await response.json();
 
         // Process webhook-monitors data and convert to WebhookData format
-        const processedData: WebhookData[] = data.map((monitor: any) => {
+        const processedData: WebhookData[] = await Promise.all(data.map(async (monitor: any) => {
           // Calculate time since
           const timestamp = new Date(monitor.latest_timestamp);
           const now = new Date();
@@ -59,10 +59,26 @@ export default function ChartsPage() {
             time_since = `${diffDays}d ago`;
           }
 
-          // Extract current and calculate previous value (if available)
+          // Extract current and calculate previous value from history
           const currentValue = monitor.latest_value || 0;
-          const previousValue = 0; // TODO: Get from history if needed
-          const changePercent = previousValue ? ((currentValue - previousValue) / previousValue) * 100 : 0;
+          let previousValue = 0;
+          let changePercent = 0;
+
+          // Fetch history to get previous value
+          try {
+            const historyResponse = await fetch(`/api/webhooks/${monitor.monitor_id}/history?limit=2`);
+            if (historyResponse.ok) {
+              const history = await historyResponse.json();
+              if (history.length >= 2) {
+                previousValue = history[1].value || 0;
+                if (previousValue !== 0) {
+                  changePercent = ((currentValue - previousValue) / previousValue) * 100;
+                }
+              }
+            }
+          } catch (error) {
+            console.error('Failed to fetch history for', monitor.monitor_id, error);
+          }
 
           // Parse description as data if it's JSON
           let dataObj = {};
@@ -91,7 +107,7 @@ export default function ChartsPage() {
             previous_value: previousValue,
             change_percent: changePercent,
           };
-        });
+        }));
 
         setWebhooks(processedData);
         calculateStats(processedData);
