@@ -9,14 +9,14 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 echo -e "${BLUE}📦 Building frontend...${NC}"
-cd /home/distill-webhook-visualizer/frontend
+cd /home/matsu/frontend
 npm run build
 
 echo -e "${BLUE}📋 Copying build to static directory...${NC}"
-cp -r build/* /home/distill-webhook-visualizer/static/
+cp -r build/* /home/matsu/static/
 
 echo -e "${BLUE}📝 Committing changes...${NC}"
-cd /home/distill-webhook-visualizer
+cd /home/matsu
 git add -A
 
 # Check if there are changes to commit
