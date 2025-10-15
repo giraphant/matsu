@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { MoreVertical, Edit, Trash2, ArrowUpRight, ArrowDownRight, Minus } from 'lucide-react';
+import { MoreVertical, Edit, Trash2, ArrowUpRight, ArrowDownRight, Minus, Bell } from 'lucide-react';
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -29,10 +29,11 @@ interface MonitorCardProps {
   monitor: Monitor;
   onEdit?: (monitor: Monitor) => void;
   onDelete?: (id: string) => void;
+  onSetAlert?: (monitor: Monitor) => void;
   showChart?: boolean;
 }
 
-export function MonitorCard({ monitor, onEdit, onDelete, showChart = true }: MonitorCardProps) {
+export function MonitorCard({ monitor, onEdit, onDelete, onSetAlert, showChart = true }: MonitorCardProps) {
   const [chartData, setChartData] = useState<any[]>([]);
   const [changePercent, setChangePercent] = useState<number>(0);
 
@@ -180,11 +181,17 @@ export function MonitorCard({ monitor, onEdit, onDelete, showChart = true }: Mon
               <MoreVertical className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="min-w-[120px]">
+          <DropdownMenuContent align="end" className="min-w-[140px]">
             {onEdit && (
               <DropdownMenuItem onClick={() => onEdit(monitor)}>
                 <Edit className="mr-2 h-3 w-3" />
                 <span className="text-xs">Edit</span>
+              </DropdownMenuItem>
+            )}
+            {onSetAlert && (
+              <DropdownMenuItem onClick={() => onSetAlert(monitor)}>
+                <Bell className="mr-2 h-3 w-3" />
+                <span className="text-xs">Set Alert</span>
               </DropdownMenuItem>
             )}
             {onDelete && (

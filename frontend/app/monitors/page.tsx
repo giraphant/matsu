@@ -49,11 +49,13 @@ interface Monitor {
 function SortableMonitorCard({
   monitor,
   onEdit,
-  onDelete
+  onDelete,
+  onSetAlert
 }: {
   monitor: Monitor;
   onEdit: (monitor: Monitor) => void;
   onDelete: (id: string) => void;
+  onSetAlert: (monitor: Monitor) => void;
 }) {
   const {
     attributes,
@@ -79,6 +81,7 @@ function SortableMonitorCard({
           monitor={monitor}
           onEdit={onEdit}
           onDelete={onDelete}
+          onSetAlert={onSetAlert}
           showChart={true}
         />
       </div>
@@ -91,6 +94,15 @@ export default function MonitorsPage() {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingMonitor, setEditingMonitor] = useState<Monitor | null>(null);
+
+  // Alert dialog states
+  const [alertDialogOpen, setAlertDialogOpen] = useState(false);
+  const [alertMonitor, setAlertMonitor] = useState<Monitor | null>(null);
+  const [alertFormData, setAlertFormData] = useState({
+    upper_threshold: '',
+    lower_threshold: '',
+    alert_level: 'medium'
+  });
 
   // Form states
   const [formData, setFormData] = useState({
@@ -243,6 +255,95 @@ export default function MonitorsPage() {
       decimal_places: 2
     });
     setEditingMonitor(null);
+  };
+
+  // Handle set alert
+  const handleSetAlert = async (monitor: Monitor) => {
+    setAlertMonitor(monitor);
+
+    // Fetch existing alert config
+    try {
+      const response = await fetch(getApiUrl(`/api/alerts/config/${monitor.id}`));
+      if (response.ok) {
+        const config = await response.json();
+        if (config) {
+          setAlertFormData({
+            upper_threshold: config.upper_threshold?.toString() || '',
+            lower_threshold: config.lower_threshold?.toString() || '',
+            alert_level: config.alert_level || 'medium'
+          });
+        } else {
+          resetAlertForm();
+        }
+      } else {
+        resetAlertForm();
+      }
+    } catch (error) {
+      console.error('Error fetching alert config:', error);
+      resetAlertForm();
+    }
+
+    setAlertDialogOpen(true);
+  };
+
+  // Handle alert submit
+  const handleAlertSubmit = async () => {
+    if (!alertMonitor) return;
+
+    try {
+      const payload = {
+        monitor_id: alertMonitor.id,
+        upper_threshold: alertFormData.upper_threshold ? parseFloat(alertFormData.upper_threshold) : null,
+        lower_threshold: alertFormData.lower_threshold ? parseFloat(alertFormData.lower_threshold) : null,
+        alert_level: alertFormData.alert_level
+      };
+
+      const response = await fetch(getApiUrl('/api/alerts/config'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) throw new Error('Failed to save alert config');
+
+      toast.success('Alert configuration saved');
+      setAlertDialogOpen(false);
+      resetAlertForm();
+    } catch (error) {
+      console.error('Error saving alert config:', error);
+      toast.error('Failed to save alert configuration');
+    }
+  };
+
+  // Handle delete alert
+  const handleDeleteAlert = async () => {
+    if (!alertMonitor) return;
+    if (!confirm('Are you sure you want to delete this alert configuration?')) return;
+
+    try {
+      const response = await fetch(getApiUrl(`/api/alerts/config/${alertMonitor.id}`), {
+        method: 'DELETE'
+      });
+
+      if (!response.ok) throw new Error('Failed to delete alert config');
+
+      toast.success('Alert configuration deleted');
+      setAlertDialogOpen(false);
+      resetAlertForm();
+    } catch (error) {
+      console.error('Error deleting alert config:', error);
+      toast.error('Failed to delete alert configuration');
+    }
+  };
+
+  // Reset alert form
+  const resetAlertForm = () => {
+    setAlertFormData({
+      upper_threshold: '',
+      lower_threshold: '',
+      alert_level: 'medium'
+    });
+    setAlertMonitor(null);
   };
 
   if (loading) {
@@ -407,12 +508,83 @@ export default function MonitorsPage() {
                   monitor={monitor}
                   onEdit={handleEdit}
                   onDelete={handleDelete}
+                  onSetAlert={handleSetAlert}
                 />
               ))}
             </div>
           </SortableContext>
         </DndContext>
       )}
+
+      {/* Alert Configuration Dialog */}
+      <Dialog open={alertDialogOpen} onOpenChange={setAlertDialogOpen}>
+        <DialogContent className="sm:max-w-[450px]">
+          <DialogHeader>
+            <DialogTitle>Alert Configuration</DialogTitle>
+            <DialogDescription>
+              Set alert thresholds for {alertMonitor?.name}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="upper_threshold">Upper Threshold (optional)</Label>
+              <Input
+                id="upper_threshold"
+                type="number"
+                step="any"
+                placeholder="Alert when value exceeds..."
+                value={alertFormData.upper_threshold}
+                onChange={(e) => setAlertFormData({ ...alertFormData, upper_threshold: e.target.value })}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="lower_threshold">Lower Threshold (optional)</Label>
+              <Input
+                id="lower_threshold"
+                type="number"
+                step="any"
+                placeholder="Alert when value falls below..."
+                value={alertFormData.lower_threshold}
+                onChange={(e) => setAlertFormData({ ...alertFormData, lower_threshold: e.target.value })}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="alert_level">Alert Level</Label>
+              <Select
+                value={alertFormData.alert_level}
+                onValueChange={(value) =>
+                  setAlertFormData({ ...alertFormData, alert_level: value })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="low">Low</SelectItem>
+                  <SelectItem value="medium">Medium</SelectItem>
+                  <SelectItem value="high">High</SelectItem>
+                  <SelectItem value="critical">Critical</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={handleDeleteAlert}
+            >
+              Delete Alert
+            </Button>
+            <Button type="button" variant="outline" onClick={() => setAlertDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" onClick={handleAlertSubmit}>
+              Save Alert
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Floating refresh button */}
       <Button
