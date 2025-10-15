@@ -5,8 +5,9 @@ import ConstantCardModal from './ConstantCardModal';
 import { Loading, EmptyState } from './components/common';
 import { LoginForm } from './components/auth';
 import { Header, ViewMode } from './components/layout';
-import { OverviewView, DetailView } from './views';
+import { OverviewView, DetailView, Bento2View } from './views';
 import MonitorsView from './views/MonitorsView';
+import { alertRuleApi } from './api/newMonitors';
 import {
   useAuth,
   useTheme,
@@ -17,7 +18,9 @@ import {
   useChartData,
   usePushover,
   useConstants,
-  useMonitorMetadata
+  useMonitorMetadata,
+  useBentoCards,
+  useBentoLayout
 } from './hooks';
 import { ALERT_LEVELS } from './constants/alerts';
 import './App.css';
@@ -95,6 +98,41 @@ function App() {
     openConstantModal,
     closeConstantModal
   } = useConstants(loadMonitors, updateMonitorOptimistic, addMonitorOptimistic);
+
+  // Bento2 (New Monitor System Bento)
+  const {
+    displayedCards,
+    availableMonitors: availableBentoMonitors,
+    allMonitors: allBentoMonitors,
+    alertRules,
+    addCard,
+    removeCard,
+    getAlertRuleForMonitor
+  } = useBentoCards();
+
+  const {
+    gridLayout: bentoGridLayout,
+    computedLayout: bentoComputedLayout,
+    onLayoutChange: onBentoLayoutChange
+  } = useBentoLayout(displayedCards);
+
+  // Handle save alert rule
+  const handleSaveAlertRule = async (data: any) => {
+    if (data.id) {
+      // Update existing
+      await alertRuleApi.update(data.id, data);
+    } else {
+      // Create new
+      await alertRuleApi.create(data);
+    }
+    // Reload to refresh alertRules
+    window.location.reload(); // Simple reload for now
+  };
+
+  const handleDeleteAlertRule = async (ruleId: string) => {
+    await alertRuleApi.delete(ruleId);
+    window.location.reload(); // Simple reload for now
+  };
 
   // UI State
   const [viewMode, setViewMode] = useState<ViewMode>('overview');
@@ -275,6 +313,22 @@ function App() {
         <DexRates />
       ) : viewMode === 'monitors' ? (
         <MonitorsView />
+      ) : viewMode === 'bento2' ? (
+        <Bento2View
+          displayedCards={displayedCards}
+          availableMonitors={availableBentoMonitors}
+          allMonitors={allBentoMonitors}
+          alertRules={alertRules}
+          computedLayout={bentoComputedLayout}
+          isMobile={isMobile}
+          onLayoutChange={(layout) => onBentoLayoutChange(layout, isMobile)}
+          onRemoveCard={removeCard}
+          onAddCard={addCard}
+          onSaveAlertRule={handleSaveAlertRule}
+          onDeleteAlertRule={handleDeleteAlertRule}
+          getAlertRuleForMonitor={getAlertRuleForMonitor}
+          gridLayout={bentoGridLayout}
+        />
       ) : (
         <DetailView
           monitors={monitors}

@@ -13,3 +13,5 @@ export * from './useChartData';
 export * from './usePushover';
 export * from './useConstants';
 export * from './useMonitorMetadata';
+export * from './useBentoCards';
+export * from './useBentoLayout';

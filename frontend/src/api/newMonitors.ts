@@ -41,7 +41,7 @@ export interface AlertRule {
   id: string;
   name: string;
   condition: string;
-  level: 'high' | 'medium' | 'low';
+  level: 'critical' | 'high' | 'medium' | 'low';
   enabled: boolean;
   cooldown_seconds: number;
   actions: string[];
@@ -52,7 +52,7 @@ export interface AlertRule {
 export interface AlertRuleCreate {
   name: string;
   condition: string;
-  level?: 'high' | 'medium' | 'low';
+  level?: 'critical' | 'high' | 'medium' | 'low';
   cooldown_seconds?: number;
   actions?: string[];
 }
@@ -60,7 +60,7 @@ export interface AlertRuleCreate {
 export interface AlertRuleUpdate {
   name?: string;
   condition?: string;
-  level?: 'high' | 'medium' | 'low';
+  level?: 'critical' | 'high' | 'medium' | 'low';
   enabled?: boolean;
   cooldown_seconds?: number;
   actions?: string[];

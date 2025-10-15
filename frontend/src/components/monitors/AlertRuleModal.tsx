@@ -22,7 +22,7 @@ export default function AlertRuleModal({
 }: AlertRuleModalProps) {
   const [name, setName] = useState('');
   const [condition, setCondition] = useState('');
-  const [level, setLevel] = useState<'high' | 'medium' | 'low'>('medium');
+  const [level, setLevel] = useState<'critical' | 'high' | 'medium' | 'low'>('medium');
   const [cooldownSeconds, setCooldownSeconds] = useState(300);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -146,9 +146,10 @@ export default function AlertRuleModal({
                 onChange={(e) => setLevel(e.target.value as any)}
                 className="form-input"
               >
-                <option value="low">Low</option>
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
+                <option value="critical">Critical (30s)</option>
+                <option value="high">High (2min)</option>
+                <option value="medium">Medium (5min)</option>
+                <option value="low">Low (15min)</option>
               </select>
             </div>
             <div className="form-group">
