@@ -86,12 +86,12 @@ export function MonitorCard({ monitor, onEdit, onDelete, showChart = true }: Mon
   };
 
   return (
-    <Card className="relative overflow-hidden border border-transparent dark:border-border/50">
+    <Card className="relative overflow-hidden border border-transparent dark:border-border/50 p-0 gap-0">
       <section className="flex flex-col flex-nowrap">
         {/* Header Section */}
-        <div className="flex flex-col justify-between gap-y-2 px-4 pt-4 pb-2">
+        <div className="flex flex-col justify-between gap-y-2 px-4 pt-4">
           <div className="flex flex-col gap-y-2">
-            <div className="flex flex-col gap-y-0.5">
+            <div className="flex flex-col gap-y-0">
               <dt className="text-sm font-medium text-muted-foreground/80 truncate">
                 {monitor.name}
               </dt>
@@ -118,13 +118,14 @@ export function MonitorCard({ monitor, onEdit, onDelete, showChart = true }: Mon
           </div>
         </div>
 
-        {/* Chart Section */}
+        {/* Chart Section - no padding, tight to bottom */}
         {showChart && chartData.length > 0 && (
-          <div className="min-h-24 w-full">
+          <div className="min-h-24 w-full -mb-1">
             <ResponsiveContainer width="100%" height={96}>
               <AreaChart
                 data={chartData}
                 className="translate-y-1 scale-105"
+                accessibilityLayer
               >
                 <defs>
                   <linearGradient id={`gradient-${monitor.id}`} x1="0" y1="0" x2="0" y2="1">
@@ -142,13 +143,12 @@ export function MonitorCard({ monitor, onEdit, onDelete, showChart = true }: Mon
                 </defs>
                 <YAxis
                   domain={[
-                    Math.min(...chartData.map((d) => d.value)) * 0.95,
+                    Math.min(...chartData.map((d) => d.value)),
                     'auto'
                   ]}
                   hide
                 />
                 <Area
-                  type="monotone"
                   dataKey="value"
                   stroke={monitor.color || 'hsl(var(--primary))'}
                   strokeWidth={2}
@@ -162,7 +162,7 @@ export function MonitorCard({ monitor, onEdit, onDelete, showChart = true }: Mon
 
         {/* Empty state for no chart data */}
         {showChart && chartData.length === 0 && (
-          <div className="min-h-24 w-full flex items-center justify-center text-xs text-muted-foreground">
+          <div className="min-h-20 w-full flex items-center justify-center text-xs text-muted-foreground">
             No data available
           </div>
         )}
