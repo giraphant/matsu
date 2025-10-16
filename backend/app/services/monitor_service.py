@@ -102,9 +102,9 @@ class MonitorService:
         """Get monitor by ID."""
         return self.repo.get_by_id(monitor_id)
 
-    def get_all_monitors(self) -> List[Monitor]:
-        """Get all enabled monitors."""
-        return self.repo.get_all(enabled_only=True)
+    def get_all_monitors(self, enabled_only: bool = False) -> List[Monitor]:
+        """Get all monitors, optionally filtered by enabled status."""
+        return self.repo.get_all(enabled_only=enabled_only)
 
     def get_monitor_with_value(self, monitor_id: str) -> Optional[Dict[str, Any]]:
         """
@@ -148,8 +148,9 @@ class MonitorService:
         return result
 
     def recompute_all(self):
-        """Recompute all monitor values."""
-        monitors = self.get_all_monitors()
+        """Recompute all enabled monitor values."""
+        # Only recompute enabled monitors
+        monitors = self.get_all_monitors(enabled_only=True)
         recomputed = []
 
         for monitor in monitors:

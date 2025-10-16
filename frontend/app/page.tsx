@@ -287,10 +287,10 @@ export default function OverviewPage() {
               </div>
             ) : (
               <div className="space-y-3">
-                {monitors.slice(0, 5).map((monitor) => (
+                {monitors.filter(m => m.enabled).slice(0, 5).map((monitor) => (
                   <div key={monitor.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors">
                     <div className="flex items-center gap-3">
-                      <div className={`w-2 h-2 rounded-full ${monitor.enabled ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`} />
+                      <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
                       <div>
                         <div className="font-medium">{monitor.name}</div>
                         {monitor.description && (

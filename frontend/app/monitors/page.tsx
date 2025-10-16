@@ -156,22 +156,25 @@ export default function MonitorsPage() {
       if (!response.ok) throw new Error('Failed to fetch monitors');
       const data = await response.json();
 
+      // Filter to only enabled monitors for the monitor card view
+      const enabledMonitors = data.filter((m: Monitor) => m.enabled);
+
       // Apply saved order from localStorage
       const savedOrder = localStorage.getItem('monitor-order');
       if (savedOrder) {
         try {
           const orderMap = JSON.parse(savedOrder);
-          const ordered = data.sort((a: Monitor, b: Monitor) => {
+          const ordered = enabledMonitors.sort((a: Monitor, b: Monitor) => {
             const indexA = orderMap[a.id] ?? 999;
             const indexB = orderMap[b.id] ?? 999;
             return indexA - indexB;
           });
           setMonitors(ordered);
         } catch {
-          setMonitors(data);
+          setMonitors(enabledMonitors);
         }
       } else {
-        setMonitors(data);
+        setMonitors(enabledMonitors);
       }
     } catch (error) {
       console.error('Error fetching monitors:', error);
