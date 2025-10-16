@@ -452,22 +452,12 @@ export default function MonitorsPage() {
     console.log('Form data:', alertFormData);
 
     try {
-      // First, fetch existing alert rules to preserve cooldown_seconds
+      // First, delete existing alert rules for this monitor
       console.log('Fetching existing rules...');
       const existingRulesResponse = await fetch(getApiUrl(`/api/alert-rules/by-monitor/${alertMonitor.id}`));
-      let existingCooldown = 300; // Default 5 minutes
-
       if (existingRulesResponse.ok) {
         const existingRules = await existingRulesResponse.json();
         console.log('Existing rules to delete:', existingRules);
-
-        // Preserve cooldown_seconds from the first existing rule
-        if (existingRules && existingRules.length > 0) {
-          existingCooldown = existingRules[0].cooldown_seconds || 300;
-          console.log('Preserving cooldown_seconds:', existingCooldown);
-        }
-
-        // Delete existing rules
         for (const rule of existingRules) {
           console.log('Deleting rule:', rule.id);
           await fetch(getApiUrl(`/api/alert-rules/${rule.id}`), { method: 'DELETE' });
@@ -493,12 +483,21 @@ export default function MonitorsPage() {
 
       const condition = conditions.join(' or ');
 
-      // Create new alert rule (preserve cooldown from existing rule)
+      // Calculate cooldown_seconds based on alert level
+      const levelCooldowns: Record<string, number> = {
+        'critical': 30,   // 30 seconds
+        'high': 120,      // 2 minutes
+        'medium': 300,    // 5 minutes
+        'low': 900        // 15 minutes
+      };
+      const cooldown_seconds = levelCooldowns[alertFormData.alert_level] || 300;
+
+      // Create new alert rule with level-appropriate cooldown
       const payload = {
         name: alertMonitor.name,
         condition: condition,
         level: alertFormData.alert_level,
-        cooldown_seconds: existingCooldown,
+        cooldown_seconds: cooldown_seconds,
         actions: ['pushover']
       };
 
