@@ -58,8 +58,9 @@ class FormulaEngine:
             var_id = match.group(2)
             dep_id = f"{var_type}:{var_id}"
             dependencies.add(dep_id)
-            # Replace with Python variable name
-            return f"_v_{var_type}_{var_id.replace('-', '_').replace('.', '_')}"
+            # Replace with Python variable name (sanitize special characters)
+            safe_id = var_id.replace('-', '_').replace('.', '_').replace('/', '_')
+            return f"_v_{var_type}_{safe_id}"
 
         parsed = self.VAR_PATTERN.sub(replace_var, formula)
         return parsed, dependencies
@@ -78,7 +79,9 @@ class FormulaEngine:
 
         for dep in dependencies:
             dep_type, dep_id = dep.split(':', 1)
-            var_name = f"_v_{dep_type}_{dep_id.replace('-', '_').replace('.', '_')}"
+            # Sanitize special characters for variable name
+            safe_id = dep_id.replace('-', '_').replace('.', '_').replace('/', '_')
+            var_name = f"_v_{dep_type}_{safe_id}"
 
             if dep_type == 'monitor':
                 # Get value from another monitor
