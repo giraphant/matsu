@@ -452,12 +452,22 @@ export default function MonitorsPage() {
     console.log('Form data:', alertFormData);
 
     try {
-      // First, delete existing alert rules for this monitor
+      // First, fetch existing alert rules to preserve cooldown_seconds
       console.log('Fetching existing rules...');
       const existingRulesResponse = await fetch(getApiUrl(`/api/alert-rules/by-monitor/${alertMonitor.id}`));
+      let existingCooldown = 300; // Default 5 minutes
+
       if (existingRulesResponse.ok) {
         const existingRules = await existingRulesResponse.json();
         console.log('Existing rules to delete:', existingRules);
+
+        // Preserve cooldown_seconds from the first existing rule
+        if (existingRules && existingRules.length > 0) {
+          existingCooldown = existingRules[0].cooldown_seconds || 300;
+          console.log('Preserving cooldown_seconds:', existingCooldown);
+        }
+
+        // Delete existing rules
         for (const rule of existingRules) {
           console.log('Deleting rule:', rule.id);
           await fetch(getApiUrl(`/api/alert-rules/${rule.id}`), { method: 'DELETE' });
@@ -483,12 +493,12 @@ export default function MonitorsPage() {
 
       const condition = conditions.join(' or ');
 
-      // Create new alert rule
+      // Create new alert rule (preserve cooldown from existing rule)
       const payload = {
         name: alertMonitor.name,
         condition: condition,
         level: alertFormData.alert_level,
-        cooldown_seconds: 300,
+        cooldown_seconds: existingCooldown,
         actions: ['pushover']
       };
 
