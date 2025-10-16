@@ -54,7 +54,7 @@ interface HistoricalData {
 export function ChartDialog({ open, onOpenChange, webhook }: ChartDialogProps) {
   const [historicalData, setHistoricalData] = useState<HistoricalData[]>([])
   const [loading, setLoading] = useState(false)
-  const [timeRange, setTimeRange] = useState<number>(100) // Number of records to fetch
+  const [timeRange, setTimeRange] = useState<number>(24) // Hours of history to fetch
 
   useEffect(() => {
     if (webhook && open) {
@@ -62,10 +62,10 @@ export function ChartDialog({ open, onOpenChange, webhook }: ChartDialogProps) {
     }
   }, [webhook, open, timeRange])
 
-  const fetchHistoricalData = async (uid: string, limit: number) => {
+  const fetchHistoricalData = async (uid: string, hours: number) => {
     setLoading(true)
     try {
-      const response = await fetch(`/api/webhooks/${uid}/history?limit=${limit}`)
+      const response = await fetch(`/api/webhooks/${uid}/history?hours=${hours}`)
       if (response.ok) {
         const data = await response.json()
         setHistoricalData(data)
@@ -159,44 +159,47 @@ export function ChartDialog({ open, onOpenChange, webhook }: ChartDialogProps) {
                   <div>
                     <CardTitle>Price History</CardTitle>
                     <CardDescription>
-                      Showing the last {historicalData.length} data points
+                      {timeRange < 24
+                        ? `Last ${timeRange} hour${timeRange > 1 ? 's' : ''}`
+                        : `Last ${timeRange / 24} day${timeRange / 24 > 1 ? 's' : ''}`}
+                      {' '}({historicalData.length} data points)
                     </CardDescription>
                   </div>
                   <div className="flex gap-2">
                     <Button
-                      variant={timeRange === 50 ? "default" : "outline"}
+                      variant={timeRange === 1 ? "default" : "outline"}
                       size="sm"
-                      onClick={() => setTimeRange(50)}
+                      onClick={() => setTimeRange(1)}
                     >
-                      50
+                      1H
                     </Button>
                     <Button
-                      variant={timeRange === 100 ? "default" : "outline"}
+                      variant={timeRange === 6 ? "default" : "outline"}
                       size="sm"
-                      onClick={() => setTimeRange(100)}
+                      onClick={() => setTimeRange(6)}
                     >
-                      100
+                      6H
                     </Button>
                     <Button
-                      variant={timeRange === 200 ? "default" : "outline"}
+                      variant={timeRange === 24 ? "default" : "outline"}
                       size="sm"
-                      onClick={() => setTimeRange(200)}
+                      onClick={() => setTimeRange(24)}
                     >
-                      200
+                      24H
                     </Button>
                     <Button
-                      variant={timeRange === 500 ? "default" : "outline"}
+                      variant={timeRange === 72 ? "default" : "outline"}
                       size="sm"
-                      onClick={() => setTimeRange(500)}
+                      onClick={() => setTimeRange(72)}
                     >
-                      500
+                      3D
                     </Button>
                     <Button
-                      variant={timeRange === 1000 ? "default" : "outline"}
+                      variant={timeRange === 168 ? "default" : "outline"}
                       size="sm"
-                      onClick={() => setTimeRange(1000)}
+                      onClick={() => setTimeRange(168)}
                     >
-                      1000
+                      7D
                     </Button>
                   </div>
                 </div>

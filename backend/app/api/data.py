@@ -615,22 +615,31 @@ async def delete_constant(monitor_id: str):
 @router.get("/webhooks/{monitor_id}/history")
 async def get_webhook_history(
     monitor_id: str,
-    limit: int = Query(50, description="Number of records to return", ge=1, le=1000)
+    hours: int = Query(24, description="Number of hours of history to return", ge=1, le=168)
 ) -> list[Dict[str, Any]]:
     """
     Get historical webhook data for a specific monitor.
-    Returns records in descending order (newest first).
+    Returns records within the specified time range, in descending order (newest first).
     """
     db = get_db_session()
 
     try:
         webhook_repo = WebhookRepository(db)
-        records = webhook_repo.get_by_monitor_id(
+
+        # Calculate time range
+        end_time = datetime.utcnow()
+        start_time = end_time - timedelta(hours=hours)
+
+        # Get records in time range
+        records = webhook_repo.get_by_date_range(
+            start_date=start_time,
+            end_date=end_time,
             monitor_id=monitor_id,
-            limit=limit,
-            order_by="timestamp",
-            order_dir="desc"
+            limit=10000  # Large limit to get all records in time range
         )
+
+        # Sort by timestamp descending (newest first)
+        records.sort(key=lambda x: x.timestamp, reverse=True)
 
         # Format records for frontend
         history = []
