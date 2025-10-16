@@ -227,6 +227,7 @@ class FormulaEngine:
     def compute_monitor_value(self, monitor_id: str) -> Optional[float]:
         """
         Compute and cache value for a monitor.
+        Only creates new record if value has changed.
 
         Args:
             monitor_id: Monitor ID
@@ -242,8 +243,26 @@ class FormulaEngine:
         value = self.evaluate(monitor.formula)
         dependencies = self.get_dependencies(monitor.formula)
 
-        # Cache the computed value
-        if value is not None:
+        # Only cache if value is not None
+        if value is None:
+            return None
+
+        # Get latest cached value
+        latest = self.db.query(MonitorValue).filter(
+            MonitorValue.monitor_id == monitor_id
+        ).order_by(MonitorValue.computed_at.desc()).first()
+
+        # Only create new record if value changed (or no previous value)
+        should_update = False
+        if latest is None:
+            should_update = True
+        else:
+            # Compare with some tolerance for floating point precision
+            value_changed = abs(value - latest.value) > 1e-10
+            if value_changed:
+                should_update = True
+
+        if should_update:
             cached = MonitorValue(
                 monitor_id=monitor_id,
                 value=value,
@@ -252,6 +271,9 @@ class FormulaEngine:
             )
             self.db.add(cached)
             self.db.commit()
+            logger.debug(f"Updated monitor {monitor_id}: {latest.value if latest else 'None'} -> {value}")
+        else:
+            logger.debug(f"Monitor {monitor_id} value unchanged: {value}")
 
         return value
 
