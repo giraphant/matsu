@@ -221,26 +221,58 @@ async def recompute_all_monitors(db: Session = Depends(get_db)):
 @router.get("/monitors/{monitor_id}/history")
 async def get_monitor_history(
     monitor_id: str,
-    limit: int = 100,
+    limit: int = 50,
+    hours: int = 24,
     db: Session = Depends(get_db)
 ):
-    """Get historical values for a monitor."""
+    """
+    Get historical values for a monitor with uniform sampling.
+
+    Args:
+        monitor_id: Monitor ID
+        limit: Maximum number of data points to return (default: 50)
+        hours: Time range in hours (default: 24)
+
+    Returns:
+        List of {timestamp, value} uniformly sampled over the time range
+    """
     try:
         from app.models.database import MonitorValue
+        from datetime import timedelta
 
-        # Get historical values
+        # Calculate time range
+        end_time = datetime.utcnow()
+        start_time = end_time - timedelta(hours=hours)
+
+        # Get all values in time range
         values = db.query(MonitorValue).filter(
-            MonitorValue.monitor_id == monitor_id
-        ).order_by(MonitorValue.computed_at.desc()).limit(limit).all()
+            MonitorValue.monitor_id == monitor_id,
+            MonitorValue.computed_at >= start_time,
+            MonitorValue.computed_at <= end_time
+        ).order_by(MonitorValue.computed_at.asc()).all()
 
-        # Return in chronological order (oldest first for charts)
-        return [
-            {
-                "timestamp": int(v.computed_at.timestamp() * 1000),  # milliseconds
+        # If we have fewer values than limit, return all
+        if len(values) <= limit:
+            return [
+                {
+                    "timestamp": int(v.computed_at.timestamp() * 1000),  # milliseconds
+                    "value": v.value
+                }
+                for v in values
+            ]
+
+        # Uniform sampling: pick evenly distributed points
+        sampled = []
+        step = len(values) / limit
+        for i in range(limit):
+            index = int(i * step)
+            v = values[index]
+            sampled.append({
+                "timestamp": int(v.computed_at.timestamp() * 1000),
                 "value": v.value
-            }
-            for v in reversed(values)
-        ]
+            })
+
+        return sampled
 
     except Exception as e:
         logger.error(f"Error retrieving monitor history: {e}")
