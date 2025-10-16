@@ -93,8 +93,8 @@ class JupiterSpotMonitor(BaseMonitor):
 
                 for symbol, lst_address in self.lst_tokens.items():
                     try:
-                        # Get quote for LST -> SOL swap
-                        quote_url = "https://quote-api.jup.ag/v6/quote"
+                        # Get quote for LST -> SOL swap using Lite tier (free)
+                        quote_url = "https://lite-api.jup.ag/swap/v1/quote"
                         params = {
                             'inputMint': lst_address,
                             'outputMint': self.sol_address,
