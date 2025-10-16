@@ -1,37 +1,43 @@
 version: '3.8'
 
 services:
-  app:
+  backend:
     build:
       context: .
-      dockerfile: Dockerfile
-    environment:
-      # These will be overridden by Coolify's environment variables
-      - HOST=${HOST:-0.0.0.0}
-      - PORT=${PORT:-9988}
-      - DATABASE_URL=sqlite:///./data/monitoring.db
-      - LOG_LEVEL=${LOG_LEVEL:-info}
-      - DOMAIN=${DOMAIN:-localhost}
-      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:9988}
-      - RAMU_PASSWORD=${RAMU_PASSWORD:-changeme}
-      - LIGIGY_PASSWORD=${LIGIGY_PASSWORD:-changeme}
-      - QUASI_PASSWORD=${QUASI_PASSWORD:-changeme}
+      dockerfile: Dockerfile.backend
+    ports:
+      - "9988:9988"
     volumes:
-      - /home/matsu/data:/app/data
-      - /home/matsu/logs:/app/logs
-    # Coolify manages port mapping through its reverse proxy
-    # ports:
-    #   - "9988:9988"
-    expose:
-      - "9988"
-    restart: unless-stopped
+      - ./data:/app/data
+      - ./logs:/app/logs
+    environment:
+      - HOST=0.0.0.0
+      - PORT=9988
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9988/health"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 40s
+      start_period: 5s
+    restart: unless-stopped
 
-volumes:
-  data:
-  logs:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    ports:
+      - "13145:13145"
+    environment:
+      - PORT=13145
+      - HOSTNAME=0.0.0.0
+      - NODE_ENV=production
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:13145/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
