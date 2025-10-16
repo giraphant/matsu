@@ -11,6 +11,12 @@ import { Badge } from "@/components/ui/badge";
 import { RefreshCw, TrendingUp, TrendingDown, Activity, Database } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { toast } from "sonner";
 
 export default function ChartsPage() {
   const [webhooks, setWebhooks] = useState<WebhookData[]>([]);
@@ -21,6 +27,16 @@ export default function ChartsPage() {
   const [selectedWebhook, setSelectedWebhook] = useState<WebhookData | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("webhooks");
+
+  // Alert Rule Edit Dialog
+  const [alertEditDialogOpen, setAlertEditDialogOpen] = useState(false);
+  const [editingAlert, setEditingAlert] = useState<AlertRuleData | null>(null);
+  const [alertFormData, setAlertFormData] = useState({
+    name: '',
+    condition: '',
+    level: 'medium',
+    cooldown_seconds: 300,
+  });
 
   // Statistics
   const [stats, setStats] = useState({
@@ -245,8 +261,37 @@ export default function ChartsPage() {
   };
 
   const handleAlertRuleEdit = (rule: AlertRuleData) => {
-    // TODO: Implement edit dialog
-    console.log('Edit alert rule:', rule);
+    setEditingAlert(rule);
+    setAlertFormData({
+      name: rule.name,
+      condition: rule.condition,
+      level: rule.level,
+      cooldown_seconds: rule.cooldown_seconds,
+    });
+    setAlertEditDialogOpen(true);
+  };
+
+  const handleAlertRuleSave = async () => {
+    if (!editingAlert) return;
+
+    try {
+      const response = await fetch(`/api/alert-rules/${editingAlert.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(alertFormData),
+      });
+
+      if (response.ok) {
+        toast.success('Alert rule updated successfully');
+        setAlertEditDialogOpen(false);
+        fetchAlertRules();
+      } else {
+        throw new Error('Failed to update alert rule');
+      }
+    } catch (error) {
+      console.error('Failed to save alert rule:', error);
+      toast.error('Failed to save alert rule');
+    }
   };
 
   const handleAlertRuleDelete = async (ruleId: string) => {
@@ -448,6 +493,80 @@ export default function ChartsPage() {
         onOpenChange={setDialogOpen}
         webhook={selectedWebhook}
       />
+
+      {/* Alert Rule Edit Dialog */}
+      <Dialog open={alertEditDialogOpen} onOpenChange={setAlertEditDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Edit Alert Rule</DialogTitle>
+            <DialogDescription>
+              Modify the alert rule configuration
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="alert-name">Name</Label>
+              <Input
+                id="alert-name"
+                value={alertFormData.name}
+                onChange={(e) => setAlertFormData({ ...alertFormData, name: e.target.value })}
+                placeholder="Alert rule name"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="alert-condition">Condition</Label>
+              <Textarea
+                id="alert-condition"
+                value={alertFormData.condition}
+                onChange={(e) => setAlertFormData({ ...alertFormData, condition: e.target.value })}
+                placeholder="e.g., ${monitor:id} > 100"
+                className="font-mono text-sm"
+                rows={3}
+              />
+              <p className="text-xs text-muted-foreground">
+                Use $&#123;monitor:id&#125; or $&#123;webhook:id&#125; in conditions
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="alert-level">Level</Label>
+                <Select
+                  value={alertFormData.level}
+                  onValueChange={(value) => setAlertFormData({ ...alertFormData, level: value })}
+                >
+                  <SelectTrigger id="alert-level">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="low">Low</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="high">High</SelectItem>
+                    <SelectItem value="critical">Critical</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="alert-cooldown">Cooldown (seconds)</Label>
+                <Input
+                  id="alert-cooldown"
+                  type="number"
+                  value={alertFormData.cooldown_seconds}
+                  onChange={(e) => setAlertFormData({ ...alertFormData, cooldown_seconds: parseInt(e.target.value) || 300 })}
+                  min={0}
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAlertEditDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleAlertRuleSave}>
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
