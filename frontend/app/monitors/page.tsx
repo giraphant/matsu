@@ -442,28 +442,41 @@ export default function MonitorsPage() {
 
   // Handle alert submit
   const handleAlertSubmit = async () => {
-    if (!alertMonitor) return;
+    if (!alertMonitor) {
+      console.error('No alertMonitor set');
+      toast.error('Monitor not selected');
+      return;
+    }
+
+    console.log('Starting alert submission for monitor:', alertMonitor.id);
+    console.log('Form data:', alertFormData);
 
     try {
       // First, delete existing alert rules for this monitor
+      console.log('Fetching existing rules...');
       const existingRulesResponse = await fetch(getApiUrl(`/api/alert-rules/by-monitor/${alertMonitor.id}`));
       if (existingRulesResponse.ok) {
         const existingRules = await existingRulesResponse.json();
+        console.log('Existing rules to delete:', existingRules);
         for (const rule of existingRules) {
+          console.log('Deleting rule:', rule.id);
           await fetch(getApiUrl(`/api/alert-rules/${rule.id}`), { method: 'DELETE' });
         }
       }
 
       // Build condition formula from thresholds
       const conditions = [];
-      if (alertFormData.upper_threshold) {
+      if (alertFormData.upper_threshold && alertFormData.upper_threshold.trim() !== '') {
         conditions.push(`\${monitor:${alertMonitor.id}} > ${alertFormData.upper_threshold}`);
       }
-      if (alertFormData.lower_threshold) {
+      if (alertFormData.lower_threshold && alertFormData.lower_threshold.trim() !== '') {
         conditions.push(`\${monitor:${alertMonitor.id}} < ${alertFormData.lower_threshold}`);
       }
 
+      console.log('Conditions array:', conditions);
+
       if (conditions.length === 0) {
+        console.error('No thresholds provided');
         toast.error('Please set at least one threshold');
         return;
       }
@@ -479,7 +492,7 @@ export default function MonitorsPage() {
         actions: ['pushover']
       };
 
-      console.log('Creating alert rule:', payload);
+      console.log('Creating alert rule with payload:', JSON.stringify(payload, null, 2));
 
       const response = await fetch(getApiUrl('/api/alert-rules'), {
         method: 'POST',
@@ -488,10 +501,12 @@ export default function MonitorsPage() {
       });
 
       console.log('Save response status:', response.status);
+      console.log('Save response ok:', response.ok);
 
       if (!response.ok) {
         const errorText = await response.text();
         console.error('Save error response:', errorText);
+        toast.error(`Failed to save: ${errorText}`);
         throw new Error('Failed to save alert rule');
       }
 
@@ -499,11 +514,12 @@ export default function MonitorsPage() {
       console.log('Saved rule:', savedRule);
 
       toast.success('Alert configuration saved successfully');
+      fetchAlertRules();  // Refresh alert rules list
       setAlertDialogOpen(false);
       resetAlertForm();
     } catch (error) {
       console.error('Error saving alert rule:', error);
-      toast.error('Failed to save alert configuration');
+      toast.error(`Failed to save alert configuration: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
