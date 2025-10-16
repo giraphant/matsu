@@ -209,10 +209,7 @@ export function MonitorCard({ monitor, onEdit, onDelete, onSetAlert, showChart =
                   </linearGradient>
                 </defs>
                 <YAxis
-                  domain={[
-                    (dataMin: number) => Math.min(0, dataMin),
-                    'auto'
-                  ]}
+                  domain={['auto', 'auto']}
                   hide
                 />
                 <Area
