@@ -2,6 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   output: 'export',
+  trailingSlash: true,  // Generate /page/index.html instead of /page.html
   images: {
     unoptimized: true
   },
