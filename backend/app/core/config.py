@@ -31,8 +31,6 @@ class Settings:
 
     # User credentials (for initial setup)
     RAMU_PASSWORD: str = os.getenv("RAMU_PASSWORD", "changeme")
-    LIGIGY_PASSWORD: str = os.getenv("LIGIGY_PASSWORD", "changeme")
-    QUASI_PASSWORD: str = os.getenv("QUASI_PASSWORD", "changeme")
 
     # API URLs
     @property

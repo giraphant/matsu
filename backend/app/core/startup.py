@@ -83,27 +83,20 @@ class StartupManager:
             logger.debug(f"Migration note: {e}")
 
     def _create_initial_users(self) -> None:
-        """Create initial users if no users exist."""
+        """Create initial user if no users exist."""
         db = get_db_session()
         try:
             user_count = db.query(User).count()
             if user_count == 0:
-                initial_users = [
-                    ("ramu", settings.RAMU_PASSWORD),
-                    ("ligigy", settings.LIGIGY_PASSWORD),
-                    ("quasi", settings.QUASI_PASSWORD)
-                ]
-
-                for username, password in initial_users:
-                    user = User(
-                        username=username,
-                        password_hash=User.hash_password(password),
-                        is_active=True
-                    )
-                    db.add(user)
-
+                # Create default admin user
+                user = User(
+                    username="ramu",
+                    password_hash=User.hash_password(settings.RAMU_PASSWORD),
+                    is_active=True
+                )
+                db.add(user)
                 db.commit()
-                logger.info("Created initial users: ramu, ligigy, quasi")
+                logger.info("Created initial user: ramu")
         finally:
             db.close()
 
