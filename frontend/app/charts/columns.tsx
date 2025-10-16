@@ -204,11 +204,6 @@ export const columns: ColumnDef<WebhookData>[] = [
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuItem
-              onClick={() => meta?.onViewChart?.(webhook)}
-            >
-              View Chart
-            </DropdownMenuItem>
-            <DropdownMenuItem
               onClick={() => meta?.onViewDetails?.(webhook)}
             >
               View Details

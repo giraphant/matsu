@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/dialog"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { WebhookData } from './columns'
 
@@ -53,17 +54,18 @@ interface HistoricalData {
 export function ChartDialog({ open, onOpenChange, webhook }: ChartDialogProps) {
   const [historicalData, setHistoricalData] = useState<HistoricalData[]>([])
   const [loading, setLoading] = useState(false)
+  const [timeRange, setTimeRange] = useState<number>(100) // Number of records to fetch
 
   useEffect(() => {
     if (webhook && open) {
-      fetchHistoricalData(webhook.uid)
+      fetchHistoricalData(webhook.uid, timeRange)
     }
-  }, [webhook, open])
+  }, [webhook, open, timeRange])
 
-  const fetchHistoricalData = async (uid: string) => {
+  const fetchHistoricalData = async (uid: string, limit: number) => {
     setLoading(true)
     try {
-      const response = await fetch(`/api/webhooks/${uid}/history?limit=100`)
+      const response = await fetch(`/api/webhooks/${uid}/history?limit=${limit}`)
       if (response.ok) {
         const data = await response.json()
         setHistoricalData(data)
@@ -135,7 +137,7 @@ export function ChartDialog({ open, onOpenChange, webhook }: ChartDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-6xl max-h-[90vh] overflow-auto">
+      <DialogContent className="max-w-[95vw] w-[95vw] max-h-[95vh] overflow-auto">
         <DialogHeader>
           <DialogTitle>{webhook.title}</DialogTitle>
           <DialogDescription>
@@ -153,13 +155,54 @@ export function ChartDialog({ open, onOpenChange, webhook }: ChartDialogProps) {
           <TabsContent value="chart" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>Price History</CardTitle>
-                <CardDescription>
-                  Showing the last {historicalData.length} data points
-                </CardDescription>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Price History</CardTitle>
+                    <CardDescription>
+                      Showing the last {historicalData.length} data points
+                    </CardDescription>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      variant={timeRange === 50 ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setTimeRange(50)}
+                    >
+                      50
+                    </Button>
+                    <Button
+                      variant={timeRange === 100 ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setTimeRange(100)}
+                    >
+                      100
+                    </Button>
+                    <Button
+                      variant={timeRange === 200 ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setTimeRange(200)}
+                    >
+                      200
+                    </Button>
+                    <Button
+                      variant={timeRange === 500 ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setTimeRange(500)}
+                    >
+                      500
+                    </Button>
+                    <Button
+                      variant={timeRange === 1000 ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setTimeRange(1000)}
+                    >
+                      1000
+                    </Button>
+                  </div>
+                </div>
               </CardHeader>
               <CardContent>
-                <div className="h-[400px]">
+                <div className="h-[600px]">
                   {loading ? (
                     <div className="flex items-center justify-center h-full">
                       <p className="text-muted-foreground">Loading chart data...</p>

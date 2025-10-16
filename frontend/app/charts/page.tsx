@@ -189,11 +189,6 @@ export default function ChartsPage() {
     });
   };
 
-  const handleViewChart = (webhook: WebhookData) => {
-    setSelectedWebhook(webhook);
-    setDialogOpen(true);
-  };
-
   const handleViewDetails = (webhook: WebhookData) => {
     setSelectedWebhook(webhook);
     setDialogOpen(true);
@@ -422,8 +417,9 @@ export default function ChartsPage() {
               <DataTable
                 columns={columns}
                 data={webhooks}
-                onViewChart={handleViewChart}
-                onViewDetails={handleViewDetails}
+                meta={{
+                  onViewDetails: handleViewDetails,
+                }}
                 pageSize={15}
               />
             </CardContent>
