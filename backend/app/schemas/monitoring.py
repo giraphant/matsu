@@ -5,7 +5,7 @@ Separated from database models for better organization.
 
 from datetime import datetime
 from typing import Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, field_serializer
 
 
 class DistillWebhookPayload(BaseModel):
@@ -47,6 +47,13 @@ class MonitoringDataResponse(BaseModel):
     class Config:
         from_attributes = True
 
+    @field_serializer('timestamp', 'webhook_received_at')
+    def serialize_dt(self, dt: datetime, _info) -> str:
+        """Serialize datetime as UTC ISO format with Z suffix."""
+        if dt is None:
+            return None
+        return dt.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
+
 
 class MonitorSummary(BaseModel):
     """Summary statistics for a monitor."""
@@ -65,3 +72,11 @@ class MonitorSummary(BaseModel):
     max_value: Optional[float]
     avg_value: Optional[float]
     change_count: int
+
+    @field_serializer('latest_timestamp')
+    def serialize_timestamp(self, dt: datetime, _info) -> str:
+        """Serialize datetime as UTC ISO format with Z suffix."""
+        if dt is None:
+            return None
+        # Ensure datetime is formatted as UTC with Z suffix
+        return dt.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'

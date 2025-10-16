@@ -247,3 +247,43 @@ async def webhook_status() -> Dict[str, Any]:
         }
     finally:
         db.close()
+
+
+@router.get("/webhooks/{monitor_id}/history")
+async def get_webhook_history(
+    monitor_id: str,
+    limit: int = Query(50, description="Number of records to return", ge=1, le=1000)
+) -> list[Dict[str, Any]]:
+    """
+    Get historical webhook data for a specific monitor.
+    Returns records in descending order (newest first).
+    """
+    db = get_db_session()
+
+    try:
+        webhook_repo = WebhookRepository(db)
+        records = webhook_repo.get_by_monitor_id(
+            monitor_id=monitor_id,
+            limit=limit,
+            order_by="timestamp",
+            order_dir="desc"
+        )
+
+        # Format records for frontend
+        history = []
+        for record in records:
+            history.append({
+                "timestamp": record.timestamp.isoformat() if record.timestamp else None,
+                "value": record.value,
+                "unit": record.unit,
+                "status": record.status,
+                "is_change": record.is_change,
+            })
+
+        return history
+
+    except Exception as e:
+        logger.error(f"Error fetching webhook history: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to fetch history: {str(e)}")
+    finally:
+        db.close()
