@@ -15,7 +15,7 @@ logger = get_logger(__name__)
 
 
 # Target symbols to monitor
-TARGET_SYMBOLS = ["BTC", "ETH", "SOL"]
+TARGET_SYMBOLS = ["BTC", "ETH", "SOL", "BONK"]
 
 
 class BybitSpotMonitor(BaseMonitor):
