@@ -2,7 +2,7 @@
 
 ## Initial User Setup
 
-This application comes with three pre-configured user accounts. You need to set their passwords using environment variables.
+This application comes with one pre-configured admin user account. You need to set its password using an environment variable.
 
 ### Step 1: Create .env file
 
@@ -12,29 +12,27 @@ Copy the example environment file:
 cp .env.example .env
 ```
 
-### Step 2: Set passwords
+### Step 2: Set password
 
-Edit the `.env` file and set secure passwords for each user:
+Edit the `.env` file and set a secure password for the admin user:
 
 ```bash
 RAMU_PASSWORD=your_secure_password_here
-LIGIGY_PASSWORD=your_secure_password_here
-QUASI_PASSWORD=your_secure_password_here
 ```
 
-**Important:** 
+**Important:**
 - The `.env` file is already in `.gitignore` and will NOT be committed to git
-- Use strong, unique passwords for each user
+- Use a strong, unique password
 - Keep the `.env` file secure and do not share it
 
-### Step 3: Reset users (if needed)
+### Step 3: Reset user (if needed)
 
-If you need to reset all users and passwords, run:
+If you need to reset the user and password, run:
 
 ```bash
-docker exec matsu_app_1 python -c "
-from app.models.database import SessionLocal, User
-db = SessionLocal()
+docker exec matsu-backend-1 python -c "
+from app.models.database import get_db_session, User
+db = get_db_session()
 db.query(User).delete()
 db.commit()
 print('Deleted all users')
@@ -44,13 +42,9 @@ db.close()
 docker-compose restart
 ```
 
-The users will be recreated with the passwords from your `.env` file.
+The user will be recreated with the password from your `.env` file.
 
-## User Accounts
+## User Account
 
-The application creates three user accounts on first startup:
-- **ramu** - Password from `RAMU_PASSWORD`
-- **ligigy** - Password from `LIGIGY_PASSWORD`
-- **quasi** - Password from `QUASI_PASSWORD`
-
-All users share the same webhook data and configurations.
+The application creates one admin user account on first startup:
+- **ramu** - Password from `RAMU_PASSWORD` environment variable

@@ -23,13 +23,11 @@
 ```bash
 # 基本配置
 DOMAIN=your-domain.com              # 你的域名，例如: distill.example.com
-PORT=9988                           # 内部端口，保持默认即可
+PORT=9988                           # 后端API端口，保持默认即可
 HOST=0.0.0.0
 
 # 用户认证密码（重要！请修改为强密码）
-RAMU_PASSWORD=your_strong_password_1
-LIGIGY_PASSWORD=your_strong_password_2
-QUASI_PASSWORD=your_strong_password_3
+RAMU_PASSWORD=your_strong_password
 
 # CORS配置（根据你的域名修改）
 CORS_ORIGINS=https://your-domain.com,http://localhost:3000
@@ -142,16 +140,14 @@ Coolify 支持自动部署，你也可以手动触发：
 | 变量名 | 必需 | 默认值 | 说明 |
 |--------|------|--------|------|
 | `DOMAIN` | 否 | `localhost` | 应用域名 |
-| `PORT` | 否 | `9988` | 应用端口 |
+| `PORT` | 否 | `9988` | 后端API端口 |
 | `HOST` | 否 | `0.0.0.0` | 监听地址 |
-| `RAMU_PASSWORD` | 否 | `changeme` | 用户ramu的密码 |
-| `LIGIGY_PASSWORD` | 否 | `changeme` | 用户ligigy的密码 |
-| `QUASI_PASSWORD` | 否 | `changeme` | 用户quasi的密码 |
+| `RAMU_PASSWORD` | 否 | `changeme` | 管理员用户ramu的密码 |
 | `CORS_ORIGINS` | 否 | 自动生成 | 允许的CORS来源 |
 
 ## 安全建议
 
-1. **修改默认密码**：务必在环境变量中设置强密码
+1. **修改默认密码**：务必在环境变量中为 `RAMU_PASSWORD` 设置强密码
 2. **HTTPS**：Coolify 自动配置 Let's Encrypt，确保使用 HTTPS
 3. **防火墙**：只开放必要的端口（443, 80）
 4. **定期备份**：设置自动备份任务
