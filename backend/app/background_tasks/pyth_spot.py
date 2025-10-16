@@ -26,6 +26,11 @@ class PythSpotMonitor(BaseMonitor):
             'SOL': '0xef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d',
             'JLP': '0x6704952e00b6a088b6dcdb8170dcd591eaf64cff9e996ca75ae0ca55bfb96687',
             'ALP': '0xa6cdf5ac29a2bb75c2d1347e85362b703c7c8090a21d358e6b4155294e5b3159',
+            # SOL Liquid Staking Tokens (LSTs)
+            'BNSOL': '0xc5a97e3f69b4b3352f9a15e8d87b7d0e2c85861f2ee8ec30a46b7e5235db51ce',  # Binance Staked SOL
+            'JitoSOL': '0x67be9f519b95cf24338801051f9a808eff0a578ccb24215166d9d5d5e93c1275',  # Jito Staked SOL
+            'bbSOL': '0x2997d5f9e96563cef9151cffc4580803930826fa38c4af5062de2363720769ea',  # Bybit Staked SOL
+            'mSOL': '0xc2289a6a43d2ce728c8e952c0693a18f331e4c12f3f063e65d84d1ec3a70a03c',  # Marinade Staked SOL
         }
 
     async def run(self) -> None:

@@ -5,6 +5,8 @@ import { DataTable } from './data-table';
 import { columns, WebhookData } from './columns';
 import { columns as monitorColumns, MonitorData } from './monitors-columns';
 import { columns as alertRuleColumns, AlertRuleData } from './alert-rules-columns';
+import { columns as fundingRateColumns, FundingRateData } from './funding-rates-columns';
+import { columns as spotPriceColumns, SpotPriceData } from './spot-prices-columns';
 import { ChartDialog } from './chart-dialog';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -22,6 +24,8 @@ export default function ChartsPage() {
   const [webhooks, setWebhooks] = useState<WebhookData[]>([]);
   const [monitors, setMonitors] = useState<MonitorData[]>([]);
   const [alertRules, setAlertRules] = useState<AlertRuleData[]>([]);
+  const [fundingRates, setFundingRates] = useState<FundingRateData[]>([]);
+  const [spotPrices, setSpotPrices] = useState<SpotPriceData[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedWebhook, setSelectedWebhook] = useState<WebhookData | null>(null);
@@ -51,10 +55,14 @@ export default function ChartsPage() {
     fetchWebhooks();
     fetchMonitors();
     fetchAlertRules();
+    fetchFundingRates();
+    fetchSpotPrices();
     const interval = setInterval(() => {
       fetchWebhooks();
       fetchMonitors();
       fetchAlertRules();
+      fetchFundingRates();
+      fetchSpotPrices();
     }, 60000); // Refresh every minute
     return () => clearInterval(interval);
   }, []);
@@ -172,6 +180,30 @@ export default function ChartsPage() {
     }
   };
 
+  const fetchFundingRates = async () => {
+    try {
+      const response = await fetch('/api/trading/funding-rates');
+      if (response.ok) {
+        const data = await response.json();
+        setFundingRates(data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch funding rates:', error);
+    }
+  };
+
+  const fetchSpotPrices = async () => {
+    try {
+      const response = await fetch('/api/trading/spot-prices');
+      if (response.ok) {
+        const data = await response.json();
+        setSpotPrices(data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch spot prices:', error);
+    }
+  };
+
   const calculateStats = (data: WebhookData[]) => {
     const total = data.length;
     const increasing = data.filter(w => w.change_percent && w.change_percent > 0).length;
@@ -200,19 +232,22 @@ export default function ChartsPage() {
     }
 
     try {
-      const response = await fetch(`/api/monitors/${monitorId}`, {
+      const response = await fetch(`/api/webhooks/${monitorId}`, {
         method: 'DELETE',
       });
 
       if (response.ok) {
-        toast.success('Webhook deleted successfully');
+        const result = await response.json();
+        toast.success(result.message || 'Webhook deleted successfully');
         fetchWebhooks();
       } else {
-        throw new Error('Failed to delete webhook');
+        const error = await response.json().catch(() => ({ detail: 'Unknown error' }));
+        console.error('Delete failed:', response.status, error);
+        toast.error(`Failed to delete: ${error.detail || error.message || 'Unknown error'}`);
       }
     } catch (error) {
       console.error('Failed to delete webhook:', error);
-      toast.error('Failed to delete webhook');
+      toast.error(`Network error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
@@ -223,6 +258,10 @@ export default function ChartsPage() {
       fetchMonitors();
     } else if (activeTab === 'alerts') {
       fetchAlertRules();
+    } else if (activeTab === 'funding') {
+      fetchFundingRates();
+    } else if (activeTab === 'prices') {
+      fetchSpotPrices();
     }
   };
 
@@ -253,11 +292,19 @@ export default function ChartsPage() {
       const response = await fetch(`/api/monitors/${monitorId}`, {
         method: 'DELETE',
       });
+
       if (response.ok) {
+        const result = await response.json();
+        toast.success(result.message || 'Monitor deleted successfully');
         fetchMonitors();
+      } else {
+        const error = await response.json().catch(() => ({ detail: 'Unknown error' }));
+        console.error('Delete failed:', response.status, error);
+        toast.error(`Failed to delete: ${error.detail || error.message || 'Unknown error'}`);
       }
     } catch (error) {
       console.error('Failed to delete monitor:', error);
+      toast.error(`Network error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
@@ -289,26 +336,57 @@ export default function ChartsPage() {
   };
 
   const handleAlertRuleSave = async () => {
-    if (!editingAlert) return;
-
     try {
-      const response = await fetch(`/api/alert-rules/${editingAlert.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(alertFormData),
-      });
+      if (editingAlert) {
+        // Update existing alert rule
+        const response = await fetch(`/api/alert-rules/${editingAlert.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(alertFormData),
+        });
 
-      if (response.ok) {
-        toast.success('Alert rule updated successfully');
-        setAlertEditDialogOpen(false);
-        fetchAlertRules();
+        if (response.ok) {
+          toast.success('Alert rule updated successfully');
+          setAlertEditDialogOpen(false);
+          setEditingAlert(null);
+          fetchAlertRules();
+        } else {
+          throw new Error('Failed to update alert rule');
+        }
       } else {
-        throw new Error('Failed to update alert rule');
+        // Create new alert rule
+        const response = await fetch('/api/alert-rules', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ...alertFormData,
+            actions: ['pushover'], // Default action
+          }),
+        });
+
+        if (response.ok) {
+          toast.success('Alert rule created successfully');
+          setAlertEditDialogOpen(false);
+          fetchAlertRules();
+        } else {
+          throw new Error('Failed to create alert rule');
+        }
       }
     } catch (error) {
       console.error('Failed to save alert rule:', error);
-      toast.error('Failed to save alert rule');
+      toast.error(editingAlert ? 'Failed to save alert rule' : 'Failed to create alert rule');
     }
+  };
+
+  const handleCreateAlertRule = () => {
+    setEditingAlert(null);
+    setAlertFormData({
+      name: '',
+      condition: '',
+      level: 'medium',
+      cooldown_seconds: 300,
+    });
+    setAlertEditDialogOpen(true);
   };
 
   const handleAlertRuleDelete = async (ruleId: string) => {
@@ -358,10 +436,12 @@ export default function ChartsPage() {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full max-w-md grid-cols-3">
+        <TabsList className="grid w-full max-w-4xl grid-cols-5">
           <TabsTrigger value="webhooks">Webhooks</TabsTrigger>
           <TabsTrigger value="monitors">Monitors</TabsTrigger>
           <TabsTrigger value="alerts">Alert Rules</TabsTrigger>
+          <TabsTrigger value="funding">Funding Rates</TabsTrigger>
+          <TabsTrigger value="prices">Spot Prices</TabsTrigger>
         </TabsList>
 
         {/* Webhooks Tab */}
@@ -481,10 +561,17 @@ export default function ChartsPage() {
         <TabsContent value="alerts" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>All Alert Rules</CardTitle>
-              <CardDescription>
-                Configure alerting conditions and thresholds
-              </CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>All Alert Rules</CardTitle>
+                  <CardDescription>
+                    Configure alerting conditions and thresholds
+                  </CardDescription>
+                </div>
+                <Button onClick={handleCreateAlertRule}>
+                  Create Alert Rule
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               <DataTable
@@ -504,6 +591,52 @@ export default function ChartsPage() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {/* Funding Rates Tab */}
+        <TabsContent value="funding" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Funding Rates</CardTitle>
+              <CardDescription>
+                Latest funding rates from all exchanges - Click symbol to copy
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <DataTable
+                columns={fundingRateColumns}
+                data={fundingRates}
+                filterColumns={[
+                  { id: "exchange", placeholder: "Filter by exchange..." },
+                  { id: "symbol", placeholder: "Filter by symbol..." }
+                ]}
+                pageSize={20}
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Spot Prices Tab */}
+        <TabsContent value="prices" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Spot Prices</CardTitle>
+              <CardDescription>
+                Latest spot prices from all exchanges - Click symbol to copy
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <DataTable
+                columns={spotPriceColumns}
+                data={spotPrices}
+                filterColumns={[
+                  { id: "exchange", placeholder: "Filter by exchange..." },
+                  { id: "symbol", placeholder: "Filter by symbol..." }
+                ]}
+                pageSize={20}
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
 
       {/* Chart Dialog */}
@@ -517,9 +650,9 @@ export default function ChartsPage() {
       <Dialog open={alertEditDialogOpen} onOpenChange={setAlertEditDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>Edit Alert Rule</DialogTitle>
+            <DialogTitle>{editingAlert ? 'Edit Alert Rule' : 'Create Alert Rule'}</DialogTitle>
             <DialogDescription>
-              Modify the alert rule configuration
+              {editingAlert ? 'Modify the alert rule configuration' : 'Create a new alert rule by entering a condition formula'}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -581,7 +714,7 @@ export default function ChartsPage() {
               Cancel
             </Button>
             <Button onClick={handleAlertRuleSave}>
-              Save Changes
+              {editingAlert ? 'Save Changes' : 'Create Alert Rule'}
             </Button>
           </DialogFooter>
         </DialogContent>

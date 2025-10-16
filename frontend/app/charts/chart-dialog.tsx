@@ -137,7 +137,7 @@ export function ChartDialog({ open, onOpenChange, webhook }: ChartDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[95vw] w-[95vw] max-h-[95vh] overflow-auto">
+      <DialogContent className="max-w-none w-[90vw] max-h-[90vh] overflow-auto">
         <DialogHeader>
           <DialogTitle>{webhook.title}</DialogTitle>
           <DialogDescription>

@@ -301,10 +301,39 @@ async def update_monitor_decimal_places(monitor_id: str, decimal_places: int = Q
         db.close()
 
 
+@router.delete("/webhooks/{monitor_id}")
+async def delete_webhook_data(monitor_id: str) -> Dict[str, Any]:
+    """
+    Delete all webhook data (monitoring_data) for a specific monitor.
+    This is separate from deleting the Monitor itself.
+    """
+    db = get_db_session()
+
+    try:
+        deleted_count = db.query(WebhookData).filter(
+            WebhookData.monitor_id == monitor_id
+        ).delete()
+
+        db.commit()
+
+        return {
+            "status": "success",
+            "message": f"Deleted {deleted_count} webhook records for monitor {monitor_id}"
+        }
+
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error deleting webhook data for {monitor_id}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+    finally:
+        db.close()
+
+
 @router.delete("/monitors/{monitor_id}")
 async def delete_monitor_data(monitor_id: str) -> Dict[str, Any]:
     """
     Delete all data for a specific monitor.
+    Deprecated: Use /webhooks/{monitor_id} instead to avoid confusion with Monitor system.
     """
     db = get_db_session()
 
@@ -487,129 +516,6 @@ async def execute_command(command_data: Dict[str, str]) -> Dict[str, Any]:
             "error": f"Error executing command: {str(e)}",
             "output": ""
         }
-
-
-# Constant card management endpoints
-class ConstantUpdate(BaseModel):
-    """Model for updating constant cards."""
-    name: Optional[str] = None
-    value: Optional[float] = None
-    unit: Optional[str] = None
-    description: Optional[str] = None
-    color: Optional[str] = None
-
-
-class ConstantCreate(BaseModel):
-    """Model for creating constant cards."""
-    name: str
-    value: float
-    unit: Optional[str] = None
-    description: Optional[str] = None
-    color: Optional[str] = '#3b82f6'
-
-
-@router.post("/constant")
-async def create_constant(constant: ConstantCreate):
-    """Create a new constant card."""
-    import uuid
-
-    db = get_db_session()
-    try:
-        # Generate unique monitor_id
-        monitor_id = f"const-{uuid.uuid4()}"
-
-        # Create new constant as monitoring_data entry
-        new_constant = WebhookData(
-            monitor_id=monitor_id,
-            monitor_name=constant.name,
-            monitor_type='constant',
-            url='',
-            value=constant.value,
-            unit=constant.unit,
-            description=constant.description,
-            color=constant.color,
-            status='active',
-            timestamp=datetime.utcnow(),
-            webhook_received_at=datetime.utcnow()
-        )
-
-        db.add(new_constant)
-        db.commit()
-
-        return {
-            "success": True,
-            "message": "Constant created",
-            "monitor_id": monitor_id
-        }
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(status_code=500, detail=f"Failed to create constant: {str(e)}")
-    finally:
-        db.close()
-
-
-@router.put("/constant/{monitor_id}")
-async def update_constant(monitor_id: str, update: ConstantUpdate):
-    """Update a constant card (monitor with type='constant')."""
-    db = get_db_session()
-    try:
-        # Get the constant's latest record
-        constant = db.query(WebhookData).filter(
-            WebhookData.monitor_id == monitor_id,
-            WebhookData.monitor_type == 'constant'
-        ).order_by(desc(WebhookData.timestamp)).first()
-
-        if not constant:
-            raise HTTPException(status_code=404, detail="Constant not found")
-
-        # Update fields
-        if update.name is not None:
-            constant.monitor_name = update.name
-        if update.value is not None:
-            constant.value = update.value
-        if update.unit is not None:
-            constant.unit = update.unit
-        if update.description is not None:
-            constant.description = update.description
-        if update.color is not None:
-            constant.color = update.color
-
-        constant.timestamp = datetime.utcnow()
-        db.commit()
-
-        return {"success": True, "message": "Constant updated"}
-    except HTTPException:
-        raise
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(status_code=500, detail=f"Failed to update constant: {str(e)}")
-    finally:
-        db.close()
-
-
-@router.delete("/constant/{monitor_id}")
-async def delete_constant(monitor_id: str):
-    """Delete a constant card."""
-    db = get_db_session()
-    try:
-        # Delete all records for this constant
-        deleted = db.query(WebhookData).filter(
-            WebhookData.monitor_id == monitor_id,
-            WebhookData.monitor_type == 'constant'
-        ).delete()
-
-        if deleted == 0:
-            raise HTTPException(status_code=404, detail="Constant not found")
-
-        db.commit()
-        return {"success": True, "message": f"Deleted {deleted} record(s)"}
-    except HTTPException:
-        raise
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(status_code=500, detail=f"Failed to delete constant: {str(e)}")
-    finally:
-        db.close()
 
 
 @router.get("/webhooks/{monitor_id}/history")
