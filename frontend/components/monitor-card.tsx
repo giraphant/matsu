@@ -39,7 +39,6 @@ export function MonitorCard({ monitor, onEdit, onDelete, onSetAlert, showChart =
   const [chartData, setChartData] = useState<any[]>([]);
   const [changePercent, setChangePercent] = useState<number>(0);
   const [timeAgo, setTimeAgo] = useState<string>('');
-  const [dataMin, setDataMin] = useState<number>(0);
 
   // Format time ago
   const formatTimeAgo = (dateString: string | undefined) => {
@@ -82,7 +81,7 @@ export function MonitorCard({ monitor, onEdit, onDelete, onSetAlert, showChart =
           const data = await response.json();
           setChartData(data);
 
-          // Calculate percentage change and minimum value
+          // Calculate percentage change
           if (data.length >= 2) {
             const firstValue = data[0].value;
             const lastValue = data[data.length - 1].value;
@@ -90,10 +89,6 @@ export function MonitorCard({ monitor, onEdit, onDelete, onSetAlert, showChart =
               const change = ((lastValue - firstValue) / firstValue) * 100;
               setChangePercent(change);
             }
-
-            // Calculate minimum value for baseline
-            const minValue = Math.min(...data.map((d: any) => d.value));
-            setDataMin(minValue);
           }
         }
       } catch (error) {
@@ -214,7 +209,7 @@ export function MonitorCard({ monitor, onEdit, onDelete, onSetAlert, showChart =
                   </linearGradient>
                 </defs>
                 <YAxis
-                  domain={[dataMin, 'auto']}
+                  domain={['dataMin', 'dataMax']}
                   hide
                 />
                 <Area
