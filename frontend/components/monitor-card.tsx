@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Line, LineChart, ResponsiveContainer, YAxis } from 'recharts';
+import { Area, AreaChart, ResponsiveContainer, YAxis } from 'recharts';
 import { cn } from "@/lib/utils";
 import { getApiUrl } from "@/lib/api-config";
 
@@ -189,23 +189,39 @@ export function MonitorCard({ monitor, onEdit, onDelete, onSetAlert, showChart =
         {showChart && chartData.length > 0 && (
           <div className="min-h-24 w-full -mb-1">
             <ResponsiveContainer width="100%" height={96}>
-              <LineChart
+              <AreaChart
                 data={chartData}
                 className="translate-y-1 scale-105"
                 accessibilityLayer
               >
+                <defs>
+                  <linearGradient id={`gradient-${monitor.id}`} x1="0" y1="0" x2="0" y2="1">
+                    <stop
+                      offset="10%"
+                      stopColor={monitor.color || 'hsl(var(--primary))'}
+                      stopOpacity={0.3}
+                    />
+                    <stop
+                      offset="100%"
+                      stopColor={monitor.color || 'hsl(var(--primary))'}
+                      stopOpacity={0.1}
+                    />
+                  </linearGradient>
+                </defs>
                 <YAxis
                   domain={['auto', 'auto']}
                   hide
                 />
-                <Line
+                <Area
                   dataKey="value"
                   stroke={isAlert ? 'rgba(255, 255, 255, 0.9)' : (monitor.color || 'hsl(var(--primary))')}
                   strokeWidth={2}
-                  dot={false}
+                  fill={`url(#gradient-${monitor.id})`}
+                  fillOpacity={1}
+                  baseline="dataMin"
                   animationDuration={300}
                 />
-              </LineChart>
+              </AreaChart>
             </ResponsiveContainer>
           </div>
         )}
