@@ -26,11 +26,12 @@ class PythSpotMonitor(BaseMonitor):
             'SOL': '0xef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d',
             'JLP': '0x6704952e00b6a088b6dcdb8170dcd591eaf64cff9e996ca75ae0ca55bfb96687',
             'ALP': '0xa6cdf5ac29a2bb75c2d1347e85362b703c7c8090a21d358e6b4155294e5b3159',
-            # SOL Liquid Staking Tokens (LSTs)
-            'BNSOL': '0xc5a97e3f69b4b3352f9a15e8d87b7d0e2c85861f2ee8ec30a46b7e5235db51ce',  # Binance Staked SOL
-            'JitoSOL': '0x67be9f519b95cf24338801051f9a808eff0a578ccb24215166d9d5d5e93c1275',  # Jito Staked SOL
-            'bbSOL': '0x2997d5f9e96563cef9151cffc4580803930826fa38c4af5062de2363720769ea',  # Bybit Staked SOL
-            'mSOL': '0xc2289a6a43d2ce728c8e952c0693a18f331e4c12f3f063e65d84d1ec3a70a03c',  # Marinade Staked SOL
+            # SOL Liquid Staking Tokens (LSTs) - Ratio vs SOL
+            'BNSOL/SOL': '0x72d61f850fe06047969e1f236a49f3c15c40823098b98ffa72f5b836a028ffa9',  # Binance Staked SOL / SOL
+            'JitoSOL/SOL': '0x01d577b07031e12635d2fb86af6ae938bdc2b6dba9602d8e8af34d44587566fc',  # Jito Staked SOL / SOL
+            'JupSOL/SOL': '0xf8d8d6b6c866c8b2624fb5b679ae846738725e5fc887fa8e927c8d8645018a2b',  # Jupiter Staked SOL / SOL
+            'mSOL/SOL': '0x046e7c1cf187195ba3174028ab3be75be88382956f7d4d4b6b507e727370f284',  # Marinade Staked SOL / SOL
+            'bbSOL/SOL': '0x7d9e2258cec229cf52873a8e58d035a276873c485d753860e56d248fb33ce68a',  # Bybit Staked SOL / SOL
         }
 
     async def run(self) -> None:
@@ -81,7 +82,11 @@ class PythSpotMonitor(BaseMonitor):
                     db.add(new_price)
                     stored_count += 1
 
-                    logger.info(f"Pyth {symbol} price: ${price:.2f}")
+                    # Log with appropriate format (ratio vs USD price)
+                    if '/SOL' in symbol:
+                        logger.info(f"Pyth {symbol} ratio: {price:.6f}")
+                    else:
+                        logger.info(f"Pyth {symbol} price: ${price:.2f}")
 
                 except Exception as e:
                     logger.error(f"Error fetching Pyth price for {symbol}: {e}", exc_info=True)
