@@ -56,10 +56,14 @@ htmlcov/
 # Application specific
 uploads/
 temp/
-static/generated/
 
-# Frontend build output (copied to static/)
+# Static files (no longer used - Next.js standalone mode)
+static/
+
+# Frontend build output
 frontend/build/
+frontend/.next/
+frontend/out/
 
 # Node modules
 node_modules/
