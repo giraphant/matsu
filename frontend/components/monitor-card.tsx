@@ -214,7 +214,7 @@ export function MonitorCard({ monitor, onEdit, onDelete, onSetAlert, showChart =
                   </linearGradient>
                 </defs>
                 <YAxis
-                  domain={['auto', 'auto']}
+                  domain={[dataMin, 'auto']}
                   hide
                 />
                 <Area
@@ -223,7 +223,6 @@ export function MonitorCard({ monitor, onEdit, onDelete, onSetAlert, showChart =
                   strokeWidth={2}
                   fill={`url(#gradient-${monitor.id})`}
                   fillOpacity={1}
-                  baseLine={dataMin}
                   animationDuration={300}
                 />
               </AreaChart>
