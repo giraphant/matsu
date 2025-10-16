@@ -4,6 +4,7 @@ import { Toaster } from "sonner"
 import { ThemeProvider } from "@/components/theme-provider"
 import { AuthProvider } from "@/contexts/auth-context"
 import { MainLayout } from "@/components/main-layout"
+import { NavigationProgress } from "@/components/navigation-progress"
 
 export const metadata: Metadata = {
   title: "Matsu Monitor",
@@ -26,6 +27,7 @@ export default function RootLayout({
           storageKey="matsu-theme"
         >
           <AuthProvider>
+            <NavigationProgress />
             <MainLayout>{children}</MainLayout>
             <Toaster position="bottom-right" />
           </AuthProvider>
