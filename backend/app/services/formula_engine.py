@@ -119,9 +119,10 @@ class FormulaEngine:
                 parts = dep_id.split('-', 1)
                 if len(parts) == 2:
                     exchange, symbol = parts
+                    # Keep symbol case as-is to match database (e.g., "SOL/JitoSOL")
                     latest = self.db.query(SpotPrice).filter(
                         SpotPrice.exchange == exchange.lower(),
-                        SpotPrice.symbol == symbol.upper()
+                        SpotPrice.symbol == symbol
                     ).order_by(SpotPrice.timestamp.desc()).first()
                     values[var_name] = latest.price if latest else None
                 else:
