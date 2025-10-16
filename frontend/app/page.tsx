@@ -219,7 +219,7 @@ export default function OverviewPage() {
                 <CardTitle>Top Funding Rates</CardTitle>
                 <CardDescription>Highest opportunities across exchanges</CardDescription>
               </div>
-              <Link href="/dex-rates">
+              <Link href="/dex-rates" prefetch={false}>
                 <Badge variant="secondary" className="cursor-pointer hover:bg-secondary/80">
                   View All <ArrowUpRight className="ml-1 h-3 w-3" />
                 </Badge>
@@ -267,7 +267,7 @@ export default function OverviewPage() {
                 <CardTitle>Recent Monitors</CardTitle>
                 <CardDescription>Live monitor status</CardDescription>
               </div>
-              <Link href="/charts">
+              <Link href="/charts" prefetch={false}>
                 <Badge variant="secondary" className="cursor-pointer hover:bg-secondary/80">
                   View Charts <ArrowUpRight className="ml-1 h-3 w-3" />
                 </Badge>
@@ -281,7 +281,7 @@ export default function OverviewPage() {
               <div className="flex flex-col items-center justify-center py-8 text-center">
                 <Wallet className="h-12 w-12 text-muted-foreground mb-3" />
                 <p className="text-muted-foreground">No monitors configured</p>
-                <Link href="/settings">
+                <Link href="/settings" prefetch={false}>
                   <Badge variant="outline" className="mt-2 cursor-pointer">Configure →</Badge>
                 </Link>
               </div>
@@ -326,7 +326,7 @@ export default function OverviewPage() {
             <CardDescription>Common tasks</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-2">
-            <Link href="/settings?tab=monitors">
+            <Link href="/settings?tab=monitors" prefetch={false}>
               <div className="flex items-center justify-between p-3 rounded-lg hover:bg-muted transition-colors cursor-pointer">
                 <div className="flex items-center gap-2">
                   <Activity className="h-4 w-4" />
@@ -335,7 +335,7 @@ export default function OverviewPage() {
                 <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
               </div>
             </Link>
-            <Link href="/settings?tab=alerts">
+            <Link href="/settings?tab=alerts" prefetch={false}>
               <div className="flex items-center justify-between p-3 rounded-lg hover:bg-muted transition-colors cursor-pointer">
                 <div className="flex items-center gap-2">
                   <Bell className="h-4 w-4" />
@@ -344,7 +344,7 @@ export default function OverviewPage() {
                 <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
               </div>
             </Link>
-            <Link href="/settings?tab=funding">
+            <Link href="/settings?tab=funding" prefetch={false}>
               <div className="flex items-center justify-between p-3 rounded-lg hover:bg-muted transition-colors cursor-pointer">
                 <div className="flex items-center gap-2">
                   <DollarSign className="h-4 w-4" />
@@ -353,7 +353,7 @@ export default function OverviewPage() {
                 <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
               </div>
             </Link>
-            <Link href="/dex-rates">
+            <Link href="/dex-rates" prefetch={false}>
               <div className="flex items-center justify-between p-3 rounded-lg hover:bg-muted transition-colors cursor-pointer">
                 <div className="flex items-center gap-2">
                   <TrendingUp className="h-4 w-4" />
