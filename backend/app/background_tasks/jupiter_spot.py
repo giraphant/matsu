@@ -28,13 +28,13 @@ class JupiterSpotMonitor(BaseMonitor):
             'ALP': '4yCLi5yWGzpTWMQ1iWHG5CrGYAdBkhyEdsuSugjDUqwj',  # Adrena LP
         }
 
-        # SOL Liquid Staking Tokens (LSTs) - priced vs SOL
+        # SOL Liquid Staking Tokens (LSTs) - how many LSTs per SOL
         self.lst_tokens = {
-            'BNSOL/SOL': 'BNso1VUJnh4zcfpZa6986Ea66P6TCp59hvtNJ8b1X85',  # Binance Staked SOL
-            'JitoSOL/SOL': 'J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn',  # Jito Staked SOL
-            'JupSOL/SOL': 'jupSoLaHXQiZZTSfEWMTRRgpnyFm8f6sZdosWBjx93v',  # Jupiter Staked SOL
-            'bbSOL/SOL': 'Bybit2vBJGhPF52GBdNaQfUJ6ZpThSgHBobjWZpLPb4B',  # Bybit Staked SOL
-            'mSOL/SOL': 'mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So',  # Marinade Staked SOL
+            'SOL/BNSOL': 'BNso1VUJnh4zcfpZa6986Ea66P6TCp59hvtNJ8b1X85',  # How many BNSOL per SOL
+            'SOL/JitoSOL': 'J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn',  # How many JitoSOL per SOL
+            'SOL/JupSOL': 'jupSoLaHXQiZZTSfEWMTRRgpnyFm8f6sZdosWBjx93v',  # How many JupSOL per SOL
+            'SOL/bbSOL': 'Bybit2vBJGhPF52GBdNaQfUJ6ZpThSgHBobjWZpLPb4B',  # How many bbSOL per SOL
+            'SOL/mSOL': 'mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So',  # How many mSOL per SOL
         }
 
     async def run(self) -> None:
@@ -87,17 +87,17 @@ class JupiterSpotMonitor(BaseMonitor):
                 except Exception as e:
                     logger.error(f"Error fetching USD prices from Jupiter: {e}", exc_info=True)
 
-                # Fetch LST/SOL ratios using quote API for real market prices
-                # Use 100 tokens as the base amount (100 * 10^9 for 9 decimals)
+                # Fetch SOL/LST ratios using quote API for real market prices
+                # Use 100 SOL as the base amount (100 * 10^9 for 9 decimals)
                 base_amount = 100_000_000_000
 
                 for symbol, lst_address in self.lst_tokens.items():
                     try:
-                        # Get quote for LST -> SOL swap using Lite tier (free)
+                        # Get quote for SOL -> LST swap using Lite tier (free)
                         quote_url = "https://lite-api.jup.ag/swap/v1/quote"
                         params = {
-                            'inputMint': lst_address,
-                            'outputMint': self.sol_address,
+                            'inputMint': self.sol_address,  # Swapping FROM SOL
+                            'outputMint': lst_address,      # Swapping TO LST
                             'amount': base_amount,
                             'swapMode': 'ExactIn',
                             'onlyDirectRoutes': 'true',  # Only direct routes for more accurate ratio
@@ -115,7 +115,7 @@ class JupiterSpotMonitor(BaseMonitor):
                             logger.warning(f"Invalid quote amounts for {symbol}: in={in_amount}, out={out_amount}")
                             continue
 
-                        # Calculate ratio: outAmount / inAmount
+                        # Calculate ratio: how many LSTs per SOL
                         ratio = out_amount / in_amount
 
                         # Store in database
@@ -129,7 +129,7 @@ class JupiterSpotMonitor(BaseMonitor):
                         db.add(new_price)
                         stored_count += 1
 
-                        logger.info(f"Jupiter {symbol} ratio: {ratio:.6f} (quote: {in_amount/1e9:.2f} -> {out_amount/1e9:.2f})")
+                        logger.info(f"Jupiter {symbol} ratio: {ratio:.6f} (quote: {in_amount/1e9:.2f} SOL -> {out_amount/1e9:.2f} LST)")
 
                     except Exception as e:
                         logger.error(f"Error fetching Jupiter quote for {symbol}: {e}", exc_info=True)
