@@ -195,6 +195,7 @@ export interface PushoverConfig {
   user_key: string;
   api_token?: string;
   enabled: boolean;
+  min_alert_level: string;  // low, medium, high, critical
   created_at: string;
   updated_at: string;
 }
@@ -216,6 +217,7 @@ export async function createPushoverConfig(config: {
   user_key: string;
   api_token?: string;
   enabled?: boolean;
+  min_alert_level?: string;
 }): Promise<PushoverConfig> {
   const response = await fetch(`${API_BASE_URL}/pushover/config`, {
     method: 'POST',
@@ -233,6 +235,7 @@ export async function updatePushoverConfig(
     user_key?: string;
     api_token?: string;
     enabled?: boolean;
+    min_alert_level?: string;
   }
 ): Promise<PushoverConfig> {
   const response = await fetch(`${API_BASE_URL}/pushover/config/${id}`, {

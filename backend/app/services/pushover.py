@@ -15,6 +15,14 @@ logger = get_logger(__name__)
 
 DEFAULT_API_TOKEN = "azGDORePK8gMaC0QOYAMyEEuzJnyUi"  # Default app token
 
+# Alert level priority (higher number = more important)
+ALERT_LEVEL_PRIORITY = {
+    'low': 0,
+    'medium': 1,
+    'high': 2,
+    'critical': 3
+}
+
 ALERT_LEVELS = {
     'critical': {
         'priority': 2,  # Emergency - requires acknowledgment
@@ -35,6 +43,22 @@ ALERT_LEVELS = {
         'sound': 'none'
     }
 }
+
+
+def should_send_to_device(alert_level: str, device_min_level: str) -> bool:
+    """
+    Check if an alert should be sent to a device based on level filtering.
+
+    Args:
+        alert_level: The alert level (low, medium, high, critical)
+        device_min_level: The minimum level configured for the device
+
+    Returns:
+        True if alert should be sent, False otherwise
+    """
+    alert_priority = ALERT_LEVEL_PRIORITY.get(alert_level, 0)
+    device_priority = ALERT_LEVEL_PRIORITY.get(device_min_level, 0)
+    return alert_priority >= device_priority
 
 
 def send_pushover_notification(
@@ -184,7 +208,7 @@ class PushoverService:
         url: Optional[str] = None
     ) -> bool:
         """
-        Send an alert notification to all enabled Pushover configurations.
+        Send an alert notification to enabled Pushover devices that meet the minimum alert level.
 
         Args:
             message: Notification message
@@ -203,10 +227,23 @@ class PushoverService:
             logger.warning("[PushoverService] ⚠️  No enabled Pushover configurations, skipping notification")
             return False
 
-        logger.info(f"[PushoverService] Sending to {len(configs)} enabled device(s)")
+        # Filter devices by minimum alert level
+        eligible_configs = []
+        for config in configs:
+            if should_send_to_device(level, config.min_alert_level):
+                eligible_configs.append(config)
+                logger.debug(f"[PushoverService] '{config.name}' is eligible (alert:{level} >= min:{config.min_alert_level})")
+            else:
+                logger.debug(f"[PushoverService] '{config.name}' skipped (alert:{level} < min:{config.min_alert_level})")
+
+        if not eligible_configs:
+            logger.info(f"[PushoverService] No devices meet minimum level requirement for {level} alert")
+            return False
+
+        logger.info(f"[PushoverService] Sending to {len(eligible_configs)}/{len(configs)} eligible device(s)")
 
         success_count = 0
-        for config in configs:
+        for config in eligible_configs:
             logger.info(f"[PushoverService] Sending to '{config.name}' (user_key: {config.user_key[:10]}...)")
 
             success = send_pushover_notification(
@@ -224,7 +261,7 @@ class PushoverService:
             else:
                 logger.error(f"[PushoverService] ❌ Failed to send to '{config.name}'")
 
-        logger.info(f"[PushoverService] Sent to {success_count}/{len(configs)} device(s)")
+        logger.info(f"[PushoverService] Sent to {success_count}/{len(eligible_configs)} device(s)")
         return success_count > 0
 
     def is_configured(self) -> bool:

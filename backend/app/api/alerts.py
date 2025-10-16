@@ -20,6 +20,7 @@ class PushoverConfigCreate(BaseModel):
     user_key: str
     api_token: Optional[str] = None
     enabled: bool = True
+    min_alert_level: str = 'low'  # low, medium, high, critical
 
 
 class PushoverConfigUpdate(BaseModel):
@@ -27,6 +28,7 @@ class PushoverConfigUpdate(BaseModel):
     user_key: Optional[str] = None
     api_token: Optional[str] = None
     enabled: Optional[bool] = None
+    min_alert_level: Optional[str] = None
 
 
 class PushoverConfigResponse(BaseModel):
@@ -35,6 +37,7 @@ class PushoverConfigResponse(BaseModel):
     user_key: str
     api_token: Optional[str]
     enabled: bool
+    min_alert_level: str
     created_at: datetime
     updated_at: datetime
 
@@ -85,7 +88,8 @@ def create_pushover_config(
         name=config.name,
         user_key=config.user_key,
         api_token=config.api_token,
-        enabled=config.enabled
+        enabled=config.enabled,
+        min_alert_level=config.min_alert_level
     )
 
 
@@ -102,7 +106,8 @@ def update_pushover_config(
         name=config.name,
         user_key=config.user_key,
         api_token=config.api_token,
-        enabled=config.enabled
+        enabled=config.enabled,
+        min_alert_level=config.min_alert_level
     )
     if not updated:
         raise HTTPException(status_code=404, detail="Pushover config not found")

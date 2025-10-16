@@ -29,6 +29,7 @@ export default function SettingsPage() {
   const [newPushoverName, setNewPushoverName] = useState('');
   const [newPushoverUserKey, setNewPushoverUserKey] = useState('');
   const [newPushoverApiToken, setNewPushoverApiToken] = useState('');
+  const [newPushoverMinLevel, setNewPushoverMinLevel] = useState('low');
   const [testingPushover, setTestingPushover] = useState<number | null>(null);
   const [creatingPushover, setCreatingPushover] = useState(false);
 
@@ -84,11 +85,13 @@ export default function SettingsPage() {
         user_key: newPushoverUserKey,
         api_token: newPushoverApiToken || undefined,
         enabled: true,
+        min_alert_level: newPushoverMinLevel,
       });
 
       setNewPushoverName('');
       setNewPushoverUserKey('');
       setNewPushoverApiToken('');
+      setNewPushoverMinLevel('low');
       setSuccessMessage('Pushover configuration created successfully');
       fetchAllData();
     } catch (err) {
@@ -118,6 +121,17 @@ export default function SettingsPage() {
       fetchAllData();
     } catch (err) {
       setError('Failed to delete Pushover configuration');
+    }
+  }
+
+  async function handleUpdateMinLevel(config: PushoverConfig, newLevel: string) {
+    try {
+      await updatePushoverConfig(config.id, {
+        min_alert_level: newLevel,
+      });
+      fetchAllData();
+    } catch (err) {
+      setError('Failed to update alert level');
     }
   }
 
@@ -264,6 +278,22 @@ export default function SettingsPage() {
                   type="password"
                 />
               </div>
+              <div className="space-y-2">
+                <label htmlFor="pushover-min-level" className="text-sm font-medium">
+                  Minimum Alert Level
+                </label>
+                <Select value={newPushoverMinLevel} onValueChange={setNewPushoverMinLevel}>
+                  <SelectTrigger id="pushover-min-level">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="low">Low (All alerts)</SelectItem>
+                    <SelectItem value="medium">Medium and above</SelectItem>
+                    <SelectItem value="high">High and Critical only</SelectItem>
+                    <SelectItem value="critical">Critical only</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               <Button
                 onClick={handleCreatePushover}
                 disabled={creatingPushover || !newPushoverName || !newPushoverUserKey}
@@ -288,8 +318,8 @@ export default function SettingsPage() {
               ) : (
                 <div className="space-y-2">
                   {pushoverConfigs.map((config) => (
-                    <div key={config.id} className="flex items-center justify-between rounded-lg border p-3">
-                      <div className="space-y-1">
+                    <div key={config.id} className="flex items-start justify-between rounded-lg border p-3">
+                      <div className="space-y-1 flex-1">
                         <div className="font-medium">{config.name}</div>
                         <div className="text-sm text-muted-foreground">
                           User Key: {config.user_key.slice(0, 10)}...
@@ -299,6 +329,23 @@ export default function SettingsPage() {
                             Custom API Token configured
                           </div>
                         )}
+                        <div className="flex items-center gap-2 mt-2">
+                          <span className="text-xs text-muted-foreground">Min Level:</span>
+                          <Select
+                            value={config.min_alert_level}
+                            onValueChange={(value) => handleUpdateMinLevel(config, value)}
+                          >
+                            <SelectTrigger className="h-7 w-[140px] text-xs">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="low">Low (All)</SelectItem>
+                              <SelectItem value="medium">Medium+</SelectItem>
+                              <SelectItem value="high">High+</SelectItem>
+                              <SelectItem value="critical">Critical</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
                       </div>
                       <div className="flex items-center gap-2">
                         <Button

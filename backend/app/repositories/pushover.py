@@ -57,7 +57,14 @@ class PushoverRepository:
         """
         return self.db.query(PushoverConfig).filter(PushoverConfig.id == config_id).first()
 
-    def create(self, name: str, user_key: str, api_token: Optional[str] = None, enabled: bool = True) -> PushoverConfig:
+    def create(
+        self,
+        name: str,
+        user_key: str,
+        api_token: Optional[str] = None,
+        enabled: bool = True,
+        min_alert_level: str = 'low'
+    ) -> PushoverConfig:
         """
         Create a new Pushover configuration.
 
@@ -66,6 +73,7 @@ class PushoverRepository:
             user_key: Pushover user key
             api_token: Optional API token
             enabled: Whether the configuration is enabled
+            min_alert_level: Minimum alert level (low, medium, high, critical)
 
         Returns:
             PushoverConfig instance
@@ -74,12 +82,13 @@ class PushoverRepository:
             name=name,
             user_key=user_key,
             api_token=api_token,
-            enabled=enabled
+            enabled=enabled,
+            min_alert_level=min_alert_level
         )
         self.db.add(config)
         self.db.commit()
         self.db.refresh(config)
-        logger.debug(f"Created Pushover config: {name}")
+        logger.debug(f"Created Pushover config: {name} (min_level={min_alert_level})")
         return config
 
     def update(
@@ -88,7 +97,8 @@ class PushoverRepository:
         name: Optional[str] = None,
         user_key: Optional[str] = None,
         api_token: Optional[str] = None,
-        enabled: Optional[bool] = None
+        enabled: Optional[bool] = None,
+        min_alert_level: Optional[str] = None
     ) -> Optional[PushoverConfig]:
         """
         Update a Pushover configuration.
@@ -99,6 +109,7 @@ class PushoverRepository:
             user_key: Optional new user key
             api_token: Optional new API token
             enabled: Optional enabled status
+            min_alert_level: Optional minimum alert level
 
         Returns:
             Updated PushoverConfig or None if not found
@@ -115,6 +126,8 @@ class PushoverRepository:
             config.api_token = api_token
         if enabled is not None:
             config.enabled = enabled
+        if min_alert_level is not None:
+            config.min_alert_level = min_alert_level
 
         config.updated_at = datetime.utcnow()
         self.db.commit()

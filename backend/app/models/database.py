@@ -123,11 +123,12 @@ class PushoverConfig(Base):
     user_key = Column(String, nullable=False)
     api_token = Column(String, nullable=True)  # Optional, can use default
     enabled = Column(Boolean, default=True)
+    min_alert_level = Column(String, default='low')  # Minimum alert level: low, medium, high, critical
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     def __repr__(self):
-        return f"<PushoverConfig(name='{self.name}', enabled={self.enabled})>"
+        return f"<PushoverConfig(name='{self.name}', enabled={self.enabled}, min_level={self.min_alert_level})>"
 
 
 class FundingRateAlert(Base):
