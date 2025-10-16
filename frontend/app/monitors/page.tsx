@@ -414,16 +414,16 @@ export default function MonitorsPage() {
           });
           toast.info(`Loaded existing alert configuration`);
         } else {
-          resetAlertForm();
+          resetAlertFormData();
           toast.info('No existing alert rules found');
         }
       } else {
-        resetAlertForm();
+        resetAlertFormData();
         toast.info('No existing alert rules found');
       }
     } catch (error) {
       console.error('Error fetching alert rules:', error);
-      resetAlertForm();
+      resetAlertFormData();
     }
 
     setAlertDialogOpen(true);
@@ -556,13 +556,18 @@ export default function MonitorsPage() {
     }
   };
 
-  // Reset alert form
-  const resetAlertForm = () => {
+  // Reset alert form data only (keep alertMonitor)
+  const resetAlertFormData = () => {
     setAlertFormData({
       upper_threshold: '',
       lower_threshold: '',
       alert_level: 'medium'
     });
+  };
+
+  // Reset alert form completely (including alertMonitor)
+  const resetAlertForm = () => {
+    resetAlertFormData();
     setAlertMonitor(null);
   };
 
