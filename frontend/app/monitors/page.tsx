@@ -472,7 +472,7 @@ export default function MonitorsPage() {
 
       // Create new alert rule
       const payload = {
-        name: `Alert for ${alertMonitor.name}`,
+        name: alertMonitor.name,
         condition: condition,
         level: alertFormData.alert_level,
         cooldown_seconds: 300,
