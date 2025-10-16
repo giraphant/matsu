@@ -4,7 +4,7 @@ Encapsulates all database queries for PushoverConfig model.
 """
 
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 from sqlalchemy.orm import Session
 
 from app.models.database import PushoverConfig
@@ -14,7 +14,7 @@ logger = get_logger(__name__)
 
 
 class PushoverRepository:
-    """Repository for PushoverConfig model."""
+    """Repository for PushoverConfig model - supports multiple configurations."""
 
     def __init__(self, db: Session):
         """
@@ -25,68 +25,126 @@ class PushoverRepository:
         """
         self.db = db
 
-    def get_config(self) -> Optional[PushoverConfig]:
+    def get_all(self) -> List[PushoverConfig]:
         """
-        Get the Pushover configuration (singleton).
+        Get all Pushover configurations.
+
+        Returns:
+            List of PushoverConfig instances
+        """
+        return self.db.query(PushoverConfig).order_by(PushoverConfig.created_at).all()
+
+    def get_enabled(self) -> List[PushoverConfig]:
+        """
+        Get all enabled Pushover configurations.
+
+        Returns:
+            List of enabled PushoverConfig instances
+        """
+        return self.db.query(PushoverConfig).filter(
+            PushoverConfig.enabled == True
+        ).order_by(PushoverConfig.created_at).all()
+
+    def get_by_id(self, config_id: int) -> Optional[PushoverConfig]:
+        """
+        Get a Pushover configuration by ID.
+
+        Args:
+            config_id: Configuration ID
 
         Returns:
             PushoverConfig or None
         """
-        return self.db.query(PushoverConfig).first()
+        return self.db.query(PushoverConfig).filter(PushoverConfig.id == config_id).first()
 
-    def create_or_update(self, user_key: str, api_token: Optional[str] = None) -> PushoverConfig:
+    def create(self, name: str, user_key: str, api_token: Optional[str] = None, enabled: bool = True) -> PushoverConfig:
         """
-        Create or update Pushover configuration.
+        Create a new Pushover configuration.
 
         Args:
+            name: Configuration name
             user_key: Pushover user key
             api_token: Optional API token
+            enabled: Whether the configuration is enabled
 
         Returns:
             PushoverConfig instance
         """
-        config = self.get_config()
-
-        if config:
-            # Update existing
-            config.user_key = user_key
-            if api_token:
-                config.api_token = api_token
-            config.updated_at = datetime.utcnow()
-            logger.debug("Updated Pushover config")
-        else:
-            # Create new
-            config = PushoverConfig(
-                user_key=user_key,
-                api_token=api_token
-            )
-            self.db.add(config)
-            logger.debug("Created Pushover config")
-
+        config = PushoverConfig(
+            name=name,
+            user_key=user_key,
+            api_token=api_token,
+            enabled=enabled
+        )
+        self.db.add(config)
         self.db.commit()
         self.db.refresh(config)
+        logger.debug(f"Created Pushover config: {name}")
         return config
 
-    def delete(self) -> bool:
+    def update(
+        self,
+        config_id: int,
+        name: Optional[str] = None,
+        user_key: Optional[str] = None,
+        api_token: Optional[str] = None,
+        enabled: Optional[bool] = None
+    ) -> Optional[PushoverConfig]:
         """
-        Delete Pushover configuration.
+        Update a Pushover configuration.
+
+        Args:
+            config_id: Configuration ID
+            name: Optional new name
+            user_key: Optional new user key
+            api_token: Optional new API token
+            enabled: Optional enabled status
+
+        Returns:
+            Updated PushoverConfig or None if not found
+        """
+        config = self.get_by_id(config_id)
+        if not config:
+            return None
+
+        if name is not None:
+            config.name = name
+        if user_key is not None:
+            config.user_key = user_key
+        if api_token is not None:
+            config.api_token = api_token
+        if enabled is not None:
+            config.enabled = enabled
+
+        config.updated_at = datetime.utcnow()
+        self.db.commit()
+        self.db.refresh(config)
+        logger.debug(f"Updated Pushover config: {config.name}")
+        return config
+
+    def delete(self, config_id: int) -> bool:
+        """
+        Delete a Pushover configuration.
+
+        Args:
+            config_id: Configuration ID
 
         Returns:
             True if deleted, False if not found
         """
-        config = self.get_config()
+        config = self.get_by_id(config_id)
         if config:
             self.db.delete(config)
             self.db.commit()
-            logger.debug("Deleted Pushover config")
+            logger.debug(f"Deleted Pushover config: {config.name}")
             return True
         return False
 
     def is_configured(self) -> bool:
         """
-        Check if Pushover is configured.
+        Check if any Pushover configuration exists.
 
         Returns:
-            True if configuration exists, False otherwise
+            True if at least one configuration exists, False otherwise
         """
-        return self.get_config() is not None
+        return self.db.query(PushoverConfig).count() > 0

@@ -114,17 +114,20 @@ class AlertState(Base):
 
 
 class PushoverConfig(Base):
-    """Database model for Pushover configuration."""
+    """Database model for Pushover configuration - supports multiple devices."""
 
     __tablename__ = "pushover_config"
 
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String, nullable=False)  # Configuration name (e.g., "iPhone", "iPad")
     user_key = Column(String, nullable=False)
     api_token = Column(String, nullable=True)  # Optional, can use default
+    enabled = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     def __repr__(self):
-        return f"<PushoverConfig(user_key='***')>"
+        return f"<PushoverConfig(name='{self.name}', enabled={self.enabled})>"
 
 
 class FundingRateAlert(Base):

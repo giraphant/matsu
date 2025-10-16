@@ -8,8 +8,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
-  getPushoverConfig,
-  savePushoverConfig,
+  getPushoverConfigs,
+  createPushoverConfig,
+  updatePushoverConfig,
+  deletePushoverConfig,
   testPushover,
   getFundingRateAlerts,
   createFundingRateAlert,
@@ -23,11 +25,12 @@ export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState('general');
 
   // Pushover config state
-  const [pushoverConfig, setPushoverConfig] = useState<PushoverConfig | null>(null);
-  const [pushoverUserKey, setPushoverUserKey] = useState('');
-  const [pushoverApiToken, setPushoverApiToken] = useState('');
-  const [testingPushover, setTestingPushover] = useState(false);
-  const [savingPushover, setSavingPushover] = useState(false);
+  const [pushoverConfigs, setPushoverConfigs] = useState<PushoverConfig[]>([]);
+  const [newPushoverName, setNewPushoverName] = useState('');
+  const [newPushoverUserKey, setNewPushoverUserKey] = useState('');
+  const [newPushoverApiToken, setNewPushoverApiToken] = useState('');
+  const [testingPushover, setTestingPushover] = useState<number | null>(null);
+  const [creatingPushover, setCreatingPushover] = useState(false);
 
   // Funding rate alerts state
   const [fundingAlerts, setFundingAlerts] = useState<FundingRateAlert[]>([]);
@@ -55,16 +58,11 @@ export default function SettingsPage() {
 
       // Fetch all data in parallel
       const [pushoverData, fundingAlertsData] = await Promise.all([
-        getPushoverConfig().catch(() => null),
+        getPushoverConfigs().catch(() => []),
         getFundingRateAlerts().catch(() => []),
       ]);
 
-      if (pushoverData) {
-        setPushoverConfig(pushoverData);
-        setPushoverUserKey(pushoverData.user_key || '');
-        setPushoverApiToken(pushoverData.api_token || '');
-      }
-
+      setPushoverConfigs(pushoverData);
       setFundingAlerts(fundingAlertsData);
     } catch (err) {
       console.error('Failed to fetch data:', err);
@@ -75,46 +73,74 @@ export default function SettingsPage() {
   }
 
   // Pushover functions
-  async function handleSavePushover() {
+  async function handleCreatePushover() {
     try {
-      setSavingPushover(true);
+      setCreatingPushover(true);
       setError(null);
       setSuccessMessage(null);
 
-      await savePushoverConfig({
-        user_key: pushoverUserKey,
-        api_token: pushoverApiToken,
+      await createPushoverConfig({
+        name: newPushoverName,
+        user_key: newPushoverUserKey,
+        api_token: newPushoverApiToken || undefined,
+        enabled: true,
       });
 
-      setSuccessMessage('Pushover configuration saved successfully');
+      setNewPushoverName('');
+      setNewPushoverUserKey('');
+      setNewPushoverApiToken('');
+      setSuccessMessage('Pushover configuration created successfully');
       fetchAllData();
     } catch (err) {
-      setError('Failed to save Pushover configuration');
+      setError('Failed to create Pushover configuration');
     } finally {
-      setSavingPushover(false);
+      setCreatingPushover(false);
     }
   }
 
-  async function handleTestPushover() {
+  async function handleTogglePushover(config: PushoverConfig) {
     try {
-      setTestingPushover(true);
+      await updatePushoverConfig(config.id, {
+        enabled: !config.enabled,
+      });
+      fetchAllData();
+    } catch (err) {
+      setError('Failed to update Pushover configuration');
+    }
+  }
+
+  async function handleDeletePushover(id: number) {
+    if (!confirm('Are you sure you want to delete this Pushover configuration?')) return;
+
+    try {
+      await deletePushoverConfig(id);
+      setSuccessMessage('Pushover configuration deleted');
+      fetchAllData();
+    } catch (err) {
+      setError('Failed to delete Pushover configuration');
+    }
+  }
+
+  async function handleTestPushover(config: PushoverConfig) {
+    try {
+      setTestingPushover(config.id);
       setError(null);
       setSuccessMessage(null);
 
       const success = await testPushover({
-        user_key: pushoverUserKey,
-        api_token: pushoverApiToken,
+        user_key: config.user_key,
+        api_token: config.api_token,
       });
 
       if (success) {
-        setSuccessMessage('Test notification sent successfully!');
+        setSuccessMessage(`Test notification sent to ${config.name}!`);
       } else {
-        setError('Failed to send test notification');
+        setError(`Failed to send test notification to ${config.name}`);
       }
     } catch (err) {
       setError('Failed to send test notification');
     } finally {
-      setTestingPushover(false);
+      setTestingPushover(null);
     }
   }
 
@@ -198,20 +224,31 @@ export default function SettingsPage() {
         <TabsContent value="general" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Pushover Notifications</CardTitle>
+              <CardTitle>Add Pushover Device</CardTitle>
               <CardDescription>
-                Configure Pushover for receiving alert notifications
+                Configure multiple Pushover devices for receiving alert notifications
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <label htmlFor="pushover-name" className="text-sm font-medium">
+                  Device Name
+                </label>
+                <Input
+                  id="pushover-name"
+                  value={newPushoverName}
+                  onChange={(e) => setNewPushoverName(e.target.value)}
+                  placeholder="e.g., iPhone, iPad, Desktop"
+                />
+              </div>
               <div className="space-y-2">
                 <label htmlFor="pushover-user" className="text-sm font-medium">
                   User Key
                 </label>
                 <Input
                   id="pushover-user"
-                  value={pushoverUserKey}
-                  onChange={(e) => setPushoverUserKey(e.target.value)}
+                  value={newPushoverUserKey}
+                  onChange={(e) => setNewPushoverUserKey(e.target.value)}
                   placeholder="Your Pushover user key"
                 />
               </div>
@@ -221,27 +258,73 @@ export default function SettingsPage() {
                 </label>
                 <Input
                   id="pushover-token"
-                  value={pushoverApiToken}
-                  onChange={(e) => setPushoverApiToken(e.target.value)}
+                  value={newPushoverApiToken}
+                  onChange={(e) => setNewPushoverApiToken(e.target.value)}
                   placeholder="Custom API token (leave empty for default)"
                   type="password"
                 />
               </div>
-              <div className="flex gap-2">
-                <Button
-                  onClick={handleSavePushover}
-                  disabled={savingPushover || !pushoverUserKey}
-                >
-                  {savingPushover ? 'Saving...' : 'Save Configuration'}
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={handleTestPushover}
-                  disabled={testingPushover || !pushoverUserKey}
-                >
-                  {testingPushover ? 'Sending...' : 'Send Test'}
-                </Button>
-              </div>
+              <Button
+                onClick={handleCreatePushover}
+                disabled={creatingPushover || !newPushoverName || !newPushoverUserKey}
+              >
+                {creatingPushover ? 'Adding...' : 'Add Device'}
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Your Pushover Devices</CardTitle>
+              <CardDescription>
+                Manage your Pushover notification devices
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {loading ? (
+                <div className="text-muted-foreground">Loading...</div>
+              ) : pushoverConfigs.length === 0 ? (
+                <div className="text-muted-foreground">No Pushover devices configured</div>
+              ) : (
+                <div className="space-y-2">
+                  {pushoverConfigs.map((config) => (
+                    <div key={config.id} className="flex items-center justify-between rounded-lg border p-3">
+                      <div className="space-y-1">
+                        <div className="font-medium">{config.name}</div>
+                        <div className="text-sm text-muted-foreground">
+                          User Key: {config.user_key.slice(0, 10)}...
+                        </div>
+                        {config.api_token && (
+                          <div className="text-xs text-muted-foreground">
+                            Custom API Token configured
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleTestPushover(config)}
+                          disabled={testingPushover === config.id}
+                        >
+                          {testingPushover === config.id ? 'Testing...' : 'Test'}
+                        </Button>
+                        <Switch
+                          checked={config.enabled}
+                          onCheckedChange={() => handleTogglePushover(config)}
+                        />
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeletePushover(config.id)}
+                        >
+                          Delete
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

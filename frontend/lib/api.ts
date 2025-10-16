@@ -190,25 +190,65 @@ export async function getAlertHistory(limit = 50): Promise<any[]> {
 
 // Pushover Configuration
 export interface PushoverConfig {
+  id: number;
+  name: string;
   user_key: string;
   api_token?: string;
-  updated_at?: string;
+  enabled: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
-export async function getPushoverConfig(): Promise<PushoverConfig | null> {
-  const response = await fetch(`${API_BASE_URL}/pushover/config`);
-  if (!response.ok) return null;
+export async function getPushoverConfigs(): Promise<PushoverConfig[]> {
+  const response = await fetch(`${API_BASE_URL}/pushover/configs`);
+  if (!response.ok) throw new Error('Failed to fetch Pushover configurations');
   return response.json();
 }
 
-export async function savePushoverConfig(config: { user_key: string; api_token?: string }): Promise<PushoverConfig> {
+export async function getPushoverConfig(id: number): Promise<PushoverConfig> {
+  const response = await fetch(`${API_BASE_URL}/pushover/config/${id}`);
+  if (!response.ok) throw new Error('Failed to fetch Pushover configuration');
+  return response.json();
+}
+
+export async function createPushoverConfig(config: {
+  name: string;
+  user_key: string;
+  api_token?: string;
+  enabled?: boolean;
+}): Promise<PushoverConfig> {
   const response = await fetch(`${API_BASE_URL}/pushover/config`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(config),
   });
-  if (!response.ok) throw new Error('Failed to save Pushover configuration');
+  if (!response.ok) throw new Error('Failed to create Pushover configuration');
   return response.json();
+}
+
+export async function updatePushoverConfig(
+  id: number,
+  config: {
+    name?: string;
+    user_key?: string;
+    api_token?: string;
+    enabled?: boolean;
+  }
+): Promise<PushoverConfig> {
+  const response = await fetch(`${API_BASE_URL}/pushover/config/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(config),
+  });
+  if (!response.ok) throw new Error('Failed to update Pushover configuration');
+  return response.json();
+}
+
+export async function deletePushoverConfig(id: number): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/pushover/config/${id}`, {
+    method: 'DELETE',
+  });
+  if (!response.ok) throw new Error('Failed to delete Pushover configuration');
 }
 
 export async function testPushover(config: { user_key: string; api_token?: string }): Promise<boolean> {

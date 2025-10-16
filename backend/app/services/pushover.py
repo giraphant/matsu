@@ -184,7 +184,7 @@ class PushoverService:
         url: Optional[str] = None
     ) -> bool:
         """
-        Send an alert notification using configured Pushover settings.
+        Send an alert notification to all enabled Pushover configurations.
 
         Args:
             message: Notification message
@@ -193,26 +193,39 @@ class PushoverService:
             url: Optional URL to include
 
         Returns:
-            True if sent successfully, False otherwise
+            True if sent successfully to at least one device, False otherwise
         """
         logger.info(f"[PushoverService] send_alert called - title: {title}, level: {level}")
 
-        config = self.pushover_repo.get_config()
+        configs = self.pushover_repo.get_enabled()
 
-        if not config:
-            logger.warning("[PushoverService] ⚠️  Pushover not configured, skipping notification")
+        if not configs:
+            logger.warning("[PushoverService] ⚠️  No enabled Pushover configurations, skipping notification")
             return False
 
-        logger.info(f"[PushoverService] Using config with user_key: {config.user_key[:10]}...")
+        logger.info(f"[PushoverService] Sending to {len(configs)} enabled device(s)")
 
-        return send_pushover_notification(
-            user_key=config.user_key,
-            message=message,
-            title=title,
-            level=level,
-            api_token=config.api_token,
-            url=url
-        )
+        success_count = 0
+        for config in configs:
+            logger.info(f"[PushoverService] Sending to '{config.name}' (user_key: {config.user_key[:10]}...)")
+
+            success = send_pushover_notification(
+                user_key=config.user_key,
+                message=message,
+                title=title,
+                level=level,
+                api_token=config.api_token,
+                url=url
+            )
+
+            if success:
+                success_count += 1
+                logger.info(f"[PushoverService] ✅ Successfully sent to '{config.name}'")
+            else:
+                logger.error(f"[PushoverService] ❌ Failed to send to '{config.name}'")
+
+        logger.info(f"[PushoverService] Sent to {success_count}/{len(configs)} device(s)")
+        return success_count > 0
 
     def is_configured(self) -> bool:
         """
