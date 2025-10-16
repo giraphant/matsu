@@ -143,7 +143,7 @@ class StartupManager:
 
         # DEPRECATED: WebhookMonitorAlertChecker removed (used old AlertConfig system)
         # Now only use Monitor Alert Checker for AlertRule system
-        self.monitors.append(MonitorAlertChecker(interval=30))
+        self.monitors.append(MonitorAlertChecker(interval=10))
 
         # Start all monitors
         for monitor in self.monitors:
