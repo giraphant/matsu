@@ -15,7 +15,7 @@ logger = get_logger(__name__)
 
 class PythSpotMonitor(BaseMonitor):
     def __init__(self):
-        super().__init__(name="Pyth Oracle Prices", interval=60)  # Every 1 minute
+        super().__init__(name="Pyth Oracle Prices", interval=10)  # Every 10 seconds
         self.api_url = "https://hermes.pyth.network/v2/updates/price/latest"
 
         # Price feed IDs for Pyth Network

@@ -22,8 +22,8 @@ class BybitSpotMonitor(BaseMonitor):
     """Monitor for Bybit spot prices."""
 
     def __init__(self):
-        # Run every 1 minute (60 seconds)
-        super().__init__(name="Bybit Spot Prices", interval=60)
+        # Run every 10 seconds
+        super().__init__(name="Bybit Spot Prices", interval=10)
         self.api_url = "https://api.bybit.com/v5/market/tickers"
 
     async def run(self) -> None:

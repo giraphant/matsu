@@ -22,8 +22,8 @@ class BinanceSpotMonitor(BaseMonitor):
     """Monitor for Binance spot prices."""
 
     def __init__(self):
-        # Run every 1 minute (60 seconds)
-        super().__init__(name="Binance Spot Prices", interval=60)
+        # Run every 10 seconds
+        super().__init__(name="Binance Spot Prices", interval=10)
         self.api_url = "https://api.binance.com/api/v3/ticker/24hr"
 
     async def run(self) -> None:

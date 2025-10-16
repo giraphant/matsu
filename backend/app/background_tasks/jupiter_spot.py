@@ -15,7 +15,7 @@ logger = get_logger(__name__)
 
 class JupiterSpotMonitor(BaseMonitor):
     def __init__(self):
-        super().__init__(name="Jupiter Spot Prices", interval=60)  # Every 1 minute
+        super().__init__(name="Jupiter Spot Prices", interval=10)  # Every 10 seconds
         self.api_url = "https://lite-api.jup.ag/price/v3"
 
         # Token mint addresses on Solana
