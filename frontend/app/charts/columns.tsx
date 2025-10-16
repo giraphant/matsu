@@ -219,6 +219,13 @@ export const columns: ColumnDef<WebhookData>[] = [
             >
               Copy monitor ID
             </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={() => meta?.onDelete?.(webhook.uid)}
+              className="text-red-600 focus:text-red-600"
+            >
+              Delete Webhook
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       )

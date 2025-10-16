@@ -194,6 +194,28 @@ export default function ChartsPage() {
     setDialogOpen(true);
   };
 
+  const handleDeleteWebhook = async (monitorId: string) => {
+    if (!confirm('Are you sure you want to delete this webhook? All historical data will be permanently deleted.')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/monitors/${monitorId}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        toast.success('Webhook deleted successfully');
+        fetchWebhooks();
+      } else {
+        throw new Error('Failed to delete webhook');
+      }
+    } catch (error) {
+      console.error('Failed to delete webhook:', error);
+      toast.error('Failed to delete webhook');
+    }
+  };
+
   const handleRefresh = () => {
     if (activeTab === 'webhooks') {
       fetchWebhooks();
@@ -419,6 +441,7 @@ export default function ChartsPage() {
                 data={webhooks}
                 meta={{
                   onViewDetails: handleViewDetails,
+                  onDelete: handleDeleteWebhook,
                 }}
                 pageSize={15}
               />

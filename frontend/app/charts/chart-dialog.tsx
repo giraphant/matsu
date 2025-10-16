@@ -202,7 +202,7 @@ export function ChartDialog({ open, onOpenChange, webhook }: ChartDialogProps) {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="h-[600px]">
+                <div className="h-[500px]">
                   {loading ? (
                     <div className="flex items-center justify-center h-full">
                       <p className="text-muted-foreground">Loading chart data...</p>
