@@ -43,10 +43,11 @@ interface ChartDialogProps {
 }
 
 interface HistoricalData {
-  id: string
+  timestamp: string
   value: number
-  created_at: string
-  uid: string
+  unit?: string
+  status?: string
+  is_change?: boolean
 }
 
 export function ChartDialog({ open, onOpenChange, webhook }: ChartDialogProps) {
@@ -62,10 +63,12 @@ export function ChartDialog({ open, onOpenChange, webhook }: ChartDialogProps) {
   const fetchHistoricalData = async (uid: string) => {
     setLoading(true)
     try {
-      const response = await fetch(`/api/webhooks/history?uid=${uid}&limit=100`)
+      const response = await fetch(`/api/webhooks/${uid}/history?limit=100`)
       if (response.ok) {
         const data = await response.json()
         setHistoricalData(data)
+      } else {
+        console.error('Failed to fetch historical data:', response.status, response.statusText)
       }
     } catch (error) {
       console.error('Failed to fetch historical data:', error)
@@ -77,7 +80,7 @@ export function ChartDialog({ open, onOpenChange, webhook }: ChartDialogProps) {
 
   const chartData = {
     labels: historicalData.map(d =>
-      new Date(d.created_at).toLocaleString('en-US', {
+      new Date(d.timestamp).toLocaleString('en-US', {
         month: 'short',
         day: 'numeric',
         hour: '2-digit',
