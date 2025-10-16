@@ -31,6 +31,7 @@ services:
       - PORT=13145
       - HOSTNAME=0.0.0.0
       - NODE_ENV=production
+      - BACKEND_URL=http://backend:9988
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:13145/"]
       interval: 30s
