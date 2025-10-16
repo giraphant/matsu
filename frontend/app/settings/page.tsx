@@ -32,6 +32,11 @@ export default function SettingsPage() {
   const [newPushoverMinLevel, setNewPushoverMinLevel] = useState('low');
   const [testingPushover, setTestingPushover] = useState<number | null>(null);
   const [creatingPushover, setCreatingPushover] = useState(false);
+  const [editingPushover, setEditingPushover] = useState<number | null>(null);
+  const [editPushoverName, setEditPushoverName] = useState('');
+  const [editPushoverUserKey, setEditPushoverUserKey] = useState('');
+  const [editPushoverApiToken, setEditPushoverApiToken] = useState('');
+  const [savingEdit, setSavingEdit] = useState(false);
 
   // Funding rate alerts state
   const [fundingAlerts, setFundingAlerts] = useState<FundingRateAlert[]>([]);
@@ -132,6 +137,42 @@ export default function SettingsPage() {
       fetchAllData();
     } catch (err) {
       setError('Failed to update alert level');
+    }
+  }
+
+  function handleStartEdit(config: PushoverConfig) {
+    setEditingPushover(config.id);
+    setEditPushoverName(config.name);
+    setEditPushoverUserKey(config.user_key);
+    setEditPushoverApiToken(config.api_token || '');
+  }
+
+  function handleCancelEdit() {
+    setEditingPushover(null);
+    setEditPushoverName('');
+    setEditPushoverUserKey('');
+    setEditPushoverApiToken('');
+  }
+
+  async function handleSaveEdit(configId: number) {
+    try {
+      setSavingEdit(true);
+      setError(null);
+      setSuccessMessage(null);
+
+      await updatePushoverConfig(configId, {
+        name: editPushoverName,
+        user_key: editPushoverUserKey,
+        api_token: editPushoverApiToken || undefined,
+      });
+
+      setSuccessMessage('Pushover device updated successfully');
+      handleCancelEdit();
+      fetchAllData();
+    } catch (err) {
+      setError('Failed to update Pushover device');
+    } finally {
+      setSavingEdit(false);
     }
   }
 
@@ -318,56 +359,114 @@ export default function SettingsPage() {
               ) : (
                 <div className="space-y-2">
                   {pushoverConfigs.map((config) => (
-                    <div key={config.id} className="flex items-start justify-between rounded-lg border p-3">
-                      <div className="space-y-1 flex-1">
-                        <div className="font-medium">{config.name}</div>
-                        <div className="text-sm text-muted-foreground">
-                          User Key: {config.user_key.slice(0, 10)}...
-                        </div>
-                        {config.api_token && (
-                          <div className="text-xs text-muted-foreground">
-                            Custom API Token configured
+                    <div key={config.id} className="rounded-lg border p-3">
+                      {editingPushover === config.id ? (
+                        // Edit mode
+                        <div className="space-y-3">
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium">Device Name</label>
+                            <Input
+                              value={editPushoverName}
+                              onChange={(e) => setEditPushoverName(e.target.value)}
+                              placeholder="Device name"
+                            />
                           </div>
-                        )}
-                        <div className="flex items-center gap-2 mt-2">
-                          <span className="text-xs text-muted-foreground">Min Level:</span>
-                          <Select
-                            value={config.min_alert_level}
-                            onValueChange={(value) => handleUpdateMinLevel(config, value)}
-                          >
-                            <SelectTrigger className="h-7 w-[140px] text-xs">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="low">Low (All)</SelectItem>
-                              <SelectItem value="medium">Medium+</SelectItem>
-                              <SelectItem value="high">High+</SelectItem>
-                              <SelectItem value="critical">Critical</SelectItem>
-                            </SelectContent>
-                          </Select>
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium">User Key</label>
+                            <Input
+                              value={editPushoverUserKey}
+                              onChange={(e) => setEditPushoverUserKey(e.target.value)}
+                              placeholder="Pushover user key"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium">API Token (Optional)</label>
+                            <Input
+                              value={editPushoverApiToken}
+                              onChange={(e) => setEditPushoverApiToken(e.target.value)}
+                              placeholder="Custom API token"
+                              type="password"
+                            />
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              onClick={() => handleSaveEdit(config.id)}
+                              disabled={savingEdit || !editPushoverName || !editPushoverUserKey}
+                              size="sm"
+                            >
+                              {savingEdit ? 'Saving...' : 'Save'}
+                            </Button>
+                            <Button
+                              variant="outline"
+                              onClick={handleCancelEdit}
+                              disabled={savingEdit}
+                              size="sm"
+                            >
+                              Cancel
+                            </Button>
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleTestPushover(config)}
-                          disabled={testingPushover === config.id}
-                        >
-                          {testingPushover === config.id ? 'Testing...' : 'Test'}
-                        </Button>
-                        <Switch
-                          checked={config.enabled}
-                          onCheckedChange={() => handleTogglePushover(config)}
-                        />
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDeletePushover(config.id)}
-                        >
-                          Delete
-                        </Button>
-                      </div>
+                      ) : (
+                        // Display mode
+                        <div className="flex items-start justify-between">
+                          <div className="space-y-1 flex-1">
+                            <div className="font-medium">{config.name}</div>
+                            <div className="text-sm text-muted-foreground">
+                              User Key: {config.user_key.slice(0, 10)}...
+                            </div>
+                            {config.api_token && (
+                              <div className="text-xs text-muted-foreground">
+                                Custom API Token configured
+                              </div>
+                            )}
+                            <div className="flex items-center gap-2 mt-2">
+                              <span className="text-xs text-muted-foreground">Min Level:</span>
+                              <Select
+                                value={config.min_alert_level}
+                                onValueChange={(value) => handleUpdateMinLevel(config, value)}
+                              >
+                                <SelectTrigger className="h-7 w-[140px] text-xs">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="low">Low (All)</SelectItem>
+                                  <SelectItem value="medium">Medium+</SelectItem>
+                                  <SelectItem value="high">High+</SelectItem>
+                                  <SelectItem value="critical">Critical</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleStartEdit(config)}
+                            >
+                              Edit
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleTestPushover(config)}
+                              disabled={testingPushover === config.id}
+                            >
+                              {testingPushover === config.id ? 'Testing...' : 'Test'}
+                            </Button>
+                            <Switch
+                              checked={config.enabled}
+                              onCheckedChange={() => handleTogglePushover(config)}
+                            />
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeletePushover(config.id)}
+                            >
+                              Delete
+                            </Button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
