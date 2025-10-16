@@ -8,8 +8,8 @@ services:
     ports:
       - "9988:9988"
     volumes:
-      - ./data:/app/data
-      - ./logs:/app/logs
+      - /home/matsu/data:/app/data
+      - /home/matsu/logs:/app/logs
     environment:
       - HOST=0.0.0.0
       - PORT=9988
