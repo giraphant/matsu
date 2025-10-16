@@ -764,7 +764,16 @@ export default function MonitorsPage() {
       )}
 
       {/* Alert Configuration Dialog */}
-      <Dialog open={alertDialogOpen} onOpenChange={setAlertDialogOpen}>
+      <Dialog
+        open={alertDialogOpen}
+        onOpenChange={(open) => {
+          setAlertDialogOpen(open);
+          // Only reset form when dialog is closed
+          if (!open) {
+            resetAlertForm();
+          }
+        }}
+      >
         <DialogContent className="sm:max-w-[450px]">
           <DialogHeader>
             <DialogTitle>Alert Configuration</DialogTitle>
