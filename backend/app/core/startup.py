@@ -118,6 +118,7 @@ class StartupManager:
         from app.workers.dex_cache_warmer import DexCacheWarmer
         from app.workers.alert_checker import AlertChecker
         from app.workers.monitor_alert_checker import MonitorAlertChecker
+        from app.workers.monitor_recompute_worker import MonitorRecomputeWorker
 
         # Create monitor instances based on feature flags
         if settings.ENABLE_DEX_MONITORING:
@@ -136,6 +137,9 @@ class StartupManager:
         self.monitors.append(BybitSpotMonitor())
         self.monitors.append(JupiterSpotMonitor())  # Solana on-chain prices
         self.monitors.append(PythSpotMonitor())     # Oracle prices
+
+        # Monitor recompute worker (every 10 seconds to match spot price updates)
+        self.monitors.append(MonitorRecomputeWorker(interval=10))
 
         # DEPRECATED: WebhookMonitorAlertChecker removed (used old AlertConfig system)
         # Now only use Monitor Alert Checker for AlertRule system
