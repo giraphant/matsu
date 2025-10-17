@@ -52,9 +52,9 @@ async def get_funding_rates() -> List[Dict[str, Any]]:
                     "symbol": latest.symbol,
                     "rate": latest.rate,
                     "annualized_rate": latest.annualized_rate,
-                    "next_funding_time": latest.next_funding_time.isoformat() if latest.next_funding_time else None,
+                    "next_funding_time": latest.next_funding_time.isoformat() + 'Z' if latest.next_funding_time else None,
                     "mark_price": latest.mark_price,
-                    "timestamp": latest.timestamp.isoformat()
+                    "timestamp": latest.timestamp.isoformat() + 'Z'
                 })
 
         return results
@@ -102,7 +102,7 @@ async def get_spot_prices() -> List[Dict[str, Any]]:
                     "symbol": latest.symbol,
                     "price": latest.price,
                     "volume_24h": latest.volume_24h,
-                    "timestamp": latest.timestamp.isoformat()
+                    "timestamp": latest.timestamp.isoformat() + 'Z'
                 })
 
         return results
@@ -141,9 +141,9 @@ async def get_funding_rate_history(
             "symbol": r.symbol,
             "rate": r.rate,
             "annualized_rate": r.annualized_rate,
-            "next_funding_time": r.next_funding_time.isoformat() if r.next_funding_time else None,
+            "next_funding_time": r.next_funding_time.isoformat() + 'Z' if r.next_funding_time else None,
             "mark_price": r.mark_price,
-            "timestamp": r.timestamp.isoformat()
+            "timestamp": r.timestamp.isoformat() + 'Z'
         } for r in history]
 
     except Exception as e:
@@ -180,7 +180,7 @@ async def get_spot_price_history(
             "symbol": r.symbol,
             "price": r.price,
             "volume_24h": r.volume_24h,
-            "timestamp": r.timestamp.isoformat()
+            "timestamp": r.timestamp.isoformat() + 'Z'
         } for r in history]
 
     except Exception as e:
