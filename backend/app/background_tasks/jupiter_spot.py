@@ -21,13 +21,17 @@ class JupiterSpotMonitor(BaseMonitor):
         self.usdc_address = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'  # USDC
 
         # USD-priced tokens (get price via USDC swap quote)
+        # Format: symbol -> (address, decimals)
         self.usd_tokens = {
-            'SOL': 'So11111111111111111111111111111111111111112',  # Native SOL
-            'BTC': '3NZ9JMVBmGAqocybic2c7LQCJScmgsAZ6vQqTDzcqmJh',  # Wrapped BTC (Portal)
-            'ETH': '7vfCXTUXx5WJV5JADk17DUJ4ksgau7utNKj4b963voxs',  # Wrapped Ether (Wormhole)
-            'JLP': '27G8MtK7VtTcCHkpASjSDdkWWYfoqT6ggEuKidVJidD4',  # Jupiter Perps LP
-            'ALP': '4yCLi5yWGzpTWMQ1iWHG5CrGYAdBkhyEdsuSugjDUqwj',  # Adrena LP
+            'SOL': ('So11111111111111111111111111111111111111112', 9),  # Native SOL
+            'BTC': ('3NZ9JMVBmGAqocybic2c7LQCJScmgsAZ6vQqTDzcqmJh', 8),  # Wrapped BTC (Portal)
+            'ETH': ('7vfCXTUXx5WJV5JADk17DUJ4ksgau7utNKj4b963voxs', 8),  # Wrapped Ether (Wormhole)
+            'JLP': ('27G8MtK7VtTcCHkpASjSDdkWWYfoqT6ggEuKidVJidD4', 6),  # Jupiter Perps LP
+            'ALP': ('4yCLi5yWGzpTWMQ1iWHG5CrGYAdBkhyEdsuSugjDUqwj', 6),  # Adrena LP
         }
+
+        # USDC decimals
+        self.usdc_decimals = 6
 
         # SOL Liquid Staking Tokens (LSTs) - how many LSTs per SOL
         self.lst_tokens = {
@@ -48,17 +52,10 @@ class JupiterSpotMonitor(BaseMonitor):
 
             async with httpx.AsyncClient(timeout=30.0) as client:
                 # Fetch USD prices using swap quotes (Token -> USDC)
-                # For each token, get quote to swap 1 token to USDC to determine USD price
-                for symbol, token_address in self.usd_tokens.items():
+                for symbol, (token_address, token_decimals) in self.usd_tokens.items():
                     try:
-                        # Determine appropriate amount based on token
-                        # Use 1 token as base (adjusted for decimals)
-                        if symbol == 'SOL':
-                            base_amount = 1_000_000_000  # 1 SOL (9 decimals)
-                        elif symbol in ['BTC', 'ETH']:
-                            base_amount = 100_000_000  # 0.1 BTC/ETH (8 decimals)
-                        else:
-                            base_amount = 1_000_000_000  # 1 token (assuming 9 decimals)
+                        # Use 1 token as base amount (adjusted for decimals)
+                        base_amount = 10 ** token_decimals
 
                         # Get quote: Token -> USDC
                         params = {
@@ -79,17 +76,10 @@ class JupiterSpotMonitor(BaseMonitor):
                             logger.warning(f"Invalid quote for {symbol}: in={in_amount}, out={out_amount}")
                             continue
 
-                        # Calculate USD price: (USDC out / USDC decimals) / (Token in / Token decimals)
-                        # USDC has 6 decimals, so out_amount is in micro-USDC
-                        usdc_value = out_amount / 1_000_000  # Convert to USDC
-
-                        # Calculate price per token
-                        if symbol in ['BTC', 'ETH']:
-                            # We used 0.1 token, so multiply by 10
-                            price = usdc_value * 10
-                        else:
-                            # We used 1 token
-                            price = usdc_value
+                        # Calculate USD price using actual returned amounts and decimals
+                        # Price = (outAmount / 10^usdc_decimals) / (inAmount / 10^token_decimals)
+                        # Simplified: Price = (outAmount * 10^token_decimals) / (inAmount * 10^usdc_decimals)
+                        price = (out_amount * (10 ** token_decimals)) / (in_amount * (10 ** self.usdc_decimals))
 
                         # Store in database
                         new_price = SpotPrice(
@@ -102,7 +92,10 @@ class JupiterSpotMonitor(BaseMonitor):
                         db.add(new_price)
                         stored_count += 1
 
-                        logger.info(f"Jupiter {symbol} price: ${price:.2f} (quote: {in_amount} -> {out_amount} USDC)")
+                        # Log with human-readable amounts
+                        token_amount = in_amount / (10 ** token_decimals)
+                        usdc_amount = out_amount / (10 ** self.usdc_decimals)
+                        logger.info(f"Jupiter {symbol} price: ${price:.2f} (quote: {token_amount:.4f} {symbol} -> {usdc_amount:.2f} USDC)")
 
                     except Exception as e:
                         logger.error(f"Error fetching Jupiter quote for {symbol}: {e}", exc_info=True)
