@@ -136,8 +136,8 @@ class StartupManager:
         self.monitors.append(LighterAccountMonitor(account_index=138344))
 
         # Position calculators (every 60 seconds)
-        if settings.JLP_AMOUNT > 0:
-            self.monitors.append(JLPHedgeMonitor(jlp_amount=settings.JLP_AMOUNT))
+        # JLP Hedge Monitor reads jlp_amount from database settings
+        self.monitors.append(JLPHedgeMonitor())
 
         # Monitor recompute worker (every 10 seconds to match spot price updates)
         self.monitors.append(MonitorRecomputeWorker(interval=10))

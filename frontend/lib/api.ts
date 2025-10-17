@@ -330,3 +330,32 @@ export async function checkHealth(): Promise<boolean> {
     return false;
   }
 }
+
+// App Settings
+export interface AppSetting {
+  key: string;
+  value: string;
+  description?: string;
+}
+
+export async function getAllSettings(): Promise<Record<string, string>> {
+  const response = await fetch(`${API_BASE_URL}/settings`);
+  if (!response.ok) throw new Error('Failed to fetch settings');
+  return response.json();
+}
+
+export async function getSetting(key: string): Promise<AppSetting> {
+  const response = await fetch(`${API_BASE_URL}/settings/${key}`);
+  if (!response.ok) throw new Error(`Failed to fetch setting: ${key}`);
+  return response.json();
+}
+
+export async function updateSetting(key: string, value: string): Promise<AppSetting> {
+  const response = await fetch(`${API_BASE_URL}/settings/${key}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ value }),
+  });
+  if (!response.ok) throw new Error(`Failed to update setting: ${key}`);
+  return response.json();
+}

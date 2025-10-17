@@ -21,6 +21,7 @@ from app.api.alerts import router as alerts_router
 from app.api.auth import router as auth_router
 from app.api.monitors import router as monitors_router
 from app.api.trading import router as trading_router
+from app.api.settings import router as settings_router
 
 logger = get_logger(__name__)
 
@@ -72,6 +73,7 @@ app.include_router(monitors_router, prefix="/api", tags=["monitors"])
 app.include_router(data_router, prefix="/api", tags=["data"])
 app.include_router(alerts_router, prefix="/api", tags=["alerts"])
 app.include_router(trading_router, prefix="/api/trading", tags=["trading"])
+app.include_router(settings_router, prefix="/api", tags=["settings"])
 
 
 # Old HTML template pages (kept for reference)

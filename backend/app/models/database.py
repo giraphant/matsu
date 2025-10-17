@@ -257,6 +257,22 @@ class AlertRule(Base):
         return f"<AlertRule(id={self.id}, name={self.name}, condition={self.condition})>"
 
 
+class AppSetting(Base):
+    """
+    Application settings stored in database.
+    Key-value pairs for runtime configuration.
+    """
+    __tablename__ = 'app_settings'
+
+    key = Column(String, primary_key=True)
+    value = Column(String, nullable=False)
+    description = Column(Text, nullable=True)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    def __repr__(self):
+        return f"<AppSetting(key={self.key}, value={self.value})>"
+
+
 # Database utility functions
 
 def get_db() -> Session:

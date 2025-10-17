@@ -12,7 +12,7 @@ from typing import Dict, Any
 import os
 
 from app.core.logger import get_logger
-from app.models.database import WebhookData, get_db_session
+from app.models.database import WebhookData, AppSetting, get_db_session
 from app.background_tasks.base import BaseMonitor
 
 logger = get_logger(__name__)
@@ -37,29 +37,40 @@ STABLECOINS = {"USDC", "USDT"}
 class JLPHedgeMonitor(BaseMonitor):
     """Monitor for JLP hedge position calculations."""
 
-    def __init__(self, jlp_amount: float = None):
+    def __init__(self):
         # Run every 60 seconds (1 minute)
         super().__init__(name="JLP Hedge Calculator", interval=60)
+        logger.info("JLP Hedge Monitor initialized (reads JLP amount from database)")
 
-        # Get JLP amount from environment variable or use provided value
-        if jlp_amount is None:
-            jlp_amount = float(os.getenv("JLP_AMOUNT", "0"))
-
-        self.jlp_amount = jlp_amount
-        logger.info(f"JLP Hedge Monitor initialized with amount: {self.jlp_amount:,.2f}")
+    def _get_jlp_amount(self) -> float:
+        """Get JLP amount from database settings."""
+        db = get_db_session()
+        try:
+            setting = db.query(AppSetting).filter(AppSetting.key == "jlp_amount").first()
+            if setting:
+                return float(setting.value)
+            return 0.0
+        except Exception as e:
+            logger.error(f"Error reading JLP amount from database: {e}")
+            return 0.0
+        finally:
+            db.close()
 
     async def run(self) -> None:
         """Calculate and store hedge positions for one iteration."""
 
-        if self.jlp_amount <= 0:
+        # Read JLP amount from database
+        jlp_amount = self._get_jlp_amount()
+
+        if jlp_amount <= 0:
             logger.debug("JLP amount is 0, skipping hedge calculation")
             return
 
-        logger.debug(f"Calculating JLP hedge positions for {self.jlp_amount:,.2f} JLP...")
+        logger.debug(f"Calculating JLP hedge positions for {jlp_amount:,.2f} JLP...")
 
         try:
             # Calculate hedge positions
-            hedge_positions = await self._calculate_hedge()
+            hedge_positions = await self._calculate_hedge(jlp_amount)
 
             if not hedge_positions:
                 logger.warning("No hedge positions calculated")
@@ -136,7 +147,7 @@ class JLPHedgeMonitor(BaseMonitor):
             logger.error(f"Error getting custody data for {custody_addr}: {e}")
             raise
 
-    async def _calculate_hedge(self) -> Dict[str, Dict[str, float]]:
+    async def _calculate_hedge(self, jlp_amount: float) -> Dict[str, Dict[str, float]]:
         """Calculate hedge amounts (excluding stablecoins)"""
         try:
             from solana.rpc.async_api import AsyncClient
@@ -158,7 +169,7 @@ class JLPHedgeMonitor(BaseMonitor):
                     data = await self._get_custody_data(client, custody_addr, decimals)
                     net_exposure = data["owned"] - data["locked"] + data["short_oi"] + data["fees"]
                     per_jlp = net_exposure / total_supply
-                    hedge_amount = per_jlp * self.jlp_amount
+                    hedge_amount = per_jlp * jlp_amount
 
                     # Use BTC instead of WBTC for display
                     display_symbol = "BTC" if symbol == "WBTC" else symbol

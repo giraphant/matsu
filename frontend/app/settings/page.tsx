@@ -17,6 +17,8 @@ import {
   createFundingRateAlert,
   updateFundingRateAlert,
   deleteFundingRateAlert,
+  getSetting,
+  updateSetting,
 } from '@/lib/api';
 import type { PushoverConfig, FundingRateAlert } from '@/lib/api';
 
@@ -50,6 +52,10 @@ export default function SettingsPage() {
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
+  // JLP configuration state
+  const [jlpAmount, setJlpAmount] = useState('0');
+  const [savingJlpAmount, setSavingJlpAmount] = useState(false);
+
   // Available exchanges for funding rate alerts
   const availableExchanges = ['lighter', 'aster', 'grvt', 'backpack', 'hyperliquid', 'bybit', 'binance'];
 
@@ -70,6 +76,15 @@ export default function SettingsPage() {
 
       setPushoverConfigs(pushoverData);
       setFundingAlerts(fundingAlertsData);
+
+      // Fetch JLP amount setting
+      try {
+        const jlpSetting = await getSetting('jlp_amount');
+        setJlpAmount(jlpSetting.value);
+      } catch (err) {
+        // Setting might not exist yet, use default 0
+        setJlpAmount('0');
+      }
     } catch (err) {
       console.error('Failed to fetch data:', err);
       setError('Failed to load settings');
@@ -252,6 +267,22 @@ export default function SettingsPage() {
     }
   }
 
+  // JLP amount functions
+  async function handleSaveJlpAmount() {
+    try {
+      setSavingJlpAmount(true);
+      setError(null);
+      setSuccessMessage(null);
+
+      await updateSetting('jlp_amount', jlpAmount);
+      setSuccessMessage('JLP amount updated successfully');
+    } catch (err) {
+      setError('Failed to update JLP amount');
+    } finally {
+      setSavingJlpAmount(false);
+    }
+  }
+
   return (
     <div className="flex flex-1 flex-col gap-4">
       <div className="flex items-center">
@@ -271,9 +302,10 @@ export default function SettingsPage() {
       )}
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="funding">Funding Alerts</TabsTrigger>
+          <TabsTrigger value="jlp">JLP Config</TabsTrigger>
         </TabsList>
 
         <TabsContent value="general" className="space-y-4">
@@ -589,6 +621,73 @@ export default function SettingsPage() {
                   ))}
                 </div>
               )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="jlp" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>JLP Position Configuration</CardTitle>
+              <CardDescription>
+                Configure your JLP token holdings for hedge position calculation
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <label htmlFor="jlp-amount" className="text-sm font-medium">
+                  JLP Amount
+                </label>
+                <Input
+                  id="jlp-amount"
+                  type="number"
+                  step="0.01"
+                  value={jlpAmount}
+                  onChange={(e) => setJlpAmount(e.target.value)}
+                  placeholder="Enter your JLP amount"
+                />
+                <p className="text-xs text-muted-foreground">
+                  The system will calculate required hedge positions based on this amount.
+                  Set to 0 to disable hedge calculations.
+                </p>
+              </div>
+              <Button
+                onClick={handleSaveJlpAmount}
+                disabled={savingJlpAmount}
+              >
+                {savingJlpAmount ? 'Saving...' : 'Save JLP Amount'}
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Current Configuration</CardTitle>
+              <CardDescription>
+                Your current JLP hedge calculation settings
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">JLP Amount:</span>
+                  <span className="text-sm font-medium">{parseFloat(jlpAmount).toLocaleString()} JLP</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">Status:</span>
+                  <span className="text-sm font-medium">
+                    {parseFloat(jlpAmount) > 0 ? (
+                      <span className="text-green-600 dark:text-green-400">Active</span>
+                    ) : (
+                      <span className="text-muted-foreground">Inactive</span>
+                    )}
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground mt-4">
+                  The JLP Hedge Monitor runs every 60 seconds and calculates required hedge positions
+                  for SOL, ETH, and BTC based on your JLP holdings. View the results on the main dashboard.
+                </p>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
