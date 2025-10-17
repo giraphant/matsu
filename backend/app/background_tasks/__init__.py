@@ -16,6 +16,7 @@ from .pyth_spot import PythSpotMonitor
 from .lighter_account import LighterAccountMonitor
 # Position calculators
 from .jlp_hedge_monitor import JLPHedgeMonitor
+from .alp_hedge_monitor import ALPHedgeMonitor
 
 __all__ = [
     "BaseMonitor",
@@ -34,4 +35,5 @@ __all__ = [
     "LighterAccountMonitor",
     # Position calculators
     "JLPHedgeMonitor",
+    "ALPHedgeMonitor",
 ]

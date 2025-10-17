@@ -56,6 +56,10 @@ export default function SettingsPage() {
   const [jlpAmount, setJlpAmount] = useState('0');
   const [savingJlpAmount, setSavingJlpAmount] = useState(false);
 
+  // ALP configuration state
+  const [alpAmount, setAlpAmount] = useState('0');
+  const [savingAlpAmount, setSavingAlpAmount] = useState(false);
+
   // Available exchanges for funding rate alerts
   const availableExchanges = ['lighter', 'aster', 'grvt', 'backpack', 'hyperliquid', 'bybit', 'binance'];
 
@@ -84,6 +88,15 @@ export default function SettingsPage() {
       } catch (err) {
         // Setting might not exist yet, use default 0
         setJlpAmount('0');
+      }
+
+      // Fetch ALP amount setting
+      try {
+        const alpSetting = await getSetting('alp_amount');
+        setAlpAmount(alpSetting.value);
+      } catch (err) {
+        // Setting might not exist yet, use default 0
+        setAlpAmount('0');
       }
     } catch (err) {
       console.error('Failed to fetch data:', err);
@@ -283,6 +296,22 @@ export default function SettingsPage() {
     }
   }
 
+  // ALP amount functions
+  async function handleSaveAlpAmount() {
+    try {
+      setSavingAlpAmount(true);
+      setError(null);
+      setSuccessMessage(null);
+
+      await updateSetting('alp_amount', alpAmount);
+      setSuccessMessage('ALP amount updated successfully');
+    } catch (err) {
+      setError('Failed to update ALP amount');
+    } finally {
+      setSavingAlpAmount(false);
+    }
+  }
+
   return (
     <div className="flex flex-1 flex-col gap-4">
       <div className="flex items-center">
@@ -305,7 +334,7 @@ export default function SettingsPage() {
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="funding">Funding Alerts</TabsTrigger>
-          <TabsTrigger value="jlp">JLP Config</TabsTrigger>
+          <TabsTrigger value="positions">Position Config</TabsTrigger>
         </TabsList>
 
         <TabsContent value="general" className="space-y-4">
@@ -625,7 +654,8 @@ export default function SettingsPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="jlp" className="space-y-4">
+        <TabsContent value="positions" className="space-y-4">
+          {/* JLP Configuration */}
           <Card>
             <CardHeader>
               <CardTitle>JLP Position Configuration</CardTitle>
@@ -647,46 +677,110 @@ export default function SettingsPage() {
                   placeholder="Enter your JLP amount"
                 />
                 <p className="text-xs text-muted-foreground">
-                  The system will calculate required hedge positions based on this amount.
-                  Set to 0 to disable hedge calculations.
+                  Calculates hedge positions for SOL, ETH, and BTC. Set to 0 to disable.
                 </p>
               </div>
-              <Button
-                onClick={handleSaveJlpAmount}
-                disabled={savingJlpAmount}
-              >
-                {savingJlpAmount ? 'Saving...' : 'Save JLP Amount'}
-              </Button>
+              <div className="flex items-center gap-4">
+                <Button
+                  onClick={handleSaveJlpAmount}
+                  disabled={savingJlpAmount}
+                >
+                  {savingJlpAmount ? 'Saving...' : 'Save JLP Amount'}
+                </Button>
+                <div className="text-sm">
+                  Status: {parseFloat(jlpAmount) > 0 ? (
+                    <span className="text-green-600 dark:text-green-400 font-medium">Active</span>
+                  ) : (
+                    <span className="text-muted-foreground">Inactive</span>
+                  )}
+                </div>
+              </div>
             </CardContent>
           </Card>
 
+          {/* ALP Configuration */}
           <Card>
             <CardHeader>
-              <CardTitle>Current Configuration</CardTitle>
+              <CardTitle>ALP Position Configuration</CardTitle>
               <CardDescription>
-                Your current JLP hedge calculation settings
+                Configure your ALP token holdings for hedge position calculation
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <label htmlFor="alp-amount" className="text-sm font-medium">
+                  ALP Amount
+                </label>
+                <Input
+                  id="alp-amount"
+                  type="number"
+                  step="0.01"
+                  value={alpAmount}
+                  onChange={(e) => setAlpAmount(e.target.value)}
+                  placeholder="Enter your ALP amount"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Calculates hedge positions for SOL, BONK, and BTC. Set to 0 to disable.
+                </p>
+              </div>
+              <div className="flex items-center gap-4">
+                <Button
+                  onClick={handleSaveAlpAmount}
+                  disabled={savingAlpAmount}
+                >
+                  {savingAlpAmount ? 'Saving...' : 'Save ALP Amount'}
+                </Button>
+                <div className="text-sm">
+                  Status: {parseFloat(alpAmount) > 0 ? (
+                    <span className="text-green-600 dark:text-green-400 font-medium">Active</span>
+                  ) : (
+                    <span className="text-muted-foreground">Inactive</span>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Current Configuration Summary */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Position Monitors Status</CardTitle>
+              <CardDescription>
+                All position monitors run every 60 seconds
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">JLP Amount:</span>
-                  <span className="text-sm font-medium">{parseFloat(jlpAmount).toLocaleString()} JLP</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Status:</span>
-                  <span className="text-sm font-medium">
+              <div className="space-y-3">
+                <div className="flex justify-between items-center p-3 bg-muted/50 rounded-lg">
+                  <div>
+                    <div className="font-medium">JLP Hedge Monitor</div>
+                    <div className="text-sm text-muted-foreground">
+                      {parseFloat(jlpAmount).toLocaleString()} JLP → SOL, ETH, BTC
+                    </div>
+                  </div>
+                  <div className="text-sm font-medium">
                     {parseFloat(jlpAmount) > 0 ? (
                       <span className="text-green-600 dark:text-green-400">Active</span>
                     ) : (
                       <span className="text-muted-foreground">Inactive</span>
                     )}
-                  </span>
+                  </div>
                 </div>
-                <p className="text-xs text-muted-foreground mt-4">
-                  The JLP Hedge Monitor runs every 60 seconds and calculates required hedge positions
-                  for SOL, ETH, and BTC based on your JLP holdings. View the results on the main dashboard.
-                </p>
+                <div className="flex justify-between items-center p-3 bg-muted/50 rounded-lg">
+                  <div>
+                    <div className="font-medium">ALP Hedge Monitor</div>
+                    <div className="text-sm text-muted-foreground">
+                      {parseFloat(alpAmount).toLocaleString()} ALP → SOL, BONK, BTC
+                    </div>
+                  </div>
+                  <div className="text-sm font-medium">
+                    {parseFloat(alpAmount) > 0 ? (
+                      <span className="text-green-600 dark:text-green-400">Active</span>
+                    ) : (
+                      <span className="text-muted-foreground">Inactive</span>
+                    )}
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>

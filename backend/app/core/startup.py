@@ -107,7 +107,7 @@ class StartupManager:
             LighterMonitor, AsterMonitor, GRVTMonitor, BackpackMonitor,
             BinanceSpotMonitor, OKXSpotMonitor, BybitSpotMonitor,
             JupiterSpotMonitor, PythSpotMonitor,
-            LighterAccountMonitor, JLPHedgeMonitor
+            LighterAccountMonitor, JLPHedgeMonitor, ALPHedgeMonitor
         )
         from app.workers.dex_cache_warmer import DexCacheWarmer
         from app.workers.alert_checker import AlertChecker
@@ -138,6 +138,8 @@ class StartupManager:
         # Position calculators (every 60 seconds)
         # JLP Hedge Monitor reads jlp_amount from database settings
         self.monitors.append(JLPHedgeMonitor())
+        # ALP Hedge Monitor reads alp_amount from database settings
+        self.monitors.append(ALPHedgeMonitor())
 
         # Monitor recompute worker (every 10 seconds to match spot price updates)
         self.monitors.append(MonitorRecomputeWorker(interval=10))
