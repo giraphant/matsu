@@ -25,17 +25,17 @@ ASSETS_OFFSET = 368
 SHORT_POSITION_OFFSET = 600
 
 CUSTODY_ACCOUNTS = {
-    "BONK": ("9n5qQNwjnYH9763vF9LForC37XZhb7pDsMGBDKWLpump", 5),
-    "JITOSOL": ("DzKfaYgdbuM8cHaJRrFF7EqB6fJ7Y8sjYLBmpYiH8NrW", 9),
-    "WBTC": ("3FJuhXYYPn2PTpLBRzG8Ci8SDfDdJtGpTHS1g9k22nqr", 8),
+    "BONK": ("8aJuzsgjxBnvRhDcfQBD7z4CUj7QoPEpaNwVd7KqsSk5", 5),
+    "JITOSOL": ("GZ9XfWwgTRhkma2Y91Q9r1XKotNXYjBnKKabj19rhT71", 9),
+    "WBTC": ("GFu3qS22mo6bAjg4Lr5R7L8pPgHq6GvbjJPKEHkbbs2c", 8),
 }
 
-# Oracle symbol offsets for price data
+# Oracle symbol offsets for price data (符号位置，价格在符号-32字节处)
 ORACLE_SYMBOL_OFFSETS = {
-    "JITOSOL": 0,
-    "SOL": 1,
-    "BONK": 2,
-    "WBTC": 3,
+    "SOL": 56,      # 需要SOL价格来换算JITOSOL
+    "BONK": 312,
+    "JITOSOL": 120,
+    "WBTC": 248,
 }
 
 
@@ -93,7 +93,7 @@ class ALPHedgeMonitor(BaseMonitor):
         return struct.unpack('<Q', data[offset:offset+8])[0]
 
     async def _get_oracle_prices(self, client) -> Dict[str, float]:
-        """Get prices from oracle account"""
+        """Get prices from oracle account (符号-32字节, 除以1e10)"""
         try:
             from solders.pubkey import Pubkey
 
@@ -101,16 +101,24 @@ class ALPHedgeMonitor(BaseMonitor):
             response = await client.get_account_info(oracle_pubkey)
 
             if not response.value or not response.value.data:
-                raise ValueError("Failed to get oracle account")
+                raise ValueError("Failed to get oracle data")
 
             data = bytes(response.value.data)
-            prices = {}
 
-            # Extract prices for each symbol
-            for symbol, offset in ORACLE_SYMBOL_OFFSETS.items():
-                price_offset = 8 + offset * 8  # 8 bytes header + symbol offset
+            max_offset = max(ORACLE_SYMBOL_OFFSETS.values())
+            if len(data) < max_offset + 8:
+                raise ValueError(f"Insufficient oracle data length: {len(data)}")
+
+            prices = {}
+            for symbol, symbol_offset in ORACLE_SYMBOL_OFFSETS.items():
+                price_offset = symbol_offset - 32  # 价格在符号-32字节处
                 raw_price = self._parse_u64(data, price_offset)
-                prices[symbol] = raw_price / 1e10  # Price is stored with 10 decimals
+                price = raw_price / 1e10
+
+                if price <= 0:
+                    raise ValueError(f"Invalid price for {symbol}: {price}")
+
+                prices[symbol] = price
 
             return prices
 
@@ -136,7 +144,7 @@ class ALPHedgeMonitor(BaseMonitor):
             logger.error(f"Error getting ALP supply: {e}")
             raise
 
-    async def _get_custody_data(self, client, custody_addr: str, decimals: int) -> Dict[str, float]:
+    async def _get_custody_data(self, client, custody_addr: str, decimals: int, price: float) -> Dict[str, float]:
         """Read custody account assets and short position data"""
         try:
             from solders.pubkey import Pubkey
@@ -149,27 +157,24 @@ class ALPHedgeMonitor(BaseMonitor):
 
             data = bytes(response.value.data)
 
-            # Read assets field (at ASSETS_OFFSET)
-            if len(data) < ASSETS_OFFSET + 24:
-                raise ValueError(f"Insufficient data length for assets: {len(data)}")
+            if len(data) < max(ASSETS_OFFSET + 24, SHORT_POSITION_OFFSET + 8):
+                raise ValueError(f"Insufficient custody data length: {len(data)}")
 
-            raw_owned = self._parse_u64(data, ASSETS_OFFSET)
-            raw_locked = self._parse_u64(data, ASSETS_OFFSET + 8)
+            # Read assets field
+            raw_owned = self._parse_u64(data, ASSETS_OFFSET + 8)
+            raw_locked = self._parse_u64(data, ASSETS_OFFSET + 16)
 
             if raw_locked > raw_owned:
                 raise ValueError("Invalid data: locked > owned")
 
-            # Read short position data (at SHORT_POSITION_OFFSET)
-            if len(data) < SHORT_POSITION_OFFSET + 16:
-                raise ValueError(f"Insufficient data length for shorts: {len(data)}")
-
-            raw_short_sizes = self._parse_u64(data, SHORT_POSITION_OFFSET)
-            raw_short_prices = self._parse_u64(data, SHORT_POSITION_OFFSET + 8)
+            # Read SHORT Position USD value
+            raw_short_usd = self._parse_u64(data, SHORT_POSITION_OFFSET)
 
             # Convert to token amounts
             owned = raw_owned / (10 ** decimals)
             locked = raw_locked / (10 ** decimals)
-            short_oi = raw_short_sizes / raw_short_prices if raw_short_prices > 0 else 0
+            short_usd = raw_short_usd / 1e6
+            short_oi = short_usd / price if price > 0 else 0
 
             return {
                 "owned": owned,
@@ -181,14 +186,14 @@ class ALPHedgeMonitor(BaseMonitor):
             raise
 
     async def _calculate_hedge(self, alp_amount: float) -> Dict[str, Dict[str, float]]:
-        """Calculate hedge amounts (excluding stablecoins)"""
+        """Calculate hedge amounts"""
         try:
             from solana.rpc.async_api import AsyncClient
 
             client = AsyncClient(RPC_URL)
 
             try:
-                # Get oracle prices first (needed for JITOSOL->SOL conversion)
+                # Get oracle prices first
                 prices = await self._get_oracle_prices(client)
 
                 # Get total supply
@@ -198,31 +203,32 @@ class ALPHedgeMonitor(BaseMonitor):
                     raise ValueError(f"Invalid total supply: {total_supply}")
 
                 hedge_positions = {}
-                jitosol_hedge = None
+                jitosol_to_sol_ratio = prices["JITOSOL"] / prices["SOL"]
 
                 for symbol, (custody_addr, decimals) in CUSTODY_ACCOUNTS.items():
-                    data = await self._get_custody_data(client, custody_addr, decimals)
+                    price = prices.get(symbol)
+                    if not price:
+                        raise ValueError(f"No price for {symbol}")
 
-                    # ALP formula: no fees component
+                    data = await self._get_custody_data(client, custody_addr, decimals, price)
+
                     net_exposure = data["owned"] - data["locked"] + data["short_oi"]
                     per_alp = net_exposure / total_supply
                     hedge_amount = per_alp * alp_amount
 
-                    # Special handling for JITOSOL - convert to SOL
+                    # JITOSOL转换为SOL
                     if symbol == "JITOSOL":
-                        jitosol_hedge = hedge_amount
-                        # Convert JITOSOL to SOL using price ratio
-                        if "JITOSOL" in prices and "SOL" in prices and prices["SOL"] > 0:
-                            sol_equivalent = hedge_amount * (prices["JITOSOL"] / prices["SOL"])
+                        sol_amount = hedge_amount * jitosol_to_sol_ratio
+                        if "SOL" in hedge_positions:
+                            hedge_positions["SOL"]["amount"] += sol_amount
+                            hedge_positions["SOL"]["per_alp"] += per_alp * jitosol_to_sol_ratio
+                        else:
                             hedge_positions["SOL"] = {
-                                "amount": sol_equivalent,
-                                "per_alp": sol_equivalent / alp_amount,
+                                "amount": sol_amount,
+                                "per_alp": per_alp * jitosol_to_sol_ratio,
                             }
-                            logger.debug(f"JITOSOL {hedge_amount:.8f} -> SOL {sol_equivalent:.8f}")
                     else:
-                        # Use BTC instead of WBTC for display
-                        display_symbol = "BTC" if symbol == "WBTC" else symbol
-                        hedge_positions[display_symbol] = {
+                        hedge_positions[symbol] = {
                             "amount": hedge_amount,
                             "per_alp": per_alp,
                         }
@@ -249,16 +255,19 @@ class ALPHedgeMonitor(BaseMonitor):
 
             # Store each hedge position
             for symbol, data in hedge_positions.items():
+                # Use BTC instead of WBTC for display
+                display_symbol = "BTC" if symbol == "WBTC" else symbol
+
                 hedge_data = WebhookData(
-                    monitor_id=f'alp_hedge_{symbol}',
-                    monitor_name=f'ALP {symbol} 对冲量',
+                    monitor_id=f'alp_hedge_{display_symbol}',
+                    monitor_name=f'ALP {display_symbol} 对冲量',
                     value=data['amount'],
                     timestamp=timestamp
                 )
                 db.add(hedge_data)
                 stored_count += 1
 
-                logger.info(f"ALP Hedge {symbol}: {data['amount']:+.8f} (per ALP: {data['per_alp']:.10f})")
+                logger.info(f"ALP Hedge {display_symbol}: {data['amount']:+.8f} (per ALP: {data['per_alp']:.10f})")
 
             db.commit()
             return stored_count
