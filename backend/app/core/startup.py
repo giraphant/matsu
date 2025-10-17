@@ -106,7 +106,8 @@ class StartupManager:
         from app.background_tasks import (
             LighterMonitor, AsterMonitor, GRVTMonitor, BackpackMonitor,
             BinanceSpotMonitor, OKXSpotMonitor, BybitSpotMonitor,
-            JupiterSpotMonitor, PythSpotMonitor
+            JupiterSpotMonitor, PythSpotMonitor,
+            LighterAccountMonitor
         )
         from app.workers.dex_cache_warmer import DexCacheWarmer
         from app.workers.alert_checker import AlertChecker
@@ -130,6 +131,9 @@ class StartupManager:
         self.monitors.append(BybitSpotMonitor())
         self.monitors.append(JupiterSpotMonitor())  # Solana on-chain prices
         self.monitors.append(PythSpotMonitor())     # Oracle prices
+
+        # Account monitors (every 30 seconds)
+        self.monitors.append(LighterAccountMonitor(account_index=138344))
 
         # Monitor recompute worker (every 10 seconds to match spot price updates)
         self.monitors.append(MonitorRecomputeWorker(interval=10))

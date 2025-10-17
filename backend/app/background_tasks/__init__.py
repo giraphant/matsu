@@ -12,6 +12,8 @@ from .okx_spot import OKXSpotMonitor
 from .bybit_spot import BybitSpotMonitor
 from .jupiter_spot import JupiterSpotMonitor
 from .pyth_spot import PythSpotMonitor
+# Account monitors
+from .lighter_account import LighterAccountMonitor
 
 __all__ = [
     "BaseMonitor",
@@ -26,4 +28,6 @@ __all__ = [
     "BybitSpotMonitor",
     "JupiterSpotMonitor",
     "PythSpotMonitor",
+    # Accounts
+    "LighterAccountMonitor",
 ]

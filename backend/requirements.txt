@@ -20,6 +20,9 @@ pydantic>=2.4.0
 httpx>=0.25.0
 requests>=2.31.0
 
+# Trading & DEX APIs
+lighter-sdk>=0.1.4
+
 # Environment & Configuration
 python-dotenv>=1.0.0
 click>=8.1.0
