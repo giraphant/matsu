@@ -14,6 +14,8 @@ from .jupiter_spot import JupiterSpotMonitor
 from .pyth_spot import PythSpotMonitor
 # Account monitors
 from .lighter_account import LighterAccountMonitor
+# Position calculators
+from .jlp_hedge_monitor import JLPHedgeMonitor
 
 __all__ = [
     "BaseMonitor",
@@ -30,4 +32,6 @@ __all__ = [
     "PythSpotMonitor",
     # Accounts
     "LighterAccountMonitor",
+    # Position calculators
+    "JLPHedgeMonitor",
 ]

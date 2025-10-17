@@ -50,6 +50,9 @@ class Settings:
     ENABLE_DEX_MONITORING: bool = os.getenv("ENABLE_DEX_MONITORING", "true").lower() == "true"
     ENABLE_LIGHTER_MONITORING: bool = os.getenv("ENABLE_LIGHTER_MONITORING", "true").lower() == "true"
 
+    # Position monitoring
+    JLP_AMOUNT: float = float(os.getenv("JLP_AMOUNT", "0"))
+
 
 # Global settings instance
 settings = Settings()
