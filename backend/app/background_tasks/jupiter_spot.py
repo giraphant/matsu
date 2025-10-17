@@ -16,10 +16,11 @@ logger = get_logger(__name__)
 class JupiterSpotMonitor(BaseMonitor):
     def __init__(self):
         super().__init__(name="Jupiter Spot Prices", interval=10)  # Every 10 seconds
-        self.api_url = "https://price.jup.ag/v6/price"
+        self.quote_url = "https://quote-api.jup.ag/v6/quote"
         self.sol_address = 'So11111111111111111111111111111111111111112'
+        self.usdc_address = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'  # USDC
 
-        # USD-priced tokens
+        # USD-priced tokens (get price via USDC swap quote)
         self.usd_tokens = {
             'SOL': 'So11111111111111111111111111111111111111112',  # Native SOL
             'BTC': '3NZ9JMVBmGAqocybic2c7LQCJScmgsAZ6vQqTDzcqmJh',  # Wrapped BTC (Portal)
@@ -46,46 +47,66 @@ class JupiterSpotMonitor(BaseMonitor):
             stored_count = 0
 
             async with httpx.AsyncClient(timeout=30.0) as client:
-                # Fetch USD prices for regular tokens
-                usd_addresses = ','.join(self.usd_tokens.values())
-                usd_url = f"{self.api_url}?ids={usd_addresses}"
+                # Fetch USD prices using swap quotes (Token -> USDC)
+                # For each token, get quote to swap 1 token to USDC to determine USD price
+                for symbol, token_address in self.usd_tokens.items():
+                    try:
+                        # Determine appropriate amount based on token
+                        # Use 1 token as base (adjusted for decimals)
+                        if symbol == 'SOL':
+                            base_amount = 1_000_000_000  # 1 SOL (9 decimals)
+                        elif symbol in ['BTC', 'ETH']:
+                            base_amount = 100_000_000  # 0.1 BTC/ETH (8 decimals)
+                        else:
+                            base_amount = 1_000_000_000  # 1 token (assuming 9 decimals)
 
-                try:
-                    usd_response = await client.get(usd_url)
-                    usd_response.raise_for_status()
-                    usd_data = usd_response.json()
+                        # Get quote: Token -> USDC
+                        params = {
+                            'inputMint': token_address,
+                            'outputMint': self.usdc_address,
+                            'amount': base_amount,
+                            'slippageBps': 50
+                        }
 
-                    # Process USD-priced tokens
-                    if 'data' in usd_data:
-                        for symbol, address in self.usd_tokens.items():
-                            if address not in usd_data['data']:
-                                logger.warning(f"No price data for {symbol} ({address}) from Jupiter")
-                                continue
+                        quote_response = await client.get(self.quote_url, params=params)
+                        quote_response.raise_for_status()
+                        quote_data = quote_response.json()
 
-                            price_info = usd_data['data'][address]
-                            price = price_info.get('price')
+                        in_amount = int(quote_data.get('inAmount', 0))
+                        out_amount = int(quote_data.get('outAmount', 0))
 
-                            if price is None:
-                                logger.warning(f"No price value for {symbol} from Jupiter")
-                                continue
+                        if in_amount == 0 or out_amount == 0:
+                            logger.warning(f"Invalid quote for {symbol}: in={in_amount}, out={out_amount}")
+                            continue
 
-                            # Store in database
-                            new_price = SpotPrice(
-                                exchange='jupiter',
-                                symbol=symbol,
-                                price=float(price),
-                                volume_24h=None,  # Jupiter v6 API doesn't provide 24h volume
-                                timestamp=datetime.utcnow()
-                            )
-                            db.add(new_price)
-                            stored_count += 1
+                        # Calculate USD price: (USDC out / USDC decimals) / (Token in / Token decimals)
+                        # USDC has 6 decimals, so out_amount is in micro-USDC
+                        usdc_value = out_amount / 1_000_000  # Convert to USDC
 
-                            logger.info(f"Jupiter {symbol} price: ${price:.2f}")
-                    else:
-                        logger.warning("No data in USD price response from Jupiter")
+                        # Calculate price per token
+                        if symbol in ['BTC', 'ETH']:
+                            # We used 0.1 token, so multiply by 10
+                            price = usdc_value * 10
+                        else:
+                            # We used 1 token
+                            price = usdc_value
 
-                except Exception as e:
-                    logger.error(f"Error fetching USD prices from Jupiter: {e}", exc_info=True)
+                        # Store in database
+                        new_price = SpotPrice(
+                            exchange='jupiter',
+                            symbol=symbol,
+                            price=float(price),
+                            volume_24h=None,
+                            timestamp=datetime.utcnow()
+                        )
+                        db.add(new_price)
+                        stored_count += 1
+
+                        logger.info(f"Jupiter {symbol} price: ${price:.2f} (quote: {in_amount} -> {out_amount} USDC)")
+
+                    except Exception as e:
+                        logger.error(f"Error fetching Jupiter quote for {symbol}: {e}", exc_info=True)
+                        continue
 
                 # Fetch SOL/LST ratios using quote API for real market prices
                 # Use 100 SOL as the base amount (100 * 10^9 for 9 decimals)
@@ -93,18 +114,15 @@ class JupiterSpotMonitor(BaseMonitor):
 
                 for symbol, lst_address in self.lst_tokens.items():
                     try:
-                        # Get quote for SOL -> LST swap using Lite tier (free)
-                        quote_url = "https://lite-api.jup.ag/swap/v1/quote"
+                        # Get quote for SOL -> LST swap
                         params = {
                             'inputMint': self.sol_address,  # Swapping FROM SOL
                             'outputMint': lst_address,      # Swapping TO LST
                             'amount': base_amount,
-                            'swapMode': 'ExactIn',
-                            'onlyDirectRoutes': 'true',  # Only direct routes for more accurate ratio
                             'slippageBps': 50
                         }
 
-                        quote_response = await client.get(quote_url, params=params)
+                        quote_response = await client.get(self.quote_url, params=params)
                         quote_response.raise_for_status()
                         quote_data = quote_response.json()
 
