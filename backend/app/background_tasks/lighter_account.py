@@ -8,7 +8,7 @@ from typing import Dict, Any
 import asyncio
 
 from app.core.logger import get_logger
-from app.models.database import MonitoringData, get_db_session
+from app.models.database import WebhookData, get_db_session
 from app.background_tasks.base import BaseMonitor
 
 logger = get_logger(__name__)
@@ -129,7 +129,7 @@ class LighterAccountMonitor(BaseMonitor):
 
             # Store account value
             if 'account_value' in account_data:
-                account_value_data = MonitoringData(
+                account_value_data = WebhookData(
                     monitor_id='lighter_account_value',
                     monitor_name='Lighter 账户价值',
                     value=account_data['account_value'],
@@ -143,7 +143,7 @@ class LighterAccountMonitor(BaseMonitor):
             # Store each position
             if 'positions' in account_data:
                 for symbol, size in account_data['positions'].items():
-                    position_data = MonitoringData(
+                    position_data = WebhookData(
                         monitor_id=f'lighter_position_{symbol}',
                         monitor_name=f'Lighter {symbol} 持仓',
                         value=size,
