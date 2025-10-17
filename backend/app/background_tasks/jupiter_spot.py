@@ -16,7 +16,7 @@ logger = get_logger(__name__)
 class JupiterSpotMonitor(BaseMonitor):
     def __init__(self):
         super().__init__(name="Jupiter Spot Prices", interval=10)  # Every 10 seconds
-        self.quote_url = "https://quote-api.jup.ag/v6/quote"
+        self.quote_url = "https://lite-api.jup.ag/swap/v1/quote"
         self.sol_address = 'So11111111111111111111111111111111111111112'
         self.usdc_address = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'  # USDC
 
