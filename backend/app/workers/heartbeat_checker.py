@@ -34,46 +34,60 @@ class HeartbeatChecker(BaseMonitor):
         )
 
     async def run(self):
-        """Check all monitors with heartbeat enabled."""
+        """Check all alert rules with heartbeat enabled."""
         db = get_db_session()
 
         try:
-            # Get all monitors with heartbeat enabled
-            monitors = db.query(Monitor).filter(
-                Monitor.heartbeat_enabled == True,
-                Monitor.enabled == True
+            from app.models.database import AlertRule
+
+            # Get all alert rules with heartbeat enabled
+            alert_rules = db.query(AlertRule).filter(
+                AlertRule.heartbeat_enabled == True,
+                AlertRule.enabled == True
             ).all()
 
-            if not monitors:
+            if not alert_rules:
                 return
 
-            logger.info(f"[HeartbeatChecker] Checking {len(monitors)} monitors with heartbeat enabled")
+            logger.info(f"[HeartbeatChecker] Checking {len(alert_rules)} alert rules with heartbeat enabled")
 
-            for monitor in monitors:
-                await self._check_monitor_heartbeat(db, monitor)
+            for rule in alert_rules:
+                await self._check_alert_rule_heartbeat(db, rule)
 
         except Exception as e:
             logger.error(f"[HeartbeatChecker] Error: {e}", exc_info=True)
         finally:
             db.close()
 
-    async def _check_monitor_heartbeat(self, db, monitor: Monitor):
+    async def _check_alert_rule_heartbeat(self, db, alert_rule):
         """
-        Check if a monitor's data is stale.
+        Check if an alert rule's monitored data is stale.
 
         Args:
             db: Database session
-            monitor: Monitor to check
+            alert_rule: AlertRule with heartbeat enabled
         """
         try:
             # Skip if heartbeat_interval not set
-            if not monitor.heartbeat_interval:
+            if not alert_rule.heartbeat_interval:
+                return
+
+            # Extract monitor ID from condition
+            monitor_id = self._extract_monitor_id(alert_rule.condition)
+            if not monitor_id:
+                logger.warning(f"[HeartbeatChecker] Could not extract monitor_id from condition: {alert_rule.condition}")
+                return
+
+            # Get monitor
+            monitor = db.query(Monitor).filter(Monitor.id == monitor_id).first()
+            if not monitor:
+                logger.warning(f"[HeartbeatChecker] Monitor {monitor_id} not found")
                 return
 
             # Get last computed value for this monitor
             from app.models.database import MonitorValue
             last_value = db.query(MonitorValue).filter(
-                MonitorValue.monitor_id == monitor.id
+                MonitorValue.monitor_id == monitor_id
             ).order_by(MonitorValue.computed_at.desc()).first()
 
             if not last_value:
@@ -84,20 +98,32 @@ class HeartbeatChecker(BaseMonitor):
             now = datetime.utcnow()
             elapsed_seconds = (now - last_value.computed_at).total_seconds()
 
-            if elapsed_seconds > monitor.heartbeat_interval:
+            if elapsed_seconds > alert_rule.heartbeat_interval:
                 # Data is stale! Trigger alert
                 await self._trigger_heartbeat_alert(
                     db,
+                    alert_rule,
                     monitor,
                     elapsed_seconds,
                     last_value.computed_at
                 )
             else:
                 # Data is fresh, resolve any active heartbeat alerts
-                await self._resolve_heartbeat_alert(db, monitor)
+                await self._resolve_heartbeat_alert(db, alert_rule, monitor)
 
         except Exception as e:
-            logger.error(f"[HeartbeatChecker] Error checking monitor {monitor.name}: {e}", exc_info=True)
+            logger.error(f"[HeartbeatChecker] Error checking alert rule {alert_rule.name}: {e}", exc_info=True)
+
+    def _extract_monitor_id(self, condition: str) -> str | None:
+        """
+        Extract monitor ID from alert rule condition.
+        E.g., "${monitor:monitor_xxx} > 100" -> "monitor_xxx"
+        """
+        import re
+        match = re.search(r'\$\{monitor:([^}]+)\}', condition)
+        if match:
+            return match.group(1)
+        return None
 
     def _extract_webhook_id(self, formula: str) -> str | None:
         """
@@ -113,6 +139,7 @@ class HeartbeatChecker(BaseMonitor):
     async def _trigger_heartbeat_alert(
         self,
         db,
+        alert_rule,
         monitor: Monitor,
         elapsed_seconds: float,
         last_update: datetime
@@ -122,12 +149,13 @@ class HeartbeatChecker(BaseMonitor):
 
         Args:
             db: Database session
+            alert_rule: AlertRule with heartbeat config
             monitor: Monitor that's stale
             elapsed_seconds: Seconds since last update
             last_update: Timestamp of last update
         """
-        alert_level = "high"  # Heartbeat failures are important
-        cooldown_seconds = 600  # 10 minute cooldown for heartbeat alerts
+        alert_level = alert_rule.level  # Use AlertRule's level
+        cooldown_seconds = alert_rule.cooldown_seconds  # Use AlertRule's cooldown
 
         # Check if we already have an active alert within cooldown
         existing = db.query(AlertState).filter(
@@ -146,6 +174,7 @@ class HeartbeatChecker(BaseMonitor):
         # Either no existing alert or cooldown expired
         # Send Pushover notification
         await self._send_pushover_alert(
+            alert_rule=alert_rule,
             monitor=monitor,
             elapsed_seconds=elapsed_seconds,
             last_update=last_update,
@@ -170,12 +199,13 @@ class HeartbeatChecker(BaseMonitor):
         db.commit()
         logger.info(f"[HeartbeatChecker] Alert triggered for {monitor.name} ({elapsed_seconds:.0f}s since last update)")
 
-    async def _resolve_heartbeat_alert(self, db, monitor: Monitor):
+    async def _resolve_heartbeat_alert(self, db, alert_rule, monitor: Monitor):
         """
         Mark heartbeat alert as resolved when data resumes.
 
         Args:
             db: Database session
+            alert_rule: AlertRule with heartbeat config
             monitor: Monitor that's no longer stale
         """
         # Find any active heartbeat alerts for this monitor
@@ -195,6 +225,7 @@ class HeartbeatChecker(BaseMonitor):
 
     async def _send_pushover_alert(
         self,
+        alert_rule,
         monitor: Monitor,
         elapsed_seconds: float,
         last_update: datetime,
@@ -204,6 +235,7 @@ class HeartbeatChecker(BaseMonitor):
         Send Pushover notification for heartbeat failure.
 
         Args:
+            alert_rule: AlertRule with heartbeat config
             monitor: Monitor that's stale
             elapsed_seconds: Seconds since last update
             last_update: Timestamp of last update
@@ -214,7 +246,7 @@ class HeartbeatChecker(BaseMonitor):
             from app.models.database import get_db_session
 
             elapsed_minutes = elapsed_seconds / 60
-            expected_minutes = monitor.heartbeat_interval / 60
+            expected_minutes = alert_rule.heartbeat_interval / 60
 
             title = f"⚠️ {monitor.name} - Heartbeat Timeout"
             message = (
