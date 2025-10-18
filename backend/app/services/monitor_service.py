@@ -33,6 +33,8 @@ class MonitorService:
         color: Optional[str] = None,
         decimal_places: int = 2,
         tags: Optional[List[str]] = None,
+        heartbeat_enabled: bool = False,
+        heartbeat_interval: Optional[int] = None,
         monitor_id: Optional[str] = None
     ) -> Optional[Monitor]:
         """
@@ -46,6 +48,8 @@ class MonitorService:
             color: Display color
             decimal_places: Number of decimal places
             tags: List of tags for this monitor
+            heartbeat_enabled: Enable heartbeat monitoring
+            heartbeat_interval: Expected data interval in seconds
             monitor_id: Optional custom ID
 
         Returns:
@@ -75,7 +79,9 @@ class MonitorService:
             color=color,
             decimal_places=decimal_places,
             tags=tags_json,
-            enabled=True
+            enabled=True,
+            heartbeat_enabled=heartbeat_enabled,
+            heartbeat_interval=heartbeat_interval
         )
 
         created = self.repo.create(monitor)
@@ -152,6 +158,8 @@ class MonitorService:
             'decimal_places': monitor.decimal_places,
             'tags': tags,
             'enabled': monitor.enabled,
+            'heartbeat_enabled': monitor.heartbeat_enabled,
+            'heartbeat_interval': monitor.heartbeat_interval,
             'value': latest_value.value if latest_value else None,
             'computed_at': latest_value.computed_at if latest_value else None,
             'created_at': monitor.created_at,

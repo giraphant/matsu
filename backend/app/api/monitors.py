@@ -32,6 +32,8 @@ class MonitorCreate(BaseModel):
     color: Optional[str] = None
     decimal_places: int = 2
     tags: Optional[List[str]] = None
+    heartbeat_enabled: Optional[bool] = False
+    heartbeat_interval: Optional[int] = None
 
 
 class MonitorUpdate(BaseModel):
@@ -44,6 +46,8 @@ class MonitorUpdate(BaseModel):
     decimal_places: Optional[int] = None
     tags: Optional[List[str]] = None
     enabled: Optional[bool] = None
+    heartbeat_enabled: Optional[bool] = None
+    heartbeat_interval: Optional[int] = None
 
 
 class MonitorResponse(BaseModel):
@@ -57,6 +61,8 @@ class MonitorResponse(BaseModel):
     decimal_places: int
     tags: Optional[List[str]]
     enabled: bool
+    heartbeat_enabled: bool
+    heartbeat_interval: Optional[int]
     value: Optional[float]
     computed_at: Optional[datetime]
     created_at: datetime

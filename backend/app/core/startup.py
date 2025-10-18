@@ -113,6 +113,7 @@ class StartupManager:
         from app.workers.alert_checker import AlertChecker
         from app.workers.monitor_alert_checker import MonitorAlertChecker
         from app.workers.monitor_recompute_worker import MonitorRecomputeWorker
+        from app.workers.heartbeat_checker import HeartbeatChecker
 
         # Create monitor instances based on feature flags
         if settings.ENABLE_DEX_MONITORING:
@@ -147,6 +148,10 @@ class StartupManager:
         # DEPRECATED: WebhookMonitorAlertChecker removed (used old AlertConfig system)
         # Now only use Monitor Alert Checker for AlertRule system
         self.monitors.append(MonitorAlertChecker(interval=10))
+
+        # Heartbeat checker (every 30 seconds)
+        # Monitors data staleness for monitors with heartbeat_enabled=True
+        self.monitors.append(HeartbeatChecker())
 
         # Start all monitors
         for monitor in self.monitors:

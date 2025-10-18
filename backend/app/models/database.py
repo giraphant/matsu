@@ -213,6 +213,11 @@ class Monitor(Base):
     decimal_places = Column(Integer, default=2)
     tags = Column(Text, nullable=True)  # JSON array of tags: ["资金费率", "高优先级"]
     enabled = Column(Boolean, default=True)
+
+    # Heartbeat monitoring (for webhook-based monitors)
+    heartbeat_enabled = Column(Boolean, default=False)  # Enable heartbeat check
+    heartbeat_interval = Column(Integer, nullable=True)  # Expected interval in seconds (e.g., 300 = 5 min)
+
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
