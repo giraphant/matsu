@@ -9,7 +9,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Activity } from 'lucide-react';
 import { toast } from "sonner";
@@ -119,8 +118,7 @@ export default function MonitorsPage() {
   const [alertRules, setAlertRules] = useState<AlertRule[]>([]);
   const [alertStates, setAlertStates] = useState<Map<string, {lastNotified: number, isActive: boolean}>>(new Map());
 
-  // Tab and filter states - now tag-based
-  const [currentTab, setCurrentTab] = useState<string>('all');
+  // Tag filter state
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
 
   const { playAlertSound, requestNotificationPermission } = useNotification();
@@ -160,9 +158,6 @@ export default function MonitorsPage() {
     })
   );
 
-  // Get storage key for current tab
-  const getOrderStorageKey = (tab: string) => `monitor-order-${tab}`;
-
   // Fetch monitors and apply saved order
   const fetchMonitors = async () => {
     try {
@@ -173,8 +168,8 @@ export default function MonitorsPage() {
       // Filter to only enabled monitors for the monitor card view
       const enabledMonitors = data.filter((m: Monitor) => m.enabled);
 
-      // Apply saved order from localStorage (use current tab's order)
-      const savedOrder = localStorage.getItem(getOrderStorageKey(currentTab));
+      // Apply saved order from localStorage
+      const savedOrder = localStorage.getItem('monitor-order');
       if (savedOrder) {
         try {
           const orderMap = JSON.parse(savedOrder);
@@ -208,12 +203,12 @@ export default function MonitorsPage() {
         const newIndex = items.findIndex((item) => item.id === over.id);
         const newOrder = arrayMove(items, oldIndex, newIndex);
 
-        // Save order to localStorage for current tab
+        // Save order to localStorage
         const orderMap = newOrder.reduce((acc, monitor, index) => {
           acc[monitor.id] = index;
           return acc;
         }, {} as Record<string, number>);
-        localStorage.setItem(getOrderStorageKey(currentTab), JSON.stringify(orderMap));
+        localStorage.setItem('monitor-order', JSON.stringify(orderMap));
 
         return newOrder;
       });
@@ -246,21 +241,14 @@ export default function MonitorsPage() {
     });
   };
 
-  // Get filtered monitors based on current tab
+  // Get filtered monitors based on selected tags
   const getFilteredMonitors = () => {
-    if (currentTab === 'all') {
-      // In ALL tab, show all monitors if no tags selected
-      if (selectedTags.size === 0) return monitors;
-      // Otherwise filter by selected tags
-      return monitors.filter(m =>
-        m.tags && m.tags.some(tag => selectedTags.has(tag))
-      );
-    } else {
-      // In specific tag tab, show only monitors with that tag
-      return monitors.filter(m =>
-        m.tags && m.tags.includes(currentTab)
-      );
-    }
+    // Show all monitors if no tags selected
+    if (selectedTags.size === 0) return monitors;
+    // Otherwise filter by selected tags
+    return monitors.filter(m =>
+      m.tags && m.tags.some(tag => selectedTags.has(tag))
+    );
   };
 
   // Fetch alert rules
@@ -373,11 +361,6 @@ export default function MonitorsPage() {
       }
     }
   }, []);
-
-  // Re-fetch when tab changes to apply correct sorting
-  useEffect(() => {
-    fetchMonitors();
-  }, [currentTab]);
 
   useEffect(() => {
     fetchMonitors();
@@ -869,101 +852,57 @@ export default function MonitorsPage() {
           </div>
         </Card>
       ) : (
-        <Tabs value={currentTab} onValueChange={(value) => setCurrentTab(value)}>
-          <TabsList className="mb-6">
-            <TabsTrigger value="all">All</TabsTrigger>
-            {getAllTags().map(tag => (
-              <TabsTrigger key={tag} value={tag}>
-                {tag}
-              </TabsTrigger>
-            ))}
-          </TabsList>
+        <>
+          {/* Tag filter badges */}
+          <div className="flex flex-wrap gap-2 mb-6">
+            {getAllTags().map(tag => {
+              const count = monitors.filter(m => m.tags && m.tags.includes(tag)).length;
+              const isSelected = selectedTags.has(tag);
 
-          <TabsContent value="all" className="mt-0">
-            {/* Tag filter badges */}
-            <div className="flex flex-wrap gap-2 mb-4">
-              {getAllTags().map(tag => {
-                const count = monitors.filter(m => m.tags && m.tags.includes(tag)).length;
-                const isSelected = selectedTags.has(tag);
-
-                return (
-                  <Badge
-                    key={tag}
-                    variant={isSelected ? 'default' : 'outline'}
-                    className="cursor-pointer"
-                    onClick={() => toggleTag(tag)}
-                  >
-                    {tag} ({count})
-                  </Badge>
-                );
-              })}
-            </div>
-
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              onDragEnd={handleDragEnd}
-            >
-              <SortableContext
-                items={getFilteredMonitors().map((m) => m.id)}
-                strategy={rectSortingStrategy}
-              >
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-                  {getFilteredMonitors().map((monitor) => {
-                    const alertRule = getAlertRuleForMonitor(monitor.id);
-                    const isAlert = alertRule ? isMonitorInAlert(monitor, alertRule) : false;
-
-                    return (
-                      <SortableMonitorCard
-                        key={monitor.id}
-                        monitor={monitor}
-                        onEdit={handleEdit}
-                        onDelete={handleDelete}
-                        onSetAlert={handleSetAlert}
-                        isAlert={isAlert}
-                        alertLevel={alertRule?.level}
-                      />
-                    );
-                  })}
-                </div>
-              </SortableContext>
-            </DndContext>
-          </TabsContent>
-
-          {getAllTags().map(tag => (
-            <TabsContent key={tag} value={tag} className="mt-0">
-              <DndContext
-                sensors={sensors}
-                collisionDetection={closestCenter}
-                onDragEnd={handleDragEnd}
-              >
-                <SortableContext
-                  items={getFilteredMonitors().map((m) => m.id)}
-                  strategy={rectSortingStrategy}
+              return (
+                <Badge
+                  key={tag}
+                  variant={isSelected ? 'default' : 'outline'}
+                  className="cursor-pointer"
+                  onClick={() => toggleTag(tag)}
                 >
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-                    {getFilteredMonitors().map((monitor) => {
-                      const alertRule = getAlertRuleForMonitor(monitor.id);
-                      const isAlert = alertRule ? isMonitorInAlert(monitor, alertRule) : false;
+                  {tag} ({count})
+                </Badge>
+              );
+            })}
+          </div>
 
-                      return (
-                        <SortableMonitorCard
-                          key={monitor.id}
-                          monitor={monitor}
-                          onEdit={handleEdit}
-                          onDelete={handleDelete}
-                          onSetAlert={handleSetAlert}
-                          isAlert={isAlert}
-                          alertLevel={alertRule?.level}
-                        />
-                      );
-                    })}
-                  </div>
-                </SortableContext>
-              </DndContext>
-            </TabsContent>
-          ))}
-        </Tabs>
+          {/* Monitor grid with drag-and-drop */}
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext
+              items={getFilteredMonitors().map((m) => m.id)}
+              strategy={rectSortingStrategy}
+            >
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                {getFilteredMonitors().map((monitor) => {
+                  const alertRule = getAlertRuleForMonitor(monitor.id);
+                  const isAlert = alertRule ? isMonitorInAlert(monitor, alertRule) : false;
+
+                  return (
+                    <SortableMonitorCard
+                      key={monitor.id}
+                      monitor={monitor}
+                      onEdit={handleEdit}
+                      onDelete={handleDelete}
+                      onSetAlert={handleSetAlert}
+                      isAlert={isAlert}
+                      alertLevel={alertRule?.level}
+                    />
+                  );
+                })}
+              </div>
+            </SortableContext>
+          </DndContext>
+        </>
       )}
 
       {/* Alert Configuration Dialog */}
