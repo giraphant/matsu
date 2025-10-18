@@ -70,34 +70,27 @@ class HeartbeatChecker(BaseMonitor):
             if not monitor.heartbeat_interval:
                 return
 
-            # Get last webhook data for this monitor
-            # We need to find webhook_id from the formula
-            webhook_id = self._extract_webhook_id(monitor.formula)
-            if not webhook_id:
-                # logger.debug(f"[HeartbeatChecker] Monitor {monitor.name} doesn't reference a webhook")
-                return
+            # Get last computed value for this monitor
+            from app.models.database import MonitorValue
+            last_value = db.query(MonitorValue).filter(
+                MonitorValue.monitor_id == monitor.id
+            ).order_by(MonitorValue.computed_at.desc()).first()
 
-            # Get last webhook update time
-            last_webhook = db.query(WebhookData).filter(
-                WebhookData.monitor_id == webhook_id
-            ).order_by(WebhookData.timestamp.desc()).first()
-
-            if not last_webhook:
-                logger.warning(f"[HeartbeatChecker] No webhook data found for {webhook_id}")
+            if not last_value:
+                logger.debug(f"[HeartbeatChecker] No values found for monitor {monitor.name}")
                 return
 
             # Check if data is stale
             now = datetime.utcnow()
-            elapsed_seconds = (now - last_webhook.timestamp).total_seconds()
+            elapsed_seconds = (now - last_value.computed_at).total_seconds()
 
             if elapsed_seconds > monitor.heartbeat_interval:
                 # Data is stale! Trigger alert
                 await self._trigger_heartbeat_alert(
                     db,
                     monitor,
-                    webhook_id,
                     elapsed_seconds,
-                    last_webhook.timestamp
+                    last_value.computed_at
                 )
             else:
                 # Data is fresh, resolve any active heartbeat alerts
@@ -121,7 +114,6 @@ class HeartbeatChecker(BaseMonitor):
         self,
         db,
         monitor: Monitor,
-        webhook_id: str,
         elapsed_seconds: float,
         last_update: datetime
     ):
@@ -131,7 +123,6 @@ class HeartbeatChecker(BaseMonitor):
         Args:
             db: Database session
             monitor: Monitor that's stale
-            webhook_id: Webhook ID being monitored
             elapsed_seconds: Seconds since last update
             last_update: Timestamp of last update
         """
@@ -156,7 +147,6 @@ class HeartbeatChecker(BaseMonitor):
         # Send Pushover notification
         await self._send_pushover_alert(
             monitor=monitor,
-            webhook_id=webhook_id,
             elapsed_seconds=elapsed_seconds,
             last_update=last_update,
             level=alert_level
@@ -206,7 +196,6 @@ class HeartbeatChecker(BaseMonitor):
     async def _send_pushover_alert(
         self,
         monitor: Monitor,
-        webhook_id: str,
         elapsed_seconds: float,
         last_update: datetime,
         level: str
@@ -216,7 +205,6 @@ class HeartbeatChecker(BaseMonitor):
 
         Args:
             monitor: Monitor that's stale
-            webhook_id: Webhook ID being monitored
             elapsed_seconds: Seconds since last update
             last_update: Timestamp of last update
             level: Alert level
@@ -231,11 +219,10 @@ class HeartbeatChecker(BaseMonitor):
             title = f"⚠️ {monitor.name} - Heartbeat Timeout"
             message = (
                 f"Monitor: {monitor.name}\n"
-                f"Webhook: {webhook_id}\n"
                 f"Expected interval: {expected_minutes:.1f} minutes\n"
                 f"Time since last update: {elapsed_minutes:.1f} minutes\n"
                 f"Last update: {last_update.strftime('%Y-%m-%d %H:%M:%S')} UTC\n\n"
-                f"Data source may be down or disconnected."
+                f"Monitor data hasn't been updated within expected interval."
             )
 
             db = get_db_session()
