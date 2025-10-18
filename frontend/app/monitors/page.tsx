@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import { Plus, Activity } from 'lucide-react';
 import { toast } from "sonner";
 import { MonitorCard } from '@/components/monitor-card';
@@ -140,7 +141,9 @@ export default function MonitorsPage() {
     description: '',
     color: '#3b82f6',
     decimal_places: 2,
-    tags: [] as string[]
+    tags: [] as string[],
+    heartbeat_enabled: false,
+    heartbeat_interval: 300  // Default 5 minutes
   });
 
   // Tag input state
@@ -427,7 +430,9 @@ export default function MonitorsPage() {
       description: monitor.description || '',
       color: monitor.color || '#3b82f6',
       decimal_places: monitor.decimal_places,
-      tags: monitor.tags || []
+      tags: monitor.tags || [],
+      heartbeat_enabled: monitor.heartbeat_enabled || false,
+      heartbeat_interval: monitor.heartbeat_interval || 300
     });
     setDialogOpen(true);
   };
@@ -441,7 +446,9 @@ export default function MonitorsPage() {
       description: '',
       color: '#3b82f6',
       decimal_places: 2,
-      tags: []
+      tags: [],
+      heartbeat_enabled: false,
+      heartbeat_interval: 300
     });
     setTagInput('');
     setEditingMonitor(null);
@@ -821,6 +828,44 @@ export default function MonitorsPage() {
                         </button>
                       </Badge>
                     ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Heartbeat Monitoring */}
+              <div className="grid gap-2 pt-4 border-t">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label htmlFor="heartbeat">Heartbeat Monitoring</Label>
+                    <p className="text-xs text-muted-foreground">
+                      Alert if no data received within interval
+                    </p>
+                  </div>
+                  <Switch
+                    id="heartbeat"
+                    checked={formData.heartbeat_enabled}
+                    onCheckedChange={(checked) =>
+                      setFormData({ ...formData, heartbeat_enabled: checked })
+                    }
+                  />
+                </div>
+                {formData.heartbeat_enabled && (
+                  <div className="grid gap-2 mt-2">
+                    <Label htmlFor="heartbeat_interval">Expected Interval (seconds)</Label>
+                    <Input
+                      id="heartbeat_interval"
+                      type="number"
+                      min="60"
+                      step="60"
+                      value={formData.heartbeat_interval}
+                      onChange={(e) =>
+                        setFormData({ ...formData, heartbeat_interval: parseInt(e.target.value) || 300 })
+                      }
+                      placeholder="e.g., 300 (5 minutes)"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Alert will trigger if no data for {Math.floor(formData.heartbeat_interval / 60)} minutes
+                    </p>
                   </div>
                 )}
               </div>

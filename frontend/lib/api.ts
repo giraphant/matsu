@@ -13,6 +13,8 @@ export interface Monitor {
   decimal_places: number;
   tags?: string[];
   enabled: boolean;
+  heartbeat_enabled: boolean;
+  heartbeat_interval?: number;
   value?: number;
   computed_at?: string;
   created_at: string;
