@@ -43,7 +43,7 @@ interface Monitor {
   description?: string;
   color?: string;
   decimal_places: number;
-  category?: string;
+  tags?: string[];
   enabled: boolean;
   value?: number;
   computed_at?: string;
@@ -177,8 +177,12 @@ export default function MonitorsPage() {
     unit: '',
     description: '',
     color: '#3b82f6',
-    decimal_places: 2
+    decimal_places: 2,
+    tags: [] as string[]
   });
+
+  // Tag input state
+  const [tagInput, setTagInput] = useState('');
 
   // Drag and drop sensors
   const sensors = useSensors(
@@ -458,7 +462,8 @@ export default function MonitorsPage() {
       unit: monitor.unit || '',
       description: monitor.description || '',
       color: monitor.color || '#3b82f6',
-      decimal_places: monitor.decimal_places
+      decimal_places: monitor.decimal_places,
+      tags: monitor.tags || []
     });
     setDialogOpen(true);
   };
@@ -471,9 +476,24 @@ export default function MonitorsPage() {
       unit: '',
       description: '',
       color: '#3b82f6',
-      decimal_places: 2
+      decimal_places: 2,
+      tags: []
     });
+    setTagInput('');
     setEditingMonitor(null);
+  };
+
+  // Handle adding tag
+  const handleAddTag = () => {
+    if (tagInput.trim() && !formData.tags.includes(tagInput.trim())) {
+      setFormData({ ...formData, tags: [...formData.tags, tagInput.trim()] });
+      setTagInput('');
+    }
+  };
+
+  // Handle removing tag
+  const handleRemoveTag = (tagToRemove: string) => {
+    setFormData({ ...formData, tags: formData.tags.filter(t => t !== tagToRemove) });
   };
 
   // Handle set alert
@@ -806,6 +826,39 @@ export default function MonitorsPage() {
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="tags">Tags</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="tags"
+                    placeholder="Enter tag name"
+                    value={tagInput}
+                    onChange={(e) => setTagInput(e.target.value)}
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleAddTag();
+                      }
+                    }}
+                  />
+                  <Button type="button" onClick={handleAddTag}>Add</Button>
+                </div>
+                {formData.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {formData.tags.map(tag => (
+                      <Badge key={tag} variant="secondary">
+                        {tag}
+                        <button
+                          onClick={() => handleRemoveTag(tag)}
+                          className="ml-2 hover:text-destructive"
+                        >
+                          ×
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
             <DialogFooter>
