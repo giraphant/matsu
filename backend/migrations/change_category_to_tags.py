@@ -11,7 +11,11 @@ import sqlite3
 import json
 
 # Database path
-DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data', 'monitoring.db')
+# For running from migrations directory or project root
+if os.path.exists('/home/matsu/data/monitoring.db'):
+    DB_PATH = '/home/matsu/data/monitoring.db'
+else:
+    DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data', 'monitoring.db')
 
 
 def upgrade():
