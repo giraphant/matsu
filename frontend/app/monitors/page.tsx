@@ -61,40 +61,6 @@ interface AlertRule {
   actions: string[];
 }
 
-// Monitor categories
-type MonitorCategory = 'funding' | 'spot' | 'account' | 'hedge' | 'other';
-
-interface CategoryConfig {
-  id: MonitorCategory;
-  label: string;
-  prefixes: string[];
-}
-
-const CATEGORIES: CategoryConfig[] = [
-  { id: 'funding', label: '资金费率', prefixes: ['lighter-', 'aster-', 'grvt-', 'backpack-', 'mini_'] },
-  { id: 'spot', label: '现货价格', prefixes: ['binance_spot_', 'okx_spot_', 'bybit_spot_', 'jupiter_spot_', 'pyth_spot_'] },
-  { id: 'account', label: '账户信息', prefixes: ['lighter_account_', 'lighter_position_'] },
-  { id: 'hedge', label: '对冲量', prefixes: ['jlp_hedge_', 'alp_hedge_'] },
-  { id: 'other', label: '其他', prefixes: [] },
-];
-
-// Get category for a monitor - checks manual category first, then auto-detects from ID
-function getMonitorCategory(monitor: Monitor | string): MonitorCategory {
-  // If monitor object is passed, check for manual category first
-  if (typeof monitor === 'object' && monitor.category) {
-    return monitor.category as MonitorCategory;
-  }
-
-  // Auto-detect from monitor ID
-  const monitorId = typeof monitor === 'string' ? monitor : monitor.id;
-  for (const category of CATEGORIES) {
-    if (category.prefixes.some(prefix => monitorId.startsWith(prefix))) {
-      return category.id;
-    }
-  }
-  return 'other';
-}
-
 // Sortable wrapper for MonitorCard
 function SortableMonitorCard({
   monitor,
@@ -153,11 +119,9 @@ export default function MonitorsPage() {
   const [alertRules, setAlertRules] = useState<AlertRule[]>([]);
   const [alertStates, setAlertStates] = useState<Map<string, {lastNotified: number, isActive: boolean}>>(new Map());
 
-  // Tab and filter states
-  const [currentTab, setCurrentTab] = useState<'all' | MonitorCategory>('all');
-  const [selectedCategories, setSelectedCategories] = useState<Set<MonitorCategory>>(
-    new Set(['funding', 'spot', 'account', 'hedge', 'other'])
-  );
+  // Tab and filter states - now tag-based
+  const [currentTab, setCurrentTab] = useState<string>('all');
+  const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
 
   const { playAlertSound, requestNotificationPermission } = useNotification();
 
@@ -197,7 +161,7 @@ export default function MonitorsPage() {
   );
 
   // Get storage key for current tab
-  const getOrderStorageKey = (tab: 'all' | MonitorCategory) => `monitor-order-${tab}`;
+  const getOrderStorageKey = (tab: string) => `monitor-order-${tab}`;
 
   // Fetch monitors and apply saved order
   const fetchMonitors = async () => {
@@ -256,29 +220,46 @@ export default function MonitorsPage() {
     }
   };
 
-  // Toggle category selection in ALL tab
-  const toggleCategory = (categoryId: MonitorCategory) => {
-    setSelectedCategories(prev => {
+  // Get all unique tags from monitors
+  const getAllTags = (): string[] => {
+    const tagSet = new Set<string>();
+    monitors.forEach(monitor => {
+      if (monitor.tags && Array.isArray(monitor.tags)) {
+        monitor.tags.forEach(tag => tagSet.add(tag));
+      }
+    });
+    return Array.from(tagSet).sort();
+  };
+
+  // Toggle tag selection
+  const toggleTag = (tag: string) => {
+    setSelectedTags(prev => {
       const newSet = new Set(prev);
-      if (newSet.has(categoryId)) {
-        newSet.delete(categoryId);
+      if (newSet.has(tag)) {
+        newSet.delete(tag);
       } else {
-        newSet.add(categoryId);
+        newSet.add(tag);
       }
       // Save to localStorage
-      localStorage.setItem('selected-categories', JSON.stringify(Array.from(newSet)));
+      localStorage.setItem('selected-tags', JSON.stringify(Array.from(newSet)));
       return newSet;
     });
   };
 
-  // Get filtered monitors based on current tab and selected categories
+  // Get filtered monitors based on current tab
   const getFilteredMonitors = () => {
     if (currentTab === 'all') {
-      // In ALL tab, filter by selected categories
-      return monitors.filter(m => selectedCategories.has(getMonitorCategory(m)));
+      // In ALL tab, show all monitors if no tags selected
+      if (selectedTags.size === 0) return monitors;
+      // Otherwise filter by selected tags
+      return monitors.filter(m =>
+        m.tags && m.tags.some(tag => selectedTags.has(tag))
+      );
     } else {
-      // In category tabs, show only that category
-      return monitors.filter(m => getMonitorCategory(m) === currentTab);
+      // In specific tag tab, show only monitors with that tag
+      return monitors.filter(m =>
+        m.tags && m.tags.includes(currentTab)
+      );
     }
   };
 
@@ -381,12 +362,12 @@ export default function MonitorsPage() {
     requestNotificationPermission();
   }, [requestNotificationPermission]);
 
-  // Load selected categories from localStorage on mount
+  // Load selected tags from localStorage on mount
   useEffect(() => {
-    const saved = localStorage.getItem('selected-categories');
+    const saved = localStorage.getItem('selected-tags');
     if (saved) {
       try {
-        setSelectedCategories(new Set(JSON.parse(saved)));
+        setSelectedTags(new Set(JSON.parse(saved)));
       } catch {
         // Ignore parse errors
       }
@@ -888,31 +869,31 @@ export default function MonitorsPage() {
           </div>
         </Card>
       ) : (
-        <Tabs value={currentTab} onValueChange={(value) => setCurrentTab(value as 'all' | MonitorCategory)}>
+        <Tabs value={currentTab} onValueChange={(value) => setCurrentTab(value)}>
           <TabsList className="mb-6">
-            <TabsTrigger value="all">全部</TabsTrigger>
-            {CATEGORIES.map(cat => (
-              <TabsTrigger key={cat.id} value={cat.id}>
-                {cat.label}
+            <TabsTrigger value="all">All</TabsTrigger>
+            {getAllTags().map(tag => (
+              <TabsTrigger key={tag} value={tag}>
+                {tag}
               </TabsTrigger>
             ))}
           </TabsList>
 
           <TabsContent value="all" className="mt-0">
-            {/* Category filter badges */}
+            {/* Tag filter badges */}
             <div className="flex flex-wrap gap-2 mb-4">
-              {CATEGORIES.map(cat => {
-                const count = monitors.filter(m => getMonitorCategory(m) === cat.id).length;
-                const isSelected = selectedCategories.has(cat.id);
+              {getAllTags().map(tag => {
+                const count = monitors.filter(m => m.tags && m.tags.includes(tag)).length;
+                const isSelected = selectedTags.has(tag);
 
                 return (
                   <Badge
-                    key={cat.id}
+                    key={tag}
                     variant={isSelected ? 'default' : 'outline'}
                     className="cursor-pointer"
-                    onClick={() => toggleCategory(cat.id)}
+                    onClick={() => toggleTag(tag)}
                   >
-                    {cat.label} ({count})
+                    {tag} ({count})
                   </Badge>
                 );
               })}
@@ -949,8 +930,8 @@ export default function MonitorsPage() {
             </DndContext>
           </TabsContent>
 
-          {CATEGORIES.map(cat => (
-            <TabsContent key={cat.id} value={cat.id} className="mt-0">
+          {getAllTags().map(tag => (
+            <TabsContent key={tag} value={tag} className="mt-0">
               <DndContext
                 sensors={sensors}
                 collisionDetection={closestCenter}
