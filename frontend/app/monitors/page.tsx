@@ -9,6 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 import { Plus, Activity } from 'lucide-react';
 import { toast } from "sonner";
 import { MonitorCard } from '@/components/monitor-card';
@@ -56,6 +58,33 @@ interface AlertRule {
   enabled: boolean;
   cooldown_seconds: number;
   actions: string[];
+}
+
+// Monitor categories
+type MonitorCategory = 'funding' | 'spot' | 'account' | 'hedge' | 'other';
+
+interface CategoryConfig {
+  id: MonitorCategory;
+  label: string;
+  prefixes: string[];
+}
+
+const CATEGORIES: CategoryConfig[] = [
+  { id: 'funding', label: '资金费率', prefixes: ['lighter-', 'aster-', 'grvt-', 'backpack-', 'mini_'] },
+  { id: 'spot', label: '现货价格', prefixes: ['binance_spot_', 'okx_spot_', 'bybit_spot_', 'jupiter_spot_', 'pyth_spot_'] },
+  { id: 'account', label: '账户信息', prefixes: ['lighter_account_', 'lighter_position_'] },
+  { id: 'hedge', label: '对冲量', prefixes: ['jlp_hedge_', 'alp_hedge_'] },
+  { id: 'other', label: '其他', prefixes: [] },
+];
+
+// Get category for a monitor based on its ID
+function getMonitorCategory(monitorId: string): MonitorCategory {
+  for (const category of CATEGORIES) {
+    if (category.prefixes.some(prefix => monitorId.startsWith(prefix))) {
+      return category.id;
+    }
+  }
+  return 'other';
 }
 
 // Sortable wrapper for MonitorCard
@@ -116,6 +145,12 @@ export default function MonitorsPage() {
   const [alertRules, setAlertRules] = useState<AlertRule[]>([]);
   const [alertStates, setAlertStates] = useState<Map<string, {lastNotified: number, isActive: boolean}>>(new Map());
 
+  // Tab and filter states
+  const [currentTab, setCurrentTab] = useState<'all' | MonitorCategory>('all');
+  const [selectedCategories, setSelectedCategories] = useState<Set<MonitorCategory>>(
+    new Set(['funding', 'spot', 'account', 'hedge', 'other'])
+  );
+
   const { playAlertSound, requestNotificationPermission } = useNotification();
 
   // Alert dialog states
@@ -149,6 +184,9 @@ export default function MonitorsPage() {
     })
   );
 
+  // Get storage key for current tab
+  const getOrderStorageKey = (tab: 'all' | MonitorCategory) => `monitor-order-${tab}`;
+
   // Fetch monitors and apply saved order
   const fetchMonitors = async () => {
     try {
@@ -159,8 +197,8 @@ export default function MonitorsPage() {
       // Filter to only enabled monitors for the monitor card view
       const enabledMonitors = data.filter((m: Monitor) => m.enabled);
 
-      // Apply saved order from localStorage
-      const savedOrder = localStorage.getItem('monitor-order');
+      // Apply saved order from localStorage (use current tab's order)
+      const savedOrder = localStorage.getItem(getOrderStorageKey(currentTab));
       if (savedOrder) {
         try {
           const orderMap = JSON.parse(savedOrder);
@@ -194,15 +232,41 @@ export default function MonitorsPage() {
         const newIndex = items.findIndex((item) => item.id === over.id);
         const newOrder = arrayMove(items, oldIndex, newIndex);
 
-        // Save order to localStorage
+        // Save order to localStorage for current tab
         const orderMap = newOrder.reduce((acc, monitor, index) => {
           acc[monitor.id] = index;
           return acc;
         }, {} as Record<string, number>);
-        localStorage.setItem('monitor-order', JSON.stringify(orderMap));
+        localStorage.setItem(getOrderStorageKey(currentTab), JSON.stringify(orderMap));
 
         return newOrder;
       });
+    }
+  };
+
+  // Toggle category selection in ALL tab
+  const toggleCategory = (categoryId: MonitorCategory) => {
+    setSelectedCategories(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(categoryId)) {
+        newSet.delete(categoryId);
+      } else {
+        newSet.add(categoryId);
+      }
+      // Save to localStorage
+      localStorage.setItem('selected-categories', JSON.stringify(Array.from(newSet)));
+      return newSet;
+    });
+  };
+
+  // Get filtered monitors based on current tab and selected categories
+  const getFilteredMonitors = () => {
+    if (currentTab === 'all') {
+      // In ALL tab, filter by selected categories
+      return monitors.filter(m => selectedCategories.has(getMonitorCategory(m.id)));
+    } else {
+      // In category tabs, show only that category
+      return monitors.filter(m => getMonitorCategory(m.id) === currentTab);
     }
   };
 
@@ -304,6 +368,23 @@ export default function MonitorsPage() {
   useEffect(() => {
     requestNotificationPermission();
   }, [requestNotificationPermission]);
+
+  // Load selected categories from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem('selected-categories');
+    if (saved) {
+      try {
+        setSelectedCategories(new Set(JSON.parse(saved)));
+      } catch {
+        // Ignore parse errors
+      }
+    }
+  }, []);
+
+  // Re-fetch when tab changes to apply correct sorting
+  useEffect(() => {
+    fetchMonitors();
+  }, [currentTab]);
 
   useEffect(() => {
     fetchMonitors();
@@ -746,35 +827,101 @@ export default function MonitorsPage() {
           </div>
         </Card>
       ) : (
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={handleDragEnd}
-        >
-          <SortableContext
-            items={monitors.map((m) => m.id)}
-            strategy={rectSortingStrategy}
-          >
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-              {monitors.map((monitor) => {
-                const alertRule = getAlertRuleForMonitor(monitor.id);
-                const isAlert = alertRule ? isMonitorInAlert(monitor, alertRule) : false;
+        <Tabs value={currentTab} onValueChange={(value) => setCurrentTab(value as 'all' | MonitorCategory)}>
+          <TabsList className="mb-6">
+            <TabsTrigger value="all">全部</TabsTrigger>
+            {CATEGORIES.map(cat => (
+              <TabsTrigger key={cat.id} value={cat.id}>
+                {cat.label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+
+          <TabsContent value="all" className="mt-0">
+            {/* Category filter badges */}
+            <div className="flex flex-wrap gap-2 mb-4">
+              {CATEGORIES.map(cat => {
+                const count = monitors.filter(m => getMonitorCategory(m.id) === cat.id).length;
+                const isSelected = selectedCategories.has(cat.id);
 
                 return (
-                  <SortableMonitorCard
-                    key={monitor.id}
-                    monitor={monitor}
-                    onEdit={handleEdit}
-                    onDelete={handleDelete}
-                    onSetAlert={handleSetAlert}
-                    isAlert={isAlert}
-                    alertLevel={alertRule?.level}
-                  />
+                  <Badge
+                    key={cat.id}
+                    variant={isSelected ? 'default' : 'outline'}
+                    className="cursor-pointer"
+                    onClick={() => toggleCategory(cat.id)}
+                  >
+                    {cat.label} ({count})
+                  </Badge>
                 );
               })}
             </div>
-          </SortableContext>
-        </DndContext>
+
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext
+                items={getFilteredMonitors().map((m) => m.id)}
+                strategy={rectSortingStrategy}
+              >
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                  {getFilteredMonitors().map((monitor) => {
+                    const alertRule = getAlertRuleForMonitor(monitor.id);
+                    const isAlert = alertRule ? isMonitorInAlert(monitor, alertRule) : false;
+
+                    return (
+                      <SortableMonitorCard
+                        key={monitor.id}
+                        monitor={monitor}
+                        onEdit={handleEdit}
+                        onDelete={handleDelete}
+                        onSetAlert={handleSetAlert}
+                        isAlert={isAlert}
+                        alertLevel={alertRule?.level}
+                      />
+                    );
+                  })}
+                </div>
+              </SortableContext>
+            </DndContext>
+          </TabsContent>
+
+          {CATEGORIES.map(cat => (
+            <TabsContent key={cat.id} value={cat.id} className="mt-0">
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
+              >
+                <SortableContext
+                  items={getFilteredMonitors().map((m) => m.id)}
+                  strategy={rectSortingStrategy}
+                >
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                    {getFilteredMonitors().map((monitor) => {
+                      const alertRule = getAlertRuleForMonitor(monitor.id);
+                      const isAlert = alertRule ? isMonitorInAlert(monitor, alertRule) : false;
+
+                      return (
+                        <SortableMonitorCard
+                          key={monitor.id}
+                          monitor={monitor}
+                          onEdit={handleEdit}
+                          onDelete={handleDelete}
+                          onSetAlert={handleSetAlert}
+                          isAlert={isAlert}
+                          alertLevel={alertRule?.level}
+                        />
+                      );
+                    })}
+                  </div>
+                </SortableContext>
+              </DndContext>
+            </TabsContent>
+          ))}
+        </Tabs>
       )}
 
       {/* Alert Configuration Dialog */}
