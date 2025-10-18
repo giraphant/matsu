@@ -31,6 +31,7 @@ class MonitorCreate(BaseModel):
     description: Optional[str] = None
     color: Optional[str] = None
     decimal_places: int = 2
+    category: Optional[str] = None
 
 
 class MonitorUpdate(BaseModel):
@@ -41,6 +42,7 @@ class MonitorUpdate(BaseModel):
     description: Optional[str] = None
     color: Optional[str] = None
     decimal_places: Optional[int] = None
+    category: Optional[str] = None
     enabled: Optional[bool] = None
 
 
@@ -53,6 +55,7 @@ class MonitorResponse(BaseModel):
     description: Optional[str]
     color: Optional[str]
     decimal_places: int
+    category: Optional[str]
     enabled: bool
     value: Optional[float]
     computed_at: Optional[datetime]
@@ -107,7 +110,8 @@ async def create_monitor(monitor: MonitorCreate, db: Session = Depends(get_db)):
             unit=monitor.unit,
             description=monitor.description,
             color=monitor.color,
-            decimal_places=monitor.decimal_places
+            decimal_places=monitor.decimal_places,
+            category=monitor.category
         )
 
         if not created:

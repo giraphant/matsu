@@ -32,6 +32,7 @@ class MonitorService:
         description: Optional[str] = None,
         color: Optional[str] = None,
         decimal_places: int = 2,
+        category: Optional[str] = None,
         monitor_id: Optional[str] = None
     ) -> Optional[Monitor]:
         """
@@ -44,6 +45,7 @@ class MonitorService:
             description: Description
             color: Display color
             decimal_places: Number of decimal places
+            category: Manual category tag
             monitor_id: Optional custom ID
 
         Returns:
@@ -68,6 +70,7 @@ class MonitorService:
             description=description,
             color=color,
             decimal_places=decimal_places,
+            category=category,
             enabled=True
         )
 
@@ -128,6 +131,7 @@ class MonitorService:
             'description': monitor.description,
             'color': monitor.color,
             'decimal_places': monitor.decimal_places,
+            'category': monitor.category,
             'enabled': monitor.enabled,
             'value': latest_value.value if latest_value else None,
             'computed_at': latest_value.computed_at if latest_value else None,

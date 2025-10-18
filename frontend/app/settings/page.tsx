@@ -19,8 +19,10 @@ import {
   deleteFundingRateAlert,
   getSetting,
   updateSetting,
+  getMonitors,
+  updateMonitor,
 } from '@/lib/api';
-import type { PushoverConfig, FundingRateAlert } from '@/lib/api';
+import type { PushoverConfig, FundingRateAlert, Monitor } from '@/lib/api';
 
 export default function SettingsPage() {
   // State for different tabs
@@ -60,8 +62,21 @@ export default function SettingsPage() {
   const [alpAmount, setAlpAmount] = useState('0');
   const [savingAlpAmount, setSavingAlpAmount] = useState(false);
 
+  // Monitors state for Data Management
+  const [monitors, setMonitors] = useState<Monitor[]>([]);
+  const [updatingMonitor, setUpdatingMonitor] = useState<string | null>(null);
+
   // Available exchanges for funding rate alerts
   const availableExchanges = ['lighter', 'aster', 'grvt', 'backpack', 'hyperliquid', 'bybit', 'binance'];
+
+  // Available categories for monitors
+  const availableCategories = [
+    { value: 'funding', label: '资金费率' },
+    { value: 'spot', label: '现货价格' },
+    { value: 'account', label: '账户信息' },
+    { value: 'hedge', label: '对冲量' },
+    { value: 'other', label: '其他' },
+  ];
 
   useEffect(() => {
     fetchAllData();
@@ -73,13 +88,15 @@ export default function SettingsPage() {
       setError(null);
 
       // Fetch all data in parallel
-      const [pushoverData, fundingAlertsData] = await Promise.all([
+      const [pushoverData, fundingAlertsData, monitorsData] = await Promise.all([
         getPushoverConfigs().catch(() => []),
         getFundingRateAlerts().catch(() => []),
+        getMonitors().catch(() => []),
       ]);
 
       setPushoverConfigs(pushoverData);
       setFundingAlerts(fundingAlertsData);
+      setMonitors(monitorsData);
 
       // Fetch JLP amount setting
       try {
@@ -312,6 +329,26 @@ export default function SettingsPage() {
     }
   }
 
+  // Monitor category functions
+  async function handleUpdateMonitorCategory(monitorId: string, category: string | null) {
+    try {
+      setUpdatingMonitor(monitorId);
+      setError(null);
+      setSuccessMessage(null);
+
+      await updateMonitor(monitorId, { category: category || undefined });
+      setSuccessMessage(`Category updated for ${monitors.find(m => m.id === monitorId)?.name}`);
+
+      // Refresh monitors
+      const monitorsData = await getMonitors();
+      setMonitors(monitorsData);
+    } catch (err) {
+      setError('Failed to update monitor category');
+    } finally {
+      setUpdatingMonitor(null);
+    }
+  }
+
   return (
     <div className="flex flex-1 flex-col gap-4">
       <div className="flex items-center">
@@ -331,10 +368,11 @@ export default function SettingsPage() {
       )}
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="funding">Funding Alerts</TabsTrigger>
           <TabsTrigger value="positions">Position Config</TabsTrigger>
+          <TabsTrigger value="data">Data Management</TabsTrigger>
         </TabsList>
 
         <TabsContent value="general" className="space-y-4">
@@ -782,6 +820,62 @@ export default function SettingsPage() {
                   </div>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="data" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Monitor Categories</CardTitle>
+              <CardDescription>
+                Manage category tags for monitors to organize them in the Monitors page
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {loading ? (
+                <div className="text-muted-foreground">Loading...</div>
+              ) : monitors.length === 0 ? (
+                <div className="text-muted-foreground">No monitors found</div>
+              ) : (
+                <div className="space-y-2">
+                  <div className="text-sm text-muted-foreground mb-4">
+                    Set manual categories to override automatic detection based on monitor ID prefixes.
+                  </div>
+                  {monitors.map((monitor) => (
+                    <div key={monitor.id} className="flex items-center justify-between rounded-lg border p-3">
+                      <div className="flex-1">
+                        <div className="font-medium">{monitor.name}</div>
+                        <div className="text-xs text-muted-foreground">
+                          ID: {monitor.id}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Select
+                          value={monitor.category || ''}
+                          onValueChange={(value) => handleUpdateMonitorCategory(monitor.id, value || null)}
+                          disabled={updatingMonitor === monitor.id}
+                        >
+                          <SelectTrigger className="w-[150px]">
+                            <SelectValue placeholder="Auto-detect" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="">Auto-detect</SelectItem>
+                            {availableCategories.map((cat) => (
+                              <SelectItem key={cat.value} value={cat.value}>
+                                {cat.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        {updatingMonitor === monitor.id && (
+                          <span className="text-xs text-muted-foreground">Saving...</span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

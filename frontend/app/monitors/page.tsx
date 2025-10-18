@@ -43,6 +43,7 @@ interface Monitor {
   description?: string;
   color?: string;
   decimal_places: number;
+  category?: string;
   enabled: boolean;
   value?: number;
   computed_at?: string;
@@ -77,8 +78,15 @@ const CATEGORIES: CategoryConfig[] = [
   { id: 'other', label: '其他', prefixes: [] },
 ];
 
-// Get category for a monitor based on its ID
-function getMonitorCategory(monitorId: string): MonitorCategory {
+// Get category for a monitor - checks manual category first, then auto-detects from ID
+function getMonitorCategory(monitor: Monitor | string): MonitorCategory {
+  // If monitor object is passed, check for manual category first
+  if (typeof monitor === 'object' && monitor.category) {
+    return monitor.category as MonitorCategory;
+  }
+
+  // Auto-detect from monitor ID
+  const monitorId = typeof monitor === 'string' ? monitor : monitor.id;
   for (const category of CATEGORIES) {
     if (category.prefixes.some(prefix => monitorId.startsWith(prefix))) {
       return category.id;
@@ -263,10 +271,10 @@ export default function MonitorsPage() {
   const getFilteredMonitors = () => {
     if (currentTab === 'all') {
       // In ALL tab, filter by selected categories
-      return monitors.filter(m => selectedCategories.has(getMonitorCategory(m.id)));
+      return monitors.filter(m => selectedCategories.has(getMonitorCategory(m)));
     } else {
       // In category tabs, show only that category
-      return monitors.filter(m => getMonitorCategory(m.id) === currentTab);
+      return monitors.filter(m => getMonitorCategory(m) === currentTab);
     }
   };
 
@@ -841,7 +849,7 @@ export default function MonitorsPage() {
             {/* Category filter badges */}
             <div className="flex flex-wrap gap-2 mb-4">
               {CATEGORIES.map(cat => {
-                const count = monitors.filter(m => getMonitorCategory(m.id) === cat.id).length;
+                const count = monitors.filter(m => getMonitorCategory(m) === cat.id).length;
                 const isSelected = selectedCategories.has(cat.id);
 
                 return (
