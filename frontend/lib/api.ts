@@ -11,7 +11,7 @@ export interface Monitor {
   description?: string;
   color?: string;
   decimal_places: number;
-  category?: string;
+  tags?: string[];
   enabled: boolean;
   value?: number;
   computed_at?: string;
