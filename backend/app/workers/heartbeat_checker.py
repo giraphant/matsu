@@ -7,7 +7,7 @@ import asyncio
 from datetime import datetime, timedelta
 from typing import List, Dict, Any
 
-from app.background_tasks.base import BackgroundTask
+from app.background_tasks.base import BaseMonitor
 from app.models.database import get_db_session, Monitor, WebhookData, AlertState
 from app.repositories.monitor_repo import MonitorRepository
 from app.repositories.webhook_repo import WebhookRepository
@@ -17,7 +17,7 @@ import json
 logger = get_logger(__name__)
 
 
-class HeartbeatChecker(BackgroundTask):
+class HeartbeatChecker(BaseMonitor):
     """
     Background task that checks for stale data on monitors with heartbeat enabled.
 
