@@ -222,7 +222,8 @@ class HeartbeatChecker(BaseMonitor):
             level: Alert level
         """
         try:
-            from app.services.pushover import send_pushover_alert
+            from app.services.pushover import PushoverService
+            from app.models.database import get_db_session
 
             elapsed_minutes = elapsed_seconds / 60
             expected_minutes = monitor.heartbeat_interval / 60
@@ -237,12 +238,16 @@ class HeartbeatChecker(BaseMonitor):
                 f"Data source may be down or disconnected."
             )
 
-            await send_pushover_alert(
-                title=title,
-                message=message,
-                priority=1,  # High priority for heartbeat failures
-                level=level
-            )
+            db = get_db_session()
+            try:
+                pushover_service = PushoverService(db)
+                pushover_service.send_alert(
+                    title=title,
+                    message=message,
+                    level=level
+                )
+            finally:
+                db.close()
 
         except Exception as e:
             logger.error(f"[HeartbeatChecker] Failed to send Pushover alert: {e}", exc_info=True)
