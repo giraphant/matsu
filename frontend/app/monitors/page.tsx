@@ -105,7 +105,9 @@ export default function MonitorsPage() {
   const [alertFormData, setAlertFormData] = useState({
     upper_threshold: '',
     lower_threshold: '',
-    alert_level: 'medium'
+    alert_level: 'medium',
+    heartbeat_enabled: false,
+    heartbeat_interval: 300
   });
 
   // Form states
@@ -465,7 +467,9 @@ export default function MonitorsPage() {
           setAlertFormData({
             upper_threshold: upper || '',
             lower_threshold: lower || '',
-            alert_level: rule.level || 'medium'
+            alert_level: rule.level || 'medium',
+            heartbeat_enabled: rule.heartbeat_enabled || false,
+            heartbeat_interval: rule.heartbeat_interval || 300
           });
           toast.info(`Loaded existing alert configuration`);
         } else {
@@ -553,7 +557,9 @@ export default function MonitorsPage() {
         condition: condition,
         level: alertFormData.alert_level,
         cooldown_seconds: cooldown_seconds,
-        actions: ['pushover']
+        actions: ['pushover'],
+        heartbeat_enabled: alertFormData.heartbeat_enabled,
+        heartbeat_interval: alertFormData.heartbeat_interval
       };
 
       console.log('Creating alert rule with payload:', JSON.stringify(payload, null, 2));
@@ -625,7 +631,9 @@ export default function MonitorsPage() {
     setAlertFormData({
       upper_threshold: '',
       lower_threshold: '',
-      alert_level: 'medium'
+      alert_level: 'medium',
+      heartbeat_enabled: false,
+      heartbeat_interval: 300
     });
   };
 
@@ -984,6 +992,43 @@ export default function MonitorsPage() {
                   <SelectItem value="low">Low</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+
+            {/* Heartbeat Monitoring Section */}
+            <div className="grid gap-2 pt-4 border-t">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label htmlFor="heartbeat">Heartbeat Monitoring</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Alert if no data received within interval (uses same alert level)
+                  </p>
+                </div>
+                <Switch
+                  id="heartbeat"
+                  checked={alertFormData.heartbeat_enabled}
+                  onCheckedChange={(checked) =>
+                    setAlertFormData({ ...alertFormData, heartbeat_enabled: checked })
+                  }
+                />
+              </div>
+              {alertFormData.heartbeat_enabled && (
+                <div className="grid gap-2 mt-2">
+                  <Label htmlFor="heartbeat_interval">Expected Interval (seconds)</Label>
+                  <Input
+                    id="heartbeat_interval"
+                    type="number"
+                    min="60"
+                    step="60"
+                    value={alertFormData.heartbeat_interval}
+                    onChange={(e) =>
+                      setAlertFormData({ ...alertFormData, heartbeat_interval: parseInt(e.target.value) || 300 })
+                    }
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Alert will trigger if no data for {Math.floor(alertFormData.heartbeat_interval / 60)} minutes
+                  </p>
+                </div>
+              )}
             </div>
           </div>
           <DialogFooter className="gap-2">

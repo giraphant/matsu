@@ -30,6 +30,8 @@ export interface AlertRule {
   enabled: boolean;
   cooldown_seconds: number;
   actions: string[];
+  heartbeat_enabled: boolean;
+  heartbeat_interval?: number;
   created_at: string;
   updated_at: string;
 }
