@@ -686,18 +686,18 @@ export default function MonitorsPage() {
 
   return (
     <div className="container mx-auto p-6 max-w-7xl">
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex justify-between items-center mb-4 md:mb-8">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Monitors</h1>
-          <p className="text-muted-foreground mt-1">
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Monitors</h1>
+          <p className="text-muted-foreground mt-1 text-sm hidden sm:block">
             Track your custom metrics with real-time updates
           </p>
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button onClick={() => { resetForm(); setDialogOpen(true); }}>
-              <Plus className="mr-2 h-4 w-4" />
-              Add Monitor
+              <Plus className="mr-0 sm:mr-2 h-4 w-4" />
+              <span className="hidden sm:inline">Add Monitor</span>
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[500px]">
