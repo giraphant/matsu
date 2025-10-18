@@ -17,6 +17,7 @@ import { MonitorCard } from '@/components/monitor-card';
 import { getApiUrl } from '@/lib/api-config';
 import { useNotification } from '@/hooks/useNotification';
 import { AlertLevel, ALERT_LEVELS } from '@/lib/alerts';
+import { Monitor, AlertRule } from '@/lib/api';
 import {
   DndContext,
   closestCenter,
@@ -34,32 +35,6 @@ import {
 } from '@dnd-kit/sortable';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-
-interface Monitor {
-  id: string;
-  name: string;
-  formula: string;
-  unit?: string;
-  description?: string;
-  color?: string;
-  decimal_places: number;
-  tags?: string[];
-  enabled: boolean;
-  value?: number;
-  computed_at?: string;
-  created_at: string;
-  updated_at: string;
-}
-
-interface AlertRule {
-  id: string;
-  name: string;
-  condition: string;
-  level: string;
-  enabled: boolean;
-  cooldown_seconds: number;
-  actions: string[];
-}
 
 // Sortable wrapper for MonitorCard
 function SortableMonitorCard({
