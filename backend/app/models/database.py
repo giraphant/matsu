@@ -211,7 +211,7 @@ class Monitor(Base):
     description = Column(Text)
     color = Column(String)
     decimal_places = Column(Integer, default=2)
-    category = Column(String, nullable=True)  # Manual category: 'funding', 'spot', 'account', 'hedge', 'other'
+    tags = Column(Text, nullable=True)  # JSON array of tags: ["资金费率", "高优先级"]
     enabled = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

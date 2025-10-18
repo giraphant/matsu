@@ -32,7 +32,7 @@ class MonitorService:
         description: Optional[str] = None,
         color: Optional[str] = None,
         decimal_places: int = 2,
-        category: Optional[str] = None,
+        tags: Optional[List[str]] = None,
         monitor_id: Optional[str] = None
     ) -> Optional[Monitor]:
         """
@@ -45,7 +45,7 @@ class MonitorService:
             description: Description
             color: Display color
             decimal_places: Number of decimal places
-            category: Manual category tag
+            tags: List of tags for this monitor
             monitor_id: Optional custom ID
 
         Returns:
@@ -61,6 +61,10 @@ class MonitorService:
         if not monitor_id:
             monitor_id = f"monitor_{uuid.uuid4().hex[:12]}"
 
+        # Serialize tags to JSON if provided
+        import json
+        tags_json = json.dumps(tags) if tags else None
+
         # Create monitor
         monitor = Monitor(
             id=monitor_id,
@@ -70,7 +74,7 @@ class MonitorService:
             description=description,
             color=color,
             decimal_places=decimal_places,
-            category=category,
+            tags=tags_json,
             enabled=True
         )
 
@@ -83,11 +87,17 @@ class MonitorService:
 
     def update_monitor(self, monitor_id: str, updates: Dict[str, Any]) -> Optional[Monitor]:
         """Update monitor."""
+        import json
+
         # If formula is being updated, check for circular dependencies
         if 'formula' in updates:
             if self.formula_engine.check_circular_dependency(monitor_id, updates['formula']):
                 logger.error(f"Circular dependency detected in updated formula")
                 return None
+
+        # Serialize tags if provided
+        if 'tags' in updates and updates['tags'] is not None:
+            updates['tags'] = json.dumps(updates['tags'])
 
         updated = self.repo.update(monitor_id, updates)
 
@@ -123,6 +133,15 @@ class MonitorService:
         # Get latest value
         latest_value = self.repo.get_latest_value(monitor_id)
 
+        # Deserialize tags from JSON
+        import json
+        tags = None
+        if monitor.tags:
+            try:
+                tags = json.loads(monitor.tags)
+            except:
+                tags = None
+
         return {
             'id': monitor.id,
             'name': monitor.name,
@@ -131,7 +150,7 @@ class MonitorService:
             'description': monitor.description,
             'color': monitor.color,
             'decimal_places': monitor.decimal_places,
-            'category': monitor.category,
+            'tags': tags,
             'enabled': monitor.enabled,
             'value': latest_value.value if latest_value else None,
             'computed_at': latest_value.computed_at if latest_value else None,
