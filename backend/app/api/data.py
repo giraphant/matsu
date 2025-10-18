@@ -21,6 +21,95 @@ logger = get_logger(__name__)
 router = APIRouter()
 
 
+class HedgeDataPoint(BaseModel):
+    """Schema for hedge position data from external sources"""
+    monitor_id: str
+    monitor_name: str
+    value: float
+    timestamp: Optional[datetime] = None
+
+
+class BulkHedgeData(BaseModel):
+    """Schema for bulk hedge position updates"""
+    data_points: List[HedgeDataPoint]
+
+
+@router.post("/hedge-data")
+async def receive_hedge_data(
+    data: BulkHedgeData,
+    token: Optional[str] = Query(None, description="Authentication token")
+) -> Dict[str, Any]:
+    """
+    Receive hedge position data from external sources (e.g., Tokyo server).
+
+    Example payload:
+    {
+        "data_points": [
+            {
+                "monitor_id": "jlp_hedge_SOL",
+                "monitor_name": "JLP SOL 对冲量",
+                "value": 123.45,
+                "timestamp": "2025-10-17T12:00:00Z"
+            },
+            {
+                "monitor_id": "alp_hedge_BTC",
+                "monitor_name": "ALP BTC 对冲量",
+                "value": 0.0012
+            }
+        ]
+    }
+
+    Authentication: Requires ?token=xxx query parameter.
+    """
+    import os
+
+    # Simple token authentication
+    expected_token = os.getenv("WEBHOOK_SECRET", "")
+    if expected_token and token != expected_token:
+        raise HTTPException(status_code=403, detail="Invalid or missing token")
+
+    db = get_db_session()
+
+    try:
+        stored_count = 0
+        current_time = datetime.utcnow()
+
+        for point in data.data_points:
+            # Use provided timestamp or current time
+            timestamp = point.timestamp or current_time
+
+            # Create WebhookData record
+            record = WebhookData(
+                monitor_id=point.monitor_id,
+                monitor_name=point.monitor_name,
+                value=point.value,
+                timestamp=timestamp,
+                webhook_received_at=current_time,
+                status="received",
+                url="external_api"
+            )
+
+            db.add(record)
+            stored_count += 1
+
+        db.commit()
+
+        logger.info(f"Received {stored_count} hedge data points from external source")
+
+        return {
+            "status": "success",
+            "message": f"Stored {stored_count} data points",
+            "received_at": current_time.isoformat()
+        }
+
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error storing hedge data: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+    finally:
+        db.close()
+
+
 @router.get("/data", response_model=List[MonitoringDataResponse])
 async def get_monitoring_data(
     monitor_id: Optional[str] = Query(None, description="Filter by monitor ID"),
