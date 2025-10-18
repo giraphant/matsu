@@ -9,21 +9,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Area, AreaChart, ResponsiveContainer, YAxis } from 'recharts';
 import { cn } from "@/lib/utils";
 import { getApiUrl } from "@/lib/api-config";
-
-interface Monitor {
-  id: string;
-  name: string;
-  formula: string;
-  unit?: string;
-  description?: string;
-  color?: string;
-  decimal_places: number;
-  enabled: boolean;
-  value?: number;
-  computed_at?: string;
-  created_at: string;
-  updated_at: string;
-}
+import { Monitor } from "@/lib/api";
 
 interface MonitorCardProps {
   monitor: Monitor;

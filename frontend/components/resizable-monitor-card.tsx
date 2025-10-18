@@ -14,21 +14,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Trash2, Edit, GripVertical, Maximize2, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { Monitor } from '@/lib/api';
 
 export type CardSize = 'tiny' | 'small' | 'vertical' | 'medium' | 'large' | 'xlarge' | 'tall';
-
-interface Monitor {
-  id: string;
-  name: string;
-  formula: string;
-  unit?: string;
-  description?: string;
-  color?: string;
-  decimal_places: number;
-  enabled: boolean;
-  value?: number;
-  computed_at?: string;
-}
 
 interface ResizableMonitorCardProps {
   monitor: Monitor;
