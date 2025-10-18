@@ -3,6 +3,7 @@
 const API_BASE_URL = '/api';
 
 // Types
+// Monitor interface with heartbeat support
 export interface Monitor {
   id: string;
   name: string;
