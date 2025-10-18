@@ -118,9 +118,7 @@ export default function MonitorsPage() {
     description: '',
     color: '#3b82f6',
     decimal_places: 2,
-    tags: [] as string[],
-    heartbeat_enabled: false,
-    heartbeat_interval: 300  // Default 5 minutes
+    tags: [] as string[]
   });
 
   // Tag input state
@@ -407,9 +405,7 @@ export default function MonitorsPage() {
       description: monitor.description || '',
       color: monitor.color || '#3b82f6',
       decimal_places: monitor.decimal_places,
-      tags: monitor.tags || [],
-      heartbeat_enabled: monitor.heartbeat_enabled || false,
-      heartbeat_interval: monitor.heartbeat_interval || 300
+      tags: monitor.tags || []
     });
     setDialogOpen(true);
   };
@@ -423,9 +419,7 @@ export default function MonitorsPage() {
       description: '',
       color: '#3b82f6',
       decimal_places: 2,
-      tags: [],
-      heartbeat_enabled: false,
-      heartbeat_interval: 300
+      tags: []
     });
     setTagInput('');
     setEditingMonitor(null);
@@ -811,44 +805,6 @@ export default function MonitorsPage() {
                         </button>
                       </Badge>
                     ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Heartbeat Monitoring */}
-              <div className="grid gap-2 pt-4 border-t">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="heartbeat">Heartbeat Monitoring</Label>
-                    <p className="text-xs text-muted-foreground">
-                      Alert if no data received within interval
-                    </p>
-                  </div>
-                  <Switch
-                    id="heartbeat"
-                    checked={formData.heartbeat_enabled}
-                    onCheckedChange={(checked) =>
-                      setFormData({ ...formData, heartbeat_enabled: checked })
-                    }
-                  />
-                </div>
-                {formData.heartbeat_enabled && (
-                  <div className="grid gap-2 mt-2">
-                    <Label htmlFor="heartbeat_interval">Expected Interval (seconds)</Label>
-                    <Input
-                      id="heartbeat_interval"
-                      type="number"
-                      min="60"
-                      step="60"
-                      value={formData.heartbeat_interval}
-                      onChange={(e) =>
-                        setFormData({ ...formData, heartbeat_interval: parseInt(e.target.value) || 300 })
-                      }
-                      placeholder="e.g., 300 (5 minutes)"
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Alert will trigger if no data for {Math.floor(formData.heartbeat_interval / 60)} minutes
-                    </p>
                   </div>
                 )}
               </div>
