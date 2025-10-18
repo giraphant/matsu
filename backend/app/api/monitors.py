@@ -76,6 +76,8 @@ class AlertRuleCreate(BaseModel):
     level: str = 'medium'
     cooldown_seconds: int = 300
     actions: List[str] = ['pushover']
+    heartbeat_enabled: bool = False
+    heartbeat_interval: Optional[int] = None
 
 
 class AlertRuleUpdate(BaseModel):
@@ -86,6 +88,8 @@ class AlertRuleUpdate(BaseModel):
     enabled: Optional[bool] = None
     cooldown_seconds: Optional[int] = None
     actions: Optional[List[str]] = None
+    heartbeat_enabled: Optional[bool] = None
+    heartbeat_interval: Optional[int] = None
 
 
 class AlertRuleResponse(BaseModel):
@@ -97,6 +101,8 @@ class AlertRuleResponse(BaseModel):
     enabled: bool
     cooldown_seconds: int
     actions: List[str]
+    heartbeat_enabled: bool
+    heartbeat_interval: Optional[int]
     created_at: datetime
     updated_at: datetime
 
@@ -306,7 +312,9 @@ async def create_alert_rule(rule: AlertRuleCreate, db: Session = Depends(get_db)
             level=rule.level,
             cooldown_seconds=rule.cooldown_seconds,
             actions=json.dumps(rule.actions),
-            enabled=True
+            enabled=True,
+            heartbeat_enabled=rule.heartbeat_enabled,
+            heartbeat_interval=rule.heartbeat_interval
         )
 
         db.add(alert_rule)
@@ -321,6 +329,8 @@ async def create_alert_rule(rule: AlertRuleCreate, db: Session = Depends(get_db)
             enabled=alert_rule.enabled,
             cooldown_seconds=alert_rule.cooldown_seconds,
             actions=json.loads(alert_rule.actions),
+            heartbeat_enabled=alert_rule.heartbeat_enabled,
+            heartbeat_interval=alert_rule.heartbeat_interval,
             created_at=alert_rule.created_at,
             updated_at=alert_rule.updated_at
         )
@@ -345,6 +355,8 @@ async def get_all_alert_rules(db: Session = Depends(get_db)):
                 enabled=rule.enabled,
                 cooldown_seconds=rule.cooldown_seconds,
                 actions=json.loads(rule.actions) if rule.actions else [],
+                heartbeat_enabled=rule.heartbeat_enabled if hasattr(rule, 'heartbeat_enabled') else False,
+                heartbeat_interval=rule.heartbeat_interval if hasattr(rule, 'heartbeat_interval') else None,
                 created_at=rule.created_at,
                 updated_at=rule.updated_at
             )
@@ -382,6 +394,10 @@ async def update_alert_rule(
             rule.cooldown_seconds = updates.cooldown_seconds
         if updates.actions is not None:
             rule.actions = json.dumps(updates.actions)
+        if updates.heartbeat_enabled is not None:
+            rule.heartbeat_enabled = updates.heartbeat_enabled
+        if updates.heartbeat_interval is not None:
+            rule.heartbeat_interval = updates.heartbeat_interval
 
         rule.updated_at = datetime.utcnow()
 
@@ -396,6 +412,8 @@ async def update_alert_rule(
             enabled=rule.enabled,
             cooldown_seconds=rule.cooldown_seconds,
             actions=json.loads(rule.actions),
+            heartbeat_enabled=rule.heartbeat_enabled,
+            heartbeat_interval=rule.heartbeat_interval,
             created_at=rule.created_at,
             updated_at=rule.updated_at
         )
@@ -445,6 +463,8 @@ async def get_alert_rules_by_monitor(monitor_id: str, db: Session = Depends(get_
                 enabled=rule.enabled,
                 cooldown_seconds=rule.cooldown_seconds,
                 actions=json.loads(rule.actions) if rule.actions else [],
+                heartbeat_enabled=rule.heartbeat_enabled if hasattr(rule, 'heartbeat_enabled') else False,
+                heartbeat_interval=rule.heartbeat_interval if hasattr(rule, 'heartbeat_interval') else None,
                 created_at=rule.created_at,
                 updated_at=rule.updated_at
             )

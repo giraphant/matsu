@@ -82,6 +82,32 @@ class StartupManager:
         except Exception as e:
             logger.debug(f"Migration note: {e}")
 
+        # Add heartbeat fields to alert_rules
+        try:
+            conn = sqlite3.connect(settings.DATABASE_PATH)
+            cursor = conn.cursor()
+            cursor.execute("PRAGMA table_info(alert_rules)")
+            columns = [col[1] for col in cursor.fetchall()]
+
+            if 'heartbeat_enabled' not in columns:
+                cursor.execute("""
+                    ALTER TABLE alert_rules
+                    ADD COLUMN heartbeat_enabled BOOLEAN DEFAULT 0
+                """)
+                logger.info("Added heartbeat_enabled column to alert_rules")
+
+            if 'heartbeat_interval' not in columns:
+                cursor.execute("""
+                    ALTER TABLE alert_rules
+                    ADD COLUMN heartbeat_interval INTEGER
+                """)
+                logger.info("Added heartbeat_interval column to alert_rules")
+
+            conn.commit()
+            conn.close()
+        except Exception as e:
+            logger.debug(f"Migration note: {e}")
+
     def _create_initial_users(self) -> None:
         """Create initial user if no users exist."""
         db = get_db_session()

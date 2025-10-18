@@ -245,7 +245,7 @@ class MonitorValue(Base):
 class AlertRule(Base):
     """
     Alert rules independent of monitors.
-    Supports formula-based conditions.
+    Supports formula-based conditions and heartbeat monitoring.
     """
     __tablename__ = 'alert_rules'
 
@@ -256,6 +256,11 @@ class AlertRule(Base):
     enabled = Column(Boolean, default=True)
     cooldown_seconds = Column(Integer, default=300)  # 5 minutes default
     actions = Column(Text)  # JSON: ["pushover", "email"]
+
+    # Heartbeat monitoring (shares the same level as threshold alerts)
+    heartbeat_enabled = Column(Boolean, default=False)  # Enable heartbeat check
+    heartbeat_interval = Column(Integer, nullable=True)  # Expected interval in seconds
+
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
