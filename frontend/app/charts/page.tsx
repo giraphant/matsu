@@ -8,6 +8,7 @@ import { columns as alertRuleColumns, AlertRuleData } from './alert-rules-column
 import { columns as fundingRateColumns, FundingRateData } from './funding-rates-columns';
 import { columns as spotPriceColumns, SpotPriceData } from './spot-prices-columns';
 import { ChartDialog } from './chart-dialog';
+import { MonitorChartDialog } from './monitor-chart-dialog';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { RefreshCw, TrendingUp, TrendingDown, Activity, Database } from 'lucide-react';
@@ -30,6 +31,8 @@ export default function ChartsPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [selectedWebhook, setSelectedWebhook] = useState<WebhookData | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedMonitor, setSelectedMonitor] = useState<MonitorData | null>(null);
+  const [monitorChartDialogOpen, setMonitorChartDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("webhooks");
 
   // Alert Rule Edit Dialog
@@ -266,6 +269,11 @@ export default function ChartsPage() {
   };
 
   // Monitor handlers
+  const handleViewMonitorChart = (monitor: MonitorData) => {
+    setSelectedMonitor(monitor);
+    setMonitorChartDialogOpen(true);
+  };
+
   const handleMonitorToggle = async (monitor: MonitorData) => {
     try {
       const response = await fetch(`/api/monitors/${monitor.id}`, {
@@ -543,6 +551,7 @@ export default function ChartsPage() {
                 columns={monitorColumns}
                 data={monitors}
                 meta={{
+                  onViewChart: handleViewMonitorChart,
                   onToggle: handleMonitorToggle,
                   onEdit: handleMonitorEdit,
                   onDelete: handleMonitorDelete,
@@ -644,6 +653,13 @@ export default function ChartsPage() {
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         webhook={selectedWebhook}
+      />
+
+      {/* Monitor Chart Dialog */}
+      <MonitorChartDialog
+        open={monitorChartDialogOpen}
+        onOpenChange={setMonitorChartDialogOpen}
+        monitor={selectedMonitor}
       />
 
       {/* Alert Rule Edit Dialog */}
