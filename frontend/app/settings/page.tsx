@@ -23,10 +23,8 @@ import {
   deleteFundingRateAlert,
   getSetting,
   updateSetting,
-  getMonitors,
-  updateMonitor,
 } from '@/lib/api';
-import type { PushoverConfig, FundingRateAlert, Monitor } from '@/lib/api';
+import type { PushoverConfig, FundingRateAlert } from '@/lib/api';
 
 export default function SettingsPage() {
   // State for different tabs
@@ -66,21 +64,6 @@ export default function SettingsPage() {
   const [alpAmount, setAlpAmount] = useState('0');
   const [savingAlpAmount, setSavingAlpAmount] = useState(false);
 
-  // Monitors state for Data Management
-  const [monitors, setMonitors] = useState<Monitor[]>([]);
-  const [editingMonitor, setEditingMonitor] = useState<Monitor | null>(null);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [monitorFormData, setMonitorFormData] = useState({
-    name: '',
-    formula: '',
-    unit: '',
-    description: '',
-    color: '#3b82f6',
-    decimal_places: 2,
-    tags: [] as string[]
-  });
-  const [tagInput, setTagInput] = useState('');
-
   // Available exchanges for funding rate alerts
   const availableExchanges = ['lighter', 'aster', 'grvt', 'backpack', 'hyperliquid', 'bybit', 'binance'];
 
@@ -94,15 +77,13 @@ export default function SettingsPage() {
       setError(null);
 
       // Fetch all data in parallel
-      const [pushoverData, fundingAlertsData, monitorsData] = await Promise.all([
+      const [pushoverData, fundingAlertsData] = await Promise.all([
         getPushoverConfigs().catch(() => []),
         getFundingRateAlerts().catch(() => []),
-        getMonitors().catch(() => []),
       ]);
 
       setPushoverConfigs(pushoverData);
       setFundingAlerts(fundingAlertsData);
-      setMonitors(monitorsData);
 
       // Fetch JLP amount setting
       try {
@@ -335,67 +316,6 @@ export default function SettingsPage() {
     }
   }
 
-  // Monitor edit functions
-  function handleEditMonitor(monitor: Monitor) {
-    setEditingMonitor(monitor);
-    setMonitorFormData({
-      name: monitor.name,
-      formula: monitor.formula,
-      unit: monitor.unit || '',
-      description: monitor.description || '',
-      color: monitor.color || '#3b82f6',
-      decimal_places: monitor.decimal_places,
-      tags: monitor.tags || []
-    });
-    setEditDialogOpen(true);
-  }
-
-  function handleCancelMonitorEdit() {
-    setEditDialogOpen(false);
-    setEditingMonitor(null);
-    setMonitorFormData({
-      name: '',
-      formula: '',
-      unit: '',
-      description: '',
-      color: '#3b82f6',
-      decimal_places: 2,
-      tags: []
-    });
-    setTagInput('');
-  }
-
-  async function handleSaveMonitorEdit() {
-    if (!editingMonitor) return;
-
-    try {
-      setError(null);
-      setSuccessMessage(null);
-
-      await updateMonitor(editingMonitor.id, monitorFormData);
-      setSuccessMessage(`Monitor "${editingMonitor.name}" updated successfully`);
-
-      // Refresh monitors
-      const monitorsData = await getMonitors();
-      setMonitors(monitorsData);
-
-      handleCancelMonitorEdit();
-    } catch (err) {
-      setError('Failed to update monitor');
-    }
-  }
-
-  function handleAddTag() {
-    if (tagInput.trim() && !monitorFormData.tags.includes(tagInput.trim())) {
-      setMonitorFormData({ ...monitorFormData, tags: [...monitorFormData.tags, tagInput.trim()] });
-      setTagInput('');
-    }
-  }
-
-  function handleRemoveTag(tagToRemove: string) {
-    setMonitorFormData({ ...monitorFormData, tags: monitorFormData.tags.filter(t => t !== tagToRemove) });
-  }
-
   return (
     <div className="flex flex-1 flex-col gap-4">
       <div className="flex items-center">
@@ -415,11 +335,10 @@ export default function SettingsPage() {
       )}
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="funding">Funding Alerts</TabsTrigger>
           <TabsTrigger value="positions">Position Config</TabsTrigger>
-          <TabsTrigger value="data">Data Management</TabsTrigger>
         </TabsList>
 
         <TabsContent value="general" className="space-y-4">
@@ -870,184 +789,7 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
         </TabsContent>
-
-        <TabsContent value="data" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Monitor Management</CardTitle>
-              <CardDescription>
-                Edit monitor settings including tags, formulas, and display options
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {loading ? (
-                <div className="text-muted-foreground">Loading...</div>
-              ) : monitors.length === 0 ? (
-                <div className="text-muted-foreground">No monitors found</div>
-              ) : (
-                <div className="space-y-2">
-                  {monitors.map((monitor) => (
-                    <div key={monitor.id} className="flex items-center justify-between rounded-lg border p-3">
-                      <div className="flex-1">
-                        <div className="font-medium">{monitor.name}</div>
-                        <div className="text-xs text-muted-foreground">
-                          ID: {monitor.id}
-                        </div>
-                        {monitor.tags && monitor.tags.length > 0 && (
-                          <div className="flex flex-wrap gap-1 mt-2">
-                            {monitor.tags.map(tag => (
-                              <Badge key={tag} variant="secondary" className="text-xs">
-                                {tag}
-                              </Badge>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleEditMonitor(monitor)}
-                        >
-                          Edit
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
       </Tabs>
-
-      {/* Monitor Edit Dialog */}
-      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>Edit Monitor</DialogTitle>
-            <DialogDescription>
-              Update monitor settings
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="edit-name">Name</Label>
-              <Input
-                id="edit-name"
-                value={monitorFormData.name}
-                onChange={(e) => setMonitorFormData({ ...monitorFormData, name: e.target.value })}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="edit-formula">Formula</Label>
-              <Textarea
-                id="edit-formula"
-                value={monitorFormData.formula}
-                onChange={(e) => setMonitorFormData({ ...monitorFormData, formula: e.target.value })}
-                className="font-mono text-sm"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="edit-unit">Unit</Label>
-                <Input
-                  id="edit-unit"
-                  value={monitorFormData.unit}
-                  onChange={(e) => setMonitorFormData({ ...monitorFormData, unit: e.target.value })}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="edit-decimal">Decimal Places</Label>
-                <Select
-                  value={monitorFormData.decimal_places.toString()}
-                  onValueChange={(value) =>
-                    setMonitorFormData({ ...monitorFormData, decimal_places: parseInt(value) })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="0">0</SelectItem>
-                    <SelectItem value="1">1</SelectItem>
-                    <SelectItem value="2">2</SelectItem>
-                    <SelectItem value="3">3</SelectItem>
-                    <SelectItem value="4">4</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="edit-color">Color</Label>
-              <div className="flex gap-2">
-                <Input
-                  id="edit-color"
-                  type="color"
-                  value={monitorFormData.color}
-                  onChange={(e) => setMonitorFormData({ ...monitorFormData, color: e.target.value })}
-                  className="w-20 h-10"
-                />
-                <Input
-                  type="text"
-                  value={monitorFormData.color}
-                  onChange={(e) => setMonitorFormData({ ...monitorFormData, color: e.target.value })}
-                  className="flex-1"
-                />
-              </div>
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="edit-description">Description</Label>
-              <Textarea
-                id="edit-description"
-                value={monitorFormData.description}
-                onChange={(e) => setMonitorFormData({ ...monitorFormData, description: e.target.value })}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="edit-tags">Tags</Label>
-              <div className="flex gap-2">
-                <Input
-                  id="edit-tags"
-                  placeholder="Enter tag name"
-                  value={tagInput}
-                  onChange={(e) => setTagInput(e.target.value)}
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      handleAddTag();
-                    }
-                  }}
-                />
-                <Button type="button" onClick={handleAddTag}>Add</Button>
-              </div>
-              {monitorFormData.tags.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {monitorFormData.tags.map(tag => (
-                    <Badge key={tag} variant="secondary">
-                      {tag}
-                      <button
-                        onClick={() => handleRemoveTag(tag)}
-                        className="ml-2 hover:text-destructive"
-                      >
-                        ×
-                      </button>
-                    </Badge>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={handleCancelMonitorEdit}>
-              Cancel
-            </Button>
-            <Button type="submit" onClick={handleSaveMonitorEdit}>
-              Save Changes
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

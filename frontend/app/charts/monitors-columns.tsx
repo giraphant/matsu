@@ -141,15 +141,15 @@ export const columns: ColumnDef<MonitorData>[] = [
               <LineChart className="mr-2 h-4 w-4" />
               View
             </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => meta?.onToggle?.(monitor)}>
-              <Power className="mr-2 h-4 w-4" />
-              {monitor.enabled ? "Disable" : "Enable"}
-            </DropdownMenuItem>
             <DropdownMenuItem onClick={() => meta?.onEdit?.(monitor)}>
               <Pencil className="mr-2 h-4 w-4" />
               Edit
             </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => meta?.onToggle?.(monitor)}>
+              <Power className="mr-2 h-4 w-4" />
+              {monitor.enabled ? "Disable" : "Enable"}
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
             <DropdownMenuItem
               onClick={() => meta?.onDelete?.(monitor.id)}
               className="text-destructive focus:text-destructive"
