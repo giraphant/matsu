@@ -4,7 +4,7 @@ import { ColumnDef } from "@tanstack/react-table"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
-import { MoreHorizontal, Pencil, Trash2, ArrowUpDown, LineChart } from "lucide-react"
+import { MoreHorizontal, Pencil, Trash2, ArrowUpDown, LineChart, Power } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -139,10 +139,11 @@ export const columns: ColumnDef<MonitorData>[] = [
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => meta?.onViewChart?.(monitor)}>
               <LineChart className="mr-2 h-4 w-4" />
-              View Chart
+              View
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => meta?.onToggle?.(monitor)}>
+              <Power className="mr-2 h-4 w-4" />
               {monitor.enabled ? "Disable" : "Enable"}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => meta?.onEdit?.(monitor)}>
