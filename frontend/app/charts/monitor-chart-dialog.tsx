@@ -138,7 +138,7 @@ export function MonitorChartDialog({ open, onOpenChange, monitor }: MonitorChart
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[90vw] max-w-none sm:max-w-none max-h-[90vh] overflow-auto">
+      <DialogContent className="w-[75vw] max-w-none sm:max-w-none max-h-[90vh] overflow-auto">
         <DialogHeader>
           <DialogTitle>{monitor.name}</DialogTitle>
           <DialogDescription>
