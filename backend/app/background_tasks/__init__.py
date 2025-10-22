@@ -17,6 +17,8 @@ from .lighter_account import LighterAccountMonitor
 # Position calculators
 from .jlp_hedge_monitor import JLPHedgeMonitor
 from .alp_hedge_monitor import ALPHedgeMonitor
+# Database maintenance
+from .database_downsampler import DatabaseDownsampler
 
 __all__ = [
     "BaseMonitor",
@@ -36,4 +38,6 @@ __all__ = [
     # Position calculators
     "JLPHedgeMonitor",
     "ALPHedgeMonitor",
+    # Database maintenance
+    "DatabaseDownsampler",
 ]

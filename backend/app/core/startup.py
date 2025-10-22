@@ -133,7 +133,8 @@ class StartupManager:
             LighterMonitor, AsterMonitor, GRVTMonitor, BackpackMonitor,
             BinanceSpotMonitor, OKXSpotMonitor, BybitSpotMonitor,
             JupiterSpotMonitor, PythSpotMonitor,
-            LighterAccountMonitor, JLPHedgeMonitor, ALPHedgeMonitor
+            LighterAccountMonitor, JLPHedgeMonitor, ALPHedgeMonitor,
+            DatabaseDownsampler
         )
         from app.workers.dex_cache_warmer import DexCacheWarmer
         from app.workers.alert_checker import AlertChecker
@@ -178,6 +179,11 @@ class StartupManager:
         # Heartbeat checker (every 30 seconds)
         # Monitors data staleness for monitors with heartbeat_enabled=True
         self.monitors.append(HeartbeatChecker())
+
+        # Database downsampler (every 24 hours)
+        # Automatically downsamples old data to reduce database size
+        # Runs at 2 AM UTC by default (86400 seconds = 24 hours)
+        self.monitors.append(DatabaseDownsampler(interval=86400, keep_backups=3))
 
         # Start all monitors
         for monitor in self.monitors:
