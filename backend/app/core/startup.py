@@ -189,7 +189,8 @@ class StartupManager:
         self.monitors.append(PythSpotMonitor())     # Oracle prices
 
         # Account monitors (every 30 seconds)
-        self.monitors.append(LighterAccountMonitor(account_index=138344))
+        # Note: Accounts are now managed through the database (Settings > DEX Accounts)
+        self.monitors.append(LighterAccountMonitor())
 
         # Position calculators (every 60 seconds)
         # JLP Hedge Monitor reads jlp_amount from database settings

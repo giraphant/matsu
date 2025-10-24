@@ -18,11 +18,9 @@ logger = get_logger(__name__)
 class LighterAccountMonitor(BaseMonitor):
     """Monitor for Lighter account data - supports multiple accounts."""
 
-    def __init__(self, account_index: int = None):
+    def __init__(self):
         # Run every 30 seconds
         super().__init__(name="Lighter Account", interval=30)
-        # Legacy: support single account_index for backward compatibility
-        self.legacy_account_index = account_index
         self.api_client = None
         self.account_api = None
 
@@ -60,23 +58,6 @@ class LighterAccountMonitor(BaseMonitor):
                     'name': account.name,
                     'address': account.address
                 })
-
-            # Legacy: always add legacy_account_index if set (for backward compatibility)
-            # This ensures the original account continues to be monitored even after
-            # adding new accounts to the database
-            if self.legacy_account_index is not None:
-                # Check if this legacy account is already in the database
-                legacy_exists = any(
-                    acc['address'] == str(self.legacy_account_index)
-                    for acc in result
-                )
-
-                if not legacy_exists:
-                    result.append({
-                        'id': None,
-                        'name': f'Legacy Account {self.legacy_account_index}',
-                        'address': str(self.legacy_account_index)
-                    })
 
             return result
 
@@ -234,4 +215,4 @@ class LighterAccountMonitor(BaseMonitor):
 
 def get_monitor():
     """Factory function to create monitor instance"""
-    return LighterAccountMonitor(account_index=138344)
+    return LighterAccountMonitor()
