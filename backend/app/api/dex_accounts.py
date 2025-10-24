@@ -9,7 +9,6 @@ from sqlalchemy.orm import Session
 
 from app.models.database import DexAccount, get_db
 from app.schemas.dex_accounts import DexAccountCreate, DexAccountUpdate, DexAccountResponse
-from app.api.auth import require_auth
 
 router = APIRouter()
 
@@ -18,8 +17,7 @@ router = APIRouter()
 async def get_dex_accounts(
     exchange: str = None,
     enabled: bool = None,
-    db: Session = Depends(get_db),
-    _: dict = Depends(require_auth)
+    db: Session = Depends(get_db)
 ):
     """
     Get all DEX accounts, optionally filtered by exchange and enabled status.
@@ -50,8 +48,7 @@ async def get_dex_accounts(
 @router.get("/dex-accounts/{account_id}", response_model=DexAccountResponse)
 async def get_dex_account(
     account_id: int,
-    db: Session = Depends(get_db),
-    _: dict = Depends(require_auth)
+    db: Session = Depends(get_db)
 ):
     """Get a specific DEX account by ID."""
     account = db.query(DexAccount).filter(DexAccount.id == account_id).first()
@@ -74,8 +71,7 @@ async def get_dex_account(
 @router.post("/dex-accounts", response_model=DexAccountResponse)
 async def create_dex_account(
     account: DexAccountCreate,
-    db: Session = Depends(get_db),
-    _: dict = Depends(require_auth)
+    db: Session = Depends(get_db)
 ):
     """Create a new DEX account."""
 
@@ -108,8 +104,7 @@ async def create_dex_account(
 async def update_dex_account(
     account_id: int,
     account_update: DexAccountUpdate,
-    db: Session = Depends(get_db),
-    _: dict = Depends(require_auth)
+    db: Session = Depends(get_db)
 ):
     """Update an existing DEX account."""
     db_account = db.query(DexAccount).filter(DexAccount.id == account_id).first()
@@ -146,8 +141,7 @@ async def update_dex_account(
 @router.delete("/dex-accounts/{account_id}")
 async def delete_dex_account(
     account_id: int,
-    db: Session = Depends(get_db),
-    _: dict = Depends(require_auth)
+    db: Session = Depends(get_db)
 ):
     """Delete a DEX account."""
     db_account = db.query(DexAccount).filter(DexAccount.id == account_id).first()
