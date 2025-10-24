@@ -284,6 +284,27 @@ class AppSetting(Base):
         return f"<AppSetting(key={self.key}, value={self.value})>"
 
 
+class DexAccount(Base):
+    """
+    Database model for DEX account addresses.
+    Stores blockchain account addresses for monitoring positions/balances.
+    """
+    __tablename__ = 'dex_accounts'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String, nullable=False)  # User-friendly name (e.g., "Main Trading Account")
+    exchange = Column(String, nullable=False, index=True)  # lighter, hyperliquid, etc.
+    address = Column(String, nullable=False)  # Blockchain address or account identifier
+    enabled = Column(Boolean, default=True)  # Enable/disable monitoring for this account
+    tags = Column(Text, nullable=True)  # JSON array of tags for filtering
+    notes = Column(Text, nullable=True)  # Optional notes
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    def __repr__(self):
+        return f"<DexAccount(name='{self.name}', exchange='{self.exchange}', address='{self.address}')>"
+
+
 # Database utility functions
 
 def get_db() -> Session:

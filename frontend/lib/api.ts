@@ -365,3 +365,77 @@ export async function updateSetting(key: string, value: string): Promise<AppSett
   if (!response.ok) throw new Error(`Failed to update setting: ${key}`);
   return response.json();
 }
+
+// DEX Accounts
+export interface DexAccount {
+  id: number;
+  name: string;
+  exchange: string;
+  address: string;
+  enabled: boolean;
+  tags?: string[];
+  notes?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export async function getDexAccounts(exchange?: string, enabled?: boolean): Promise<DexAccount[]> {
+  const params = new URLSearchParams();
+  if (exchange) params.append('exchange', exchange);
+  if (enabled !== undefined) params.append('enabled', String(enabled));
+
+  const url = `${API_BASE_URL}/dex-accounts${params.toString() ? `?${params.toString()}` : ''}`;
+  const response = await fetch(url);
+  if (!response.ok) throw new Error('Failed to fetch DEX accounts');
+  return response.json();
+}
+
+export async function getDexAccount(id: number): Promise<DexAccount> {
+  const response = await fetch(`${API_BASE_URL}/dex-accounts/${id}`);
+  if (!response.ok) throw new Error('Failed to fetch DEX account');
+  return response.json();
+}
+
+export async function createDexAccount(account: {
+  name: string;
+  exchange: string;
+  address: string;
+  enabled?: boolean;
+  tags?: string[];
+  notes?: string;
+}): Promise<DexAccount> {
+  const response = await fetch(`${API_BASE_URL}/dex-accounts`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(account),
+  });
+  if (!response.ok) throw new Error('Failed to create DEX account');
+  return response.json();
+}
+
+export async function updateDexAccount(
+  id: number,
+  account: {
+    name?: string;
+    exchange?: string;
+    address?: string;
+    enabled?: boolean;
+    tags?: string[];
+    notes?: string;
+  }
+): Promise<DexAccount> {
+  const response = await fetch(`${API_BASE_URL}/dex-accounts/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(account),
+  });
+  if (!response.ok) throw new Error('Failed to update DEX account');
+  return response.json();
+}
+
+export async function deleteDexAccount(id: number): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/dex-accounts/${id}`, {
+    method: 'DELETE',
+  });
+  if (!response.ok) throw new Error('Failed to delete DEX account');
+}

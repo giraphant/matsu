@@ -108,6 +108,34 @@ class StartupManager:
         except Exception as e:
             logger.debug(f"Migration note: {e}")
 
+        # Create dex_accounts table if it doesn't exist
+        try:
+            conn = sqlite3.connect(settings.DATABASE_PATH)
+            cursor = conn.cursor()
+            cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='dex_accounts'")
+
+            if not cursor.fetchone():
+                cursor.execute("""
+                    CREATE TABLE dex_accounts (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        name TEXT NOT NULL,
+                        exchange TEXT NOT NULL,
+                        address TEXT NOT NULL,
+                        enabled BOOLEAN DEFAULT 1,
+                        tags TEXT,
+                        notes TEXT,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                """)
+                cursor.execute("CREATE INDEX ix_dex_accounts_exchange ON dex_accounts(exchange)")
+                conn.commit()
+                logger.info("Created dex_accounts table for multi-account support")
+
+            conn.close()
+        except Exception as e:
+            logger.debug(f"Migration note: {e}")
+
     def _create_initial_users(self) -> None:
         """Create initial user if no users exist."""
         db = get_db_session()

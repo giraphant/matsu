@@ -25,6 +25,7 @@ import {
   updateSetting,
 } from '@/lib/api';
 import type { PushoverConfig, FundingRateAlert } from '@/lib/api';
+import DexAccountsManager from '@/components/dex-accounts-manager';
 
 export default function SettingsPage() {
   // State for different tabs
@@ -335,8 +336,9 @@ export default function SettingsPage() {
       )}
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="general">General</TabsTrigger>
+          <TabsTrigger value="accounts">DEX Accounts</TabsTrigger>
           <TabsTrigger value="funding">Funding Alerts</TabsTrigger>
           <TabsTrigger value="positions">Position Config</TabsTrigger>
         </TabsList>
@@ -536,6 +538,20 @@ export default function SettingsPage() {
                   ))}
                 </div>
               )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="accounts" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>DEX Account Management</CardTitle>
+              <CardDescription>
+                Manage blockchain accounts for monitoring positions and balances across different DEXes
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <DexAccountsManager />
             </CardContent>
           </Card>
         </TabsContent>
