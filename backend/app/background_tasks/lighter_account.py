@@ -61,13 +61,22 @@ class LighterAccountMonitor(BaseMonitor):
                     'address': account.address
                 })
 
-            # Legacy: if no accounts in database but legacy_account_index is set, use that
-            if not result and self.legacy_account_index is not None:
-                result.append({
-                    'id': None,
-                    'name': f'Account {self.legacy_account_index}',
-                    'address': str(self.legacy_account_index)
-                })
+            # Legacy: always add legacy_account_index if set (for backward compatibility)
+            # This ensures the original account continues to be monitored even after
+            # adding new accounts to the database
+            if self.legacy_account_index is not None:
+                # Check if this legacy account is already in the database
+                legacy_exists = any(
+                    acc['address'] == str(self.legacy_account_index)
+                    for acc in result
+                )
+
+                if not legacy_exists:
+                    result.append({
+                        'id': None,
+                        'name': f'Legacy Account {self.legacy_account_index}',
+                        'address': str(self.legacy_account_index)
+                    })
 
             return result
 
