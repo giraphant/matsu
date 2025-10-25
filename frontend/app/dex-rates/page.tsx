@@ -175,14 +175,13 @@ export default function DexRatesPage() {
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-          className="-ml-4"
         >
           Symbol
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       ),
       cell: ({ row }) => (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 pl-4">
           <span className="font-bold">{row.getValue('symbol')}</span>
           {row.original.hasBinanceSpot && (
             <span
@@ -203,7 +202,7 @@ export default function DexRatesPage() {
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-            className="-ml-4 capitalize"
+            className="capitalize"
           >
             {exchange === 'backpack' ? 'BP' : exchange}
             <ArrowUpDown className="ml-2 h-4 w-4" />
@@ -224,7 +223,6 @@ export default function DexRatesPage() {
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-          className="-ml-4"
         >
           Spread
           <ArrowUpDown className="ml-2 h-4 w-4" />
@@ -273,8 +271,21 @@ export default function DexRatesPage() {
     setEnabledExchanges(newEnabled);
   };
 
+  // Calculate top spreads for stats cards
+  const topSpreads = useMemo(() => {
+    return [...tableData]
+      .filter(row => row.spread !== null)
+      .sort((a, b) => (b.spread || 0) - (a.spread || 0))
+      .slice(0, 5);
+  }, [tableData]);
+
+  const avgSpread = useMemo(() => {
+    const spreads = tableData.filter(row => row.spread !== null).map(row => row.spread || 0);
+    return spreads.length > 0 ? spreads.reduce((a, b) => a + b, 0) / spreads.length : 0;
+  }, [tableData]);
+
   return (
-    <div className="container mx-auto py-6 space-y-4">
+    <div className="container mx-auto py-6 space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
@@ -299,6 +310,38 @@ export default function DexRatesPage() {
             Refresh
           </Button>
         </div>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-2xl font-bold">{tableData.length}</div>
+            <p className="text-xs text-muted-foreground">Trading Pairs</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-2xl font-bold">{avgSpread.toFixed(2)}%</div>
+            <p className="text-xs text-muted-foreground">Avg Spread</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+              {topSpreads.length > 0 ? `${topSpreads[0].spread?.toFixed(2)}%` : 'N/A'}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {topSpreads.length > 0 ? `Top: ${topSpreads[0].symbol}` : 'No Data'}
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-2xl font-bold">{enabledExchanges.size}</div>
+            <p className="text-xs text-muted-foreground">Active Exchanges</p>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Filters */}
