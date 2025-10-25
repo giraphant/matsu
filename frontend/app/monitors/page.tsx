@@ -15,8 +15,6 @@ import { Plus, Activity } from 'lucide-react';
 import { toast } from "sonner";
 import { MonitorCard } from '@/components/monitor-card';
 import { getApiUrl } from '@/lib/api-config';
-import { useNotification } from '@/hooks/useNotification';
-import { AlertLevel, ALERT_LEVELS } from '@/lib/alerts';
 import { Monitor, AlertRule } from '@/lib/api';
 import {
   DndContext,
@@ -92,12 +90,9 @@ export default function MonitorsPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingMonitor, setEditingMonitor] = useState<Monitor | null>(null);
   const [alertRules, setAlertRules] = useState<AlertRule[]>([]);
-  const [alertStates, setAlertStates] = useState<Map<string, {lastNotified: number, isActive: boolean}>>(new Map());
 
   // Tag filter state
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
-
-  const { playAlertSound, requestNotificationPermission } = useNotification();
 
   // Alert dialog states
   const [alertDialogOpen, setAlertDialogOpen] = useState(false);
@@ -273,60 +268,9 @@ export default function MonitorsPage() {
   }, [alertRules]);
 
   // Check alerts and play sounds
-  useEffect(() => {
-    if (monitors.length === 0 || alertRules.length === 0) return;
-
-    const checkAlerts = () => {
-      monitors.forEach(monitor => {
-        const rule = getAlertRuleForMonitor(monitor.id);
-        if (!rule || !rule.enabled) return;
-
-        const isAlert = isMonitorInAlert(monitor, rule);
-        const state = alertStates.get(monitor.id);
-        const level = rule.level as AlertLevel;
-        const alertConfig = ALERT_LEVELS[level] || ALERT_LEVELS.medium;
-
-        if (isAlert && monitor.value !== null) {
-          // New alert or time to repeat
-          const now = Date.now();
-          const shouldNotify = !state?.isActive ||
-            (now - (state.lastNotified || 0)) >= alertConfig.interval * 1000;
-
-          if (shouldNotify) {
-            // Play alert sound
-            playAlertSound(level);
-
-            const newStates = new Map(alertStates);
-            newStates.set(monitor.id, {
-              lastNotified: now,
-              isActive: true
-            });
-            setAlertStates(newStates);
-          }
-        } else if (state?.isActive) {
-          // Clear alert state when value returns to normal
-          const newStates = new Map(alertStates);
-          newStates.set(monitor.id, {
-            lastNotified: state.lastNotified,
-            isActive: false
-          });
-          setAlertStates(newStates);
-        }
-      });
-    };
-
-    // Check immediately
-    checkAlerts();
-
-    // Then check every 10 seconds
-    const interval = setInterval(checkAlerts, 10000);
-    return () => clearInterval(interval);
-  }, [monitors, alertRules, alertStates, isMonitorInAlert, getAlertRuleForMonitor, playAlertSound]);
-
-  // Request notification permission on mount
-  useEffect(() => {
-    requestNotificationPermission();
-  }, [requestNotificationPermission]);
+  // Alert checking is now handled by Service Worker in the background
+  // This ensures alerts work even when the tab is not visible
+  // Notification permission is requested by ServiceWorkerProvider
 
   // Load selected tags from localStorage on mount
   useEffect(() => {

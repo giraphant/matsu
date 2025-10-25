@@ -65,6 +65,9 @@ export default function SettingsPage() {
   const [alpAmount, setAlpAmount] = useState('0');
   const [savingAlpAmount, setSavingAlpAmount] = useState(false);
 
+  // Background alerts state
+  const [backgroundAlertsEnabled, setBackgroundAlertsEnabled] = useState(true);
+
   // Available exchanges for funding rate alerts
   const availableExchanges = ['lighter', 'aster', 'grvt', 'backpack', 'hyperliquid', 'bybit', 'binance'];
 
@@ -102,6 +105,14 @@ export default function SettingsPage() {
       } catch (err) {
         // Setting might not exist yet, use default 0
         setAlpAmount('0');
+      }
+
+      // Load background alerts setting from localStorage
+      try {
+        const enabled = localStorage.getItem('backgroundAlertsEnabled');
+        setBackgroundAlertsEnabled(enabled === null ? true : enabled === 'true');
+      } catch {
+        setBackgroundAlertsEnabled(true);
       }
     } catch (err) {
       console.error('Failed to fetch data:', err);
@@ -344,6 +355,51 @@ export default function SettingsPage() {
         </TabsList>
 
         <TabsContent value="general" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Background Alert Monitoring</CardTitle>
+              <CardDescription>
+                Enable browser-based alert monitoring that runs even when the tab is in the background
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <label htmlFor="background-alerts" className="text-sm font-medium">
+                    Enable Background Alerts
+                  </label>
+                  <p className="text-sm text-gray-500">
+                    Play alert sounds and show notifications even when the page is not visible.
+                    Works across multiple tabs and browser sessions.
+                  </p>
+                </div>
+                <Switch
+                  id="background-alerts"
+                  checked={backgroundAlertsEnabled}
+                  onCheckedChange={(checked) => {
+                    setBackgroundAlertsEnabled(checked);
+                    localStorage.setItem('backgroundAlertsEnabled', String(checked));
+                    setSuccessMessage(
+                      checked
+                        ? 'Background alerts enabled - monitoring will continue in the background'
+                        : 'Background alerts disabled - alerts only when page is active'
+                    );
+                    setTimeout(() => setSuccessMessage(null), 3000);
+                  }}
+                />
+              </div>
+              <div className="rounded-lg bg-blue-50 border border-blue-200 p-3 text-sm text-blue-700">
+                <p className="font-medium mb-1">How it works:</p>
+                <ul className="list-disc list-inside space-y-1 text-xs">
+                  <li>Service Worker monitors alerts every 10 seconds</li>
+                  <li>Runs independently of page tabs (low resource usage)</li>
+                  <li>Notifications appear even when browser is minimized</li>
+                  <li>Disable this to stop all browser-based alerts</li>
+                </ul>
+              </div>
+            </CardContent>
+          </Card>
+
           <Card>
             <CardHeader>
               <CardTitle>Add Pushover Device</CardTitle>
