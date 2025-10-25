@@ -93,14 +93,10 @@ function stopAlertChecking() {
 
 // Main alert checking function
 async function checkAlerts() {
-  const checkTime = new Date().toISOString();
-  console.log(`[Service Worker] Checking alerts at ${checkTime}`);
-
   try {
     // Check if background alerts are enabled
     const settings = await getSettings();
     if (!settings.backgroundAlertsEnabled) {
-      console.log('[Service Worker] Background alerts disabled, skipping check');
       return;
     }
 
@@ -112,10 +108,6 @@ async function checkAlerts() {
 
     // Check if responses are ok
     if (!monitorsResponse.ok || !alertRulesResponse.ok) {
-      console.warn('[Service Worker] API request failed:', {
-        monitors: monitorsResponse.status,
-        alertRules: alertRulesResponse.status
-      });
       return;
     }
 
@@ -124,15 +116,12 @@ async function checkAlerts() {
     try {
       monitors = await monitorsResponse.json();
       alertRules = await alertRulesResponse.json();
-      console.log(`[Service Worker] Fetched ${monitors.length} monitors and ${alertRules.length} alert rules`);
     } catch (error) {
       console.error('[Service Worker] Failed to parse API response:', error);
       return;
     }
 
     // Check each monitor against its alert rules
-    let alertsChecked = 0;
-    let alertsTriggered = 0;
     for (const monitor of monitors) {
       const rule = alertRules.find(r => {
         try {
@@ -145,7 +134,6 @@ async function checkAlerts() {
 
       if (!rule || !rule.enabled) continue;
 
-      alertsChecked++;
       const isAlert = await evaluateAlertCondition(monitor, rule);
       const state = alertStates.get(monitor.id);
       const level = rule.level || 'medium';
@@ -159,7 +147,6 @@ async function checkAlerts() {
 
         if (shouldNotify) {
           // Trigger alert
-          alertsTriggered++;
           triggerAlert(monitor, rule, level);
 
           alertStates.set(monitor.id, {
@@ -175,8 +162,6 @@ async function checkAlerts() {
         });
       }
     }
-
-    console.log(`[Service Worker] Check complete: ${alertsChecked} alerts checked, ${alertsTriggered} triggered`);
 
   } catch (error) {
     console.error('[Service Worker] Error checking alerts:', error);
