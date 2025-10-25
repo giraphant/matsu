@@ -102,10 +102,29 @@ async function checkAlerts() {
     }
 
     // Fetch monitors and alert rules
-    const [monitors, alertRules] = await Promise.all([
-      fetch(`${API_BASE_URL}/monitors`).then(r => r.json()),
-      fetch(`${API_BASE_URL}/alert-rules`).then(r => r.json())
+    const [monitorsResponse, alertRulesResponse] = await Promise.all([
+      fetch(`${API_BASE_URL}/monitors`),
+      fetch(`${API_BASE_URL}/alert-rules`)
     ]);
+
+    // Check if responses are ok
+    if (!monitorsResponse.ok || !alertRulesResponse.ok) {
+      console.warn('[Service Worker] API request failed:', {
+        monitors: monitorsResponse.status,
+        alertRules: alertRulesResponse.status
+      });
+      return;
+    }
+
+    // Parse JSON with error handling
+    let monitors, alertRules;
+    try {
+      monitors = await monitorsResponse.json();
+      alertRules = await alertRulesResponse.json();
+    } catch (error) {
+      console.error('[Service Worker] Failed to parse API response:', error);
+      return;
+    }
 
     // Check each monitor against its alert rules
     for (const monitor of monitors) {
@@ -164,7 +183,20 @@ async function evaluateAlertCondition(monitor, rule) {
     const monitorMatches = condition.match(/\$\{monitor:([^}]+)\}/g);
     if (monitorMatches) {
       // Fetch all monitors to get their current values
-      const monitors = await fetch(`${API_BASE_URL}/monitors`).then(r => r.json());
+      const response = await fetch(`${API_BASE_URL}/monitors`);
+      if (!response.ok) {
+        console.warn('[Service Worker] Failed to fetch monitors for condition evaluation');
+        return false;
+      }
+
+      let monitors;
+      try {
+        monitors = await response.json();
+      } catch (error) {
+        console.error('[Service Worker] Failed to parse monitors response:', error);
+        return false;
+      }
+
       const monitorMap = {};
       monitors.forEach(m => monitorMap[m.id] = m.value);
 
