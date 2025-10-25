@@ -7,6 +7,7 @@ from .aster_funding import AsterMonitor
 from .grvt_funding import GRVTMonitor
 from .backpack_funding import BackpackMonitor
 from .binance_funding import BinanceMonitor
+from .bybit_funding import BybitMonitor
 from .hyperliquid_funding import HyperliquidMonitor
 # Spot price monitors
 from .binance_spot import BinanceSpotMonitor
@@ -30,6 +31,7 @@ __all__ = [
     "GRVTMonitor",
     "BackpackMonitor",
     "BinanceMonitor",
+    "BybitMonitor",
     "HyperliquidMonitor",
     # Spot prices
     "BinanceSpotMonitor",

@@ -1,11 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useEffect, useState, useMemo } from 'react';
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { RefreshCw, TrendingUp, TrendingDown, ExternalLink } from 'lucide-react';
+import { RefreshCw, ArrowUpDown } from 'lucide-react';
 import { getApiUrl } from "@/lib/api-config";
 
 interface FundingRateData {
@@ -26,26 +26,24 @@ interface SpotPriceData {
   timestamp: string;
 }
 
-interface UnifiedRow {
-  symbol: string;
-  rates: Record<string, number>; // exchange -> annualized_rate
-  hasSpot: Record<string, boolean>; // exchange -> has spot price
-  spread: {
-    max: number;
-    min: number;
-    diff: number;
-    maxExchange: string;
-    minExchange: string;
-  } | null;
-}
+type SortColumn = 'symbol' | 'spread' | 'lighter' | 'aster' | 'grvt' | 'backpack' | 'binance' | 'bybit' | 'hyperliquid';
 
-export default function TradingPage() {
+export default function DexRatesPage() {
   const [fundingRates, setFundingRates] = useState<FundingRateData[]>([]);
   const [spotPrices, setSpotPrices] = useState<SpotPriceData[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [activeTab, setActiveTab] = useState("unified");
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+
+  // Filters and sorting
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortBy, setSortBy] = useState<SortColumn>('spread');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [enabledExchanges, setEnabledExchanges] = useState<Set<string>>(
+    new Set(['lighter', 'aster', 'grvt', 'backpack', 'binance', 'bybit', 'hyperliquid'])
+  );
+
+  const exchanges = ['lighter', 'aster', 'grvt', 'backpack', 'binance', 'bybit', 'hyperliquid'];
 
   useEffect(() => {
     fetchData();
@@ -81,96 +79,141 @@ export default function TradingPage() {
     }
   }
 
-  // Build unified table data
-  const buildUnifiedData = (): UnifiedRow[] => {
-    const symbols = ['BTC', 'ETH', 'SOL'];
-    const exchanges = ['lighter', 'aster', 'grvt', 'backpack', 'binance', 'hyperliquid'];
-
-    return symbols.map(symbol => {
-      const symbolRates = fundingRates.filter(r => r.symbol === symbol);
-      const symbolSpots = spotPrices.filter(p => p.symbol === symbol);
-
-      const rates: Record<string, number> = {};
-      const hasSpot: Record<string, boolean> = {};
-
-      // Build rates map
-      exchanges.forEach(exchange => {
-        const rate = symbolRates.find(r => r.exchange === exchange);
-        rates[exchange] = rate ? rate.annualized_rate : NaN;
-
-        // Check if exchange has spot price
-        const spot = symbolSpots.find(s => s.exchange === exchange);
-        hasSpot[exchange] = !!spot;
-      });
-
-      // Calculate spread
-      const validRates = Object.entries(rates)
-        .filter(([_, value]) => !isNaN(value))
-        .map(([exchange, value]) => ({ exchange, value }));
-
-      let spread = null;
-      if (validRates.length >= 2) {
-        const sorted = validRates.sort((a, b) => b.value - a.value);
-        const max = sorted[0];
-        const min = sorted[sorted.length - 1];
-
-        spread = {
-          max: max.value,
-          min: min.value,
-          diff: max.value - min.value,
-          maxExchange: max.exchange,
-          minExchange: min.exchange
-        };
+  // Group rates by symbol
+  const groupedRates = useMemo(() => {
+    return fundingRates.reduce((acc, rate) => {
+      if (!acc[rate.symbol]) {
+        acc[rate.symbol] = {};
       }
+      acc[rate.symbol][rate.exchange] = rate.annualized_rate;
+      return acc;
+    }, {} as Record<string, Record<string, number>>);
+  }, [fundingRates]);
 
-      return {
-        symbol,
-        rates,
-        hasSpot,
-        spread
-      };
-    });
-  };
-
-  // Calculate top spreads across all symbols
-  const getTopSpreads = () => {
-    const allSpreads: Array<{
-      symbol: string;
-      spread: number;
-      maxExchange: string;
-      minExchange: string;
-      maxRate: number;
-      minRate: number;
-    }> = [];
-
-    const data = buildUnifiedData();
-    data.forEach(row => {
-      if (row.spread) {
-        allSpreads.push({
-          symbol: row.symbol,
-          spread: row.spread.diff,
-          maxExchange: row.spread.maxExchange,
-          minExchange: row.spread.minExchange,
-          maxRate: row.spread.max,
-          minRate: row.spread.min
-        });
+  // Check which symbols have Binance spot
+  const binanceSpotSymbols = useMemo(() => {
+    const symbols = new Set<string>();
+    spotPrices.forEach(spot => {
+      if (spot.exchange === 'binance') {
+        symbols.add(spot.symbol);
       }
     });
+    return symbols;
+  }, [spotPrices]);
 
-    return allSpreads.sort((a, b) => b.spread - a.spread);
+  // Filter and sort symbols
+  const processedSymbols = useMemo(() => {
+    // Get all symbols
+    let symbols = Object.keys(groupedRates);
+
+    // Filter by search term
+    if (searchTerm) {
+      symbols = symbols.filter(symbol =>
+        symbol.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Filter: require at least 2 exchanges with data
+    symbols = symbols.filter(symbol => {
+      const rates = groupedRates[symbol];
+      const validRates = Object.values(rates).filter(r => r !== null && r !== undefined && !isNaN(r));
+      return validRates.length >= 2;
+    });
+
+    // Calculate spreads and sort
+    const symbolsWithSpreads = symbols.map(symbol => {
+      const rates = groupedRates[symbol];
+      const enabledRates = exchanges
+        .filter(ex => enabledExchanges.has(ex))
+        .map(ex => rates[ex])
+        .filter(r => r !== null && r !== undefined && !isNaN(r));
+
+      const spread = enabledRates.length >= 2
+        ? Math.max(...enabledRates) - Math.min(...enabledRates)
+        : null;
+
+      return { symbol, spread, rates };
+    });
+
+    // Sort
+    symbolsWithSpreads.sort((a, b) => {
+      let compareValue = 0;
+
+      if (sortBy === 'symbol') {
+        compareValue = a.symbol.localeCompare(b.symbol);
+      } else if (sortBy === 'spread') {
+        // Prioritize symbols with all enabled exchanges
+        const aHasAll = exchanges.every(ex =>
+          !enabledExchanges.has(ex) || (a.rates[ex] !== null && a.rates[ex] !== undefined && !isNaN(a.rates[ex]))
+        );
+        const bHasAll = exchanges.every(ex =>
+          !enabledExchanges.has(ex) || (b.rates[ex] !== null && b.rates[ex] !== undefined && !isNaN(b.rates[ex]))
+        );
+
+        if (aHasAll && !bHasAll) return -1;
+        if (!aHasAll && bHasAll) return 1;
+
+        // Sort by spread
+        if (a.spread === null && b.spread === null) return 0;
+        if (a.spread === null) return 1;
+        if (b.spread === null) return -1;
+        compareValue = a.spread - b.spread;
+      } else {
+        // Sort by specific exchange
+        const rateA = a.rates[sortBy];
+        const rateB = b.rates[sortBy];
+
+        if ((rateA === null || rateA === undefined || isNaN(rateA)) &&
+            (rateB === null || rateB === undefined || isNaN(rateB))) return 0;
+        if (rateA === null || rateA === undefined || isNaN(rateA)) return 1;
+        if (rateB === null || rateB === undefined || isNaN(rateB)) return -1;
+        compareValue = rateA - rateB;
+      }
+
+      return sortOrder === 'asc' ? compareValue : -compareValue;
+    });
+
+    return symbolsWithSpreads;
+  }, [groupedRates, searchTerm, sortBy, sortOrder, enabledExchanges, exchanges]);
+
+  const handleSort = (column: SortColumn) => {
+    if (sortBy === column) {
+      setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(column);
+      setSortOrder(column === 'symbol' ? 'asc' : 'desc');
+    }
   };
 
-  const unifiedData = buildUnifiedData();
-  const topSpreads = getTopSpreads();
-  const exchanges = ['lighter', 'aster', 'grvt', 'backpack', 'binance', 'hyperliquid'];
+  const toggleExchange = (exchange: string) => {
+    const newEnabled = new Set(enabledExchanges);
+    if (newEnabled.has(exchange)) {
+      newEnabled.delete(exchange);
+    } else {
+      newEnabled.add(exchange);
+    }
+    setEnabledExchanges(newEnabled);
+  };
+
+  const formatRate = (rate: number | null | undefined): string => {
+    if (rate === null || rate === undefined || isNaN(rate)) return 'N/A';
+    const sign = rate >= 0 ? '+' : '';
+    return `${sign}${rate.toFixed(4)}%`;
+  };
+
+  const getRateColor = (rate: number | null | undefined): string => {
+    if (rate === null || rate === undefined || isNaN(rate)) return 'text-muted-foreground';
+    return rate >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400';
+  };
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
+    <div className="container mx-auto py-6 space-y-4">
+      {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Funding Rates</h1>
+          <h1 className="text-3xl font-bold tracking-tight">DEX Funding Rates</h1>
           <p className="text-muted-foreground">
-            Monitor funding rates and arbitrage opportunities across exchanges
+            Compare funding rates across {exchanges.length} exchanges
           </p>
         </div>
         <div className="flex items-center gap-4">
@@ -180,9 +223,10 @@ export default function TradingPage() {
             </span>
           )}
           <Button
-            onClick={fetchData}
+            onClick={() => fetchData()}
             disabled={refreshing}
             variant="outline"
+            size="sm"
           >
             <RefreshCw className={`mr-2 h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
             Refresh
@@ -190,159 +234,137 @@ export default function TradingPage() {
         </div>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full max-w-md grid-cols-2">
-          <TabsTrigger value="unified">Unified View</TabsTrigger>
-          <TabsTrigger value="spreads">Top Spreads</TabsTrigger>
-        </TabsList>
+      {/* Filters */}
+      <Card>
+        <CardContent className="pt-6 space-y-4">
+          {/* Search */}
+          <div>
+            <Input
+              type="text"
+              placeholder="Search symbol..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="max-w-sm"
+            />
+          </div>
 
-        {/* Unified Table View */}
-        <TabsContent value="unified" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Funding Rates Comparison</CardTitle>
-              <CardDescription>Annualized rates across all exchanges (8-hour normalized)</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-left py-3 px-4 font-semibold">Symbol</th>
-                      {exchanges.map(exchange => (
-                        <th key={exchange} className="text-right py-3 px-4 font-semibold capitalize">
-                          {exchange}
-                        </th>
-                      ))}
-                      <th className="text-right py-3 px-4 font-semibold">Spread</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {unifiedData.map(row => (
-                      <tr key={row.symbol} className="border-b hover:bg-muted/50">
-                        <td className="py-3 px-4 font-bold">{row.symbol}</td>
-                        {exchanges.map(exchange => {
-                          const rate = row.rates[exchange];
-                          const hasSpotMarket = row.hasSpot[exchange];
+          {/* Exchange filters */}
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="text-sm font-medium">Exchanges:</span>
+            {exchanges.map(exchange => (
+              <label key={exchange} className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={enabledExchanges.has(exchange)}
+                  onChange={() => toggleExchange(exchange)}
+                  className="w-4 h-4"
+                />
+                <span className="text-sm capitalize">{exchange}</span>
+              </label>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
-                          return (
-                            <td key={exchange} className="text-right py-3 px-4">
-                              {!isNaN(rate) ? (
-                                <div className="flex flex-col items-end gap-1">
-                                  <span className={`font-mono ${rate > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                                    {rate.toFixed(2)}%
-                                  </span>
-                                  {hasSpotMarket && exchange === 'binance' && (
-                                    <Badge variant="outline" className="text-xs">Spot</Badge>
-                                  )}
-                                </div>
-                              ) : (
-                                <span className="text-muted-foreground">-</span>
-                              )}
-                            </td>
-                          );
-                        })}
-                        <td className="text-right py-3 px-4">
-                          {row.spread ? (
-                            <div className="flex flex-col items-end gap-1">
-                              <span className="font-mono font-bold text-orange-600 dark:text-orange-400">
-                                {row.spread.diff.toFixed(2)}%
-                              </span>
-                              <span className="text-xs text-muted-foreground">
-                                {row.spread.maxExchange} → {row.spread.minExchange}
-                              </span>
-                            </div>
-                          ) : (
-                            <span className="text-muted-foreground">-</span>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Legend */}
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex flex-wrap gap-4 text-sm">
-                <div className="flex items-center gap-2">
-                  <Badge variant="outline">Spot</Badge>
-                  <span className="text-muted-foreground">Spot market available on Binance</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-orange-600 dark:text-orange-400 font-bold">Spread</span>
-                  <span className="text-muted-foreground">Arbitrage opportunity (high → low)</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Top Spreads Tab */}
-        <TabsContent value="spreads" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Top Arbitrage Opportunities</CardTitle>
-              <CardDescription>Ranked by funding rate spread across exchanges</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {topSpreads.map((item, idx) => (
-                  <div
-                    key={`${item.symbol}-${idx}`}
-                    className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
+      {/* Table */}
+      <Card>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="border-b">
+                <tr>
+                  <th
+                    onClick={() => handleSort('symbol')}
+                    className="text-left py-3 px-4 font-semibold cursor-pointer hover:bg-muted/50 select-none"
                   >
-                    <div className="flex items-center gap-4">
-                      <div className={`text-2xl font-bold ${idx === 0 ? 'text-orange-500' : idx === 1 ? 'text-orange-400' : 'text-orange-300'}`}>
-                        #{idx + 1}
+                    <div className="flex items-center gap-2">
+                      Symbol
+                      {sortBy === 'symbol' && (
+                        <span>{sortOrder === 'asc' ? '↑' : '↓'}</span>
+                      )}
+                    </div>
+                  </th>
+                  {exchanges.filter(ex => enabledExchanges.has(ex)).map(exchange => (
+                    <th
+                      key={exchange}
+                      onClick={() => handleSort(exchange as SortColumn)}
+                      className="text-right py-3 px-4 font-semibold cursor-pointer hover:bg-muted/50 select-none capitalize"
+                    >
+                      <div className="flex items-center justify-end gap-2">
+                        {exchange === 'backpack' ? 'BP' : exchange}
+                        {sortBy === exchange && (
+                          <span>{sortOrder === 'asc' ? '↑' : '↓'}</span>
+                        )}
                       </div>
-                      <div>
-                        <div className="font-bold text-lg">{item.symbol}</div>
-                        <div className="text-sm text-muted-foreground">
-                          Long on <span className="font-medium capitalize">{item.minExchange}</span> ({item.minRate.toFixed(2)}%)
-                          {' '}<span className="mx-1">→</span>{' '}
-                          Short on <span className="font-medium capitalize">{item.maxExchange}</span> ({item.maxRate.toFixed(2)}%)
+                    </th>
+                  ))}
+                  <th
+                    onClick={() => handleSort('spread')}
+                    className="text-right py-3 px-4 font-semibold cursor-pointer hover:bg-muted/50 select-none"
+                  >
+                    <div className="flex items-center justify-end gap-2">
+                      Spread
+                      {sortBy === 'spread' && (
+                        <span>{sortOrder === 'asc' ? '↑' : '↓'}</span>
+                      )}
+                    </div>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {loading && processedSymbols.length === 0 ? (
+                  <tr>
+                    <td colSpan={exchanges.filter(ex => enabledExchanges.has(ex)).length + 2} className="text-center py-8 text-muted-foreground">
+                      Loading...
+                    </td>
+                  </tr>
+                ) : processedSymbols.length === 0 ? (
+                  <tr>
+                    <td colSpan={exchanges.filter(ex => enabledExchanges.has(ex)).length + 2} className="text-center py-8 text-muted-foreground">
+                      No symbols found
+                    </td>
+                  </tr>
+                ) : (
+                  processedSymbols.map(({ symbol, spread, rates }) => (
+                    <tr key={symbol} className="border-b hover:bg-muted/30">
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold">{symbol}</span>
+                          {binanceSpotSymbols.has(symbol) && (
+                            <span
+                              className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-orange-500 text-white text-[10px] font-bold"
+                              title="Has Binance spot trading"
+                            >
+                              ✓
+                            </span>
+                          )}
                         </div>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
-                        {item.spread.toFixed(2)}%
-                      </div>
-                      <div className="text-xs text-muted-foreground">APY spread</div>
-                    </div>
-                  </div>
-                ))}
-                {topSpreads.length === 0 && (
-                  <div className="text-center py-8 text-muted-foreground">
-                    No spreads available
-                  </div>
+                      </td>
+                      {exchanges.filter(ex => enabledExchanges.has(ex)).map(exchange => (
+                        <td key={exchange} className={`text-right py-3 px-4 font-mono ${getRateColor(rates[exchange])}`}>
+                          {formatRate(rates[exchange])}
+                        </td>
+                      ))}
+                      <td className="text-right py-3 px-4 font-mono font-bold text-orange-600 dark:text-orange-400">
+                        {spread !== null ? `${spread.toFixed(4)}%` : 'N/A'}
+                      </td>
+                    </tr>
+                  ))
                 )}
-              </div>
-            </CardContent>
-          </Card>
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
 
-          {/* Explanation Card */}
-          <Card>
-            <CardHeader>
-              <CardTitle>How to Use Spreads</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2 text-sm">
-              <p>
-                <strong>Arbitrage Strategy:</strong> Open a long position on the exchange with lower funding rate,
-                and simultaneously open a short position on the exchange with higher funding rate.
-              </p>
-              <p className="text-muted-foreground">
-                The spread represents the annualized profit you could earn from the funding rate differential,
-                assuming the spread remains constant. Always account for transaction fees, slippage, and market risks.
-              </p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+      {/* Footer */}
+      <div className="text-sm text-muted-foreground">
+        Showing {processedSymbols.length} symbols •
+        <span className="ml-1">
+          <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-orange-500 text-white text-[10px] font-bold mx-1">✓</span>
+          = Has Binance spot trading
+        </span>
+      </div>
     </div>
   );
 }
