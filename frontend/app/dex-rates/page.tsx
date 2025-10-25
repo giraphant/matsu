@@ -123,7 +123,7 @@ export default function DexRatesPage() {
     );
 
     return Object.keys(grouped)
-      .map(symbol => {
+      .map((symbol): SymbolRow | null => {
         const rates = grouped[symbol];
 
         // Check if at least 2 exchanges have data
