@@ -17,7 +17,7 @@ from sqlalchemy import and_, text
 from typing import Dict, Any
 
 from app.core.logger import get_logger
-from app.models.database import get_db_session, SpotPrice, MonitorValue, WebhookData
+from app.models.database import get_db_session, SpotPrice, MonitorValue, WebhookData, FundingRate
 from app.background_tasks.base import BaseMonitor
 
 logger = get_logger(__name__)
@@ -39,12 +39,26 @@ class DatabaseDownsampler(BaseMonitor):
         {"name": "30+ days", "days_ago": 30, "days_until": None, "interval_minutes": 15},
     ]
 
-    def __init__(self, interval: int = 86400, keep_backups: int = 3):
+    # Aggressive policy for spot prices and most funding rates
+    AGGRESSIVE_POLICY = [
+        {"name": "Last 1 hour", "hours_ago": 0, "hours_until": 1, "keep_all": True},
+        {"name": "1-8 hours", "hours_ago": 1, "hours_until": 8, "interval_minutes": 5},
+        {"name": "8+ hours", "hours_ago": 8, "hours_until": None, "delete_all": True},
+    ]
+
+    # Important funding rates to keep long-term (using default POLICY)
+    IMPORTANT_FUNDING_RATES = [
+        ("lighter", "BTC"),
+        ("lighter", "ETH"),
+        ("lighter", "SOL"),
+    ]
+
+    def __init__(self, interval: int = 7200, keep_backups: int = 3):
         """
         Initialize database downsampler.
 
         Args:
-            interval: Seconds between runs (default: 86400 = 24 hours)
+            interval: Seconds between runs (default: 7200 = 2 hours)
             keep_backups: Number of backup files to keep (default: 3)
         """
         super().__init__(name="Database Downsampler", interval=interval)
@@ -81,9 +95,16 @@ class DatabaseDownsampler(BaseMonitor):
             db = get_db_session()
 
             try:
-                # Downsample each table
+                # Downsample each table with appropriate policy
                 self.stats = {}
-                await self._downsample_table(db, SpotPrice, 'timestamp', 'spot_prices')
+
+                # Spot prices: aggressive policy (1h full, 1-8h sampled, 8h+ delete)
+                await self._downsample_spot_prices(db)
+
+                # Funding rates: split into important (long-term) and others (aggressive)
+                await self._downsample_funding_rates(db)
+
+                # Monitor values and webhook data: use original long-term policy
                 await self._downsample_table(db, MonitorValue, 'computed_at', 'monitor_values')
                 await self._downsample_table(db, WebhookData, 'timestamp', 'monitoring_data')
 
@@ -196,6 +217,56 @@ class DatabaseDownsampler(BaseMonitor):
 
         return ranges
 
+    def _get_aggressive_time_ranges(self):
+        """Calculate time ranges for aggressive retention policy (spot prices, non-important funding rates)."""
+        now = datetime.utcnow()
+        ranges = []
+
+        for policy in self.AGGRESSIVE_POLICY:
+            if policy.get('keep_all'):
+                # Keep all in this hour range
+                hours = policy['hours_until']
+                start = now - timedelta(hours=hours)
+                end = now
+                ranges.append({
+                    'name': policy['name'],
+                    'start': start,
+                    'end': end,
+                    'keep_all': True,
+                    'delete_all': False,
+                    'interval_minutes': 0
+                })
+            elif policy.get('delete_all'):
+                # Delete everything older than this
+                hours = policy['hours_ago']
+                end = now - timedelta(hours=hours)
+                ranges.append({
+                    'name': policy['name'],
+                    'start': datetime.min,
+                    'end': end,
+                    'keep_all': False,
+                    'delete_all': True,
+                    'interval_minutes': 0
+                })
+            else:
+                # Downsample in this range
+                hours_start = policy['hours_ago']
+                hours_end = policy.get('hours_until')
+
+                start = now - timedelta(hours=hours_start)
+                end = now - timedelta(hours=hours_end) if hours_end else datetime.min
+
+                ranges.append({
+                    'name': policy['name'],
+                    'start': end,
+                    'end': start,
+                    'keep_all': False,
+                    'delete_all': False,
+                    'interval_minutes': policy['interval_minutes']
+                })
+
+        return ranges
+
     async def _downsample_table(self, db, model, time_column: str, table_name: str):
         """Downsample a table based on retention policy."""
         try:
@@ -294,4 +365,267 @@ class DatabaseDownsampler(BaseMonitor):
         except Exception as e:
             db.rollback()
             logger.error(f"Error downsampling time range {range_name}: {e}", exc_info=True)
+            return 0
+
+    async def _downsample_spot_prices(self, db):
+        """Downsample spot prices with aggressive policy."""
+        try:
+            from app.models.database import SpotPrice
+
+            # Get initial count
+            initial_count = db.query(SpotPrice).count()
+
+            if initial_count == 0:
+                logger.info("spot_prices: empty, skipping")
+                return
+
+            logger.info(f"spot_prices: {initial_count:,} records")
+
+            total_deleted = 0
+            ranges = self._get_aggressive_time_ranges()
+
+            for time_range in ranges:
+                if time_range['keep_all']:
+                    continue
+
+                if time_range['delete_all']:
+                    # Delete everything older than threshold
+                    deleted = db.query(SpotPrice).filter(
+                        SpotPrice.timestamp < time_range['end']
+                    ).delete()
+                    db.commit()
+                    total_deleted += deleted
+                    if deleted > 0:
+                        logger.info(f"spot_prices [{time_range['name']}]: deleted {deleted:,} old records")
+                else:
+                    # Downsample this time range
+                    deleted = await self._downsample_time_range(
+                        db,
+                        SpotPrice,
+                        'timestamp',
+                        time_range['start'],
+                        time_range['end'],
+                        time_range['interval_minutes'],
+                        time_range['name']
+                    )
+                    total_deleted += deleted
+
+            # Get final count
+            final_count = db.query(SpotPrice).count()
+
+            self.stats['spot_prices'] = {
+                'before': initial_count,
+                'after': final_count,
+                'deleted': total_deleted
+            }
+
+            if total_deleted > 0:
+                reduction = (total_deleted / initial_count * 100)
+                logger.info(f"spot_prices: deleted {total_deleted:,} records ({reduction:.1f}%)")
+
+        except Exception as e:
+            logger.error(f"Error downsampling spot_prices: {e}", exc_info=True)
+
+    async def _downsample_funding_rates(self, db):
+        """Downsample funding rates with split policy: important ones use long-term, others use aggressive."""
+        try:
+            from app.models.database import FundingRate
+
+            # Get initial count
+            initial_count = db.query(FundingRate).count()
+
+            if initial_count == 0:
+                logger.info("funding_rates: empty, skipping")
+                return
+
+            logger.info(f"funding_rates: {initial_count:,} records")
+
+            total_deleted = 0
+
+            # Process important funding rates with long-term policy
+            for exchange, symbol in self.IMPORTANT_FUNDING_RATES:
+                deleted = await self._downsample_important_funding_rate(db, exchange, symbol)
+                total_deleted += deleted
+
+            # Process non-important funding rates with aggressive policy
+            deleted = await self._downsample_nonimportant_funding_rates(db)
+            total_deleted += deleted
+
+            # Get final count
+            final_count = db.query(FundingRate).count()
+
+            self.stats['funding_rates'] = {
+                'before': initial_count,
+                'after': final_count,
+                'deleted': total_deleted
+            }
+
+            if total_deleted > 0:
+                reduction = (total_deleted / initial_count * 100)
+                logger.info(f"funding_rates: deleted {total_deleted:,} records ({reduction:.1f}%)")
+
+        except Exception as e:
+            logger.error(f"Error downsampling funding_rates: {e}", exc_info=True)
+
+    async def _downsample_important_funding_rate(self, db, exchange: str, symbol: str) -> int:
+        """Downsample an important funding rate pair with long-term policy."""
+        try:
+            from app.models.database import FundingRate
+
+            total_deleted = 0
+            ranges = self._get_time_ranges()  # Use default long-term policy
+
+            for time_range in ranges:
+                if time_range['keep_all']:
+                    continue
+
+                # Count records in this range for this exchange/symbol
+                records_in_range = db.query(FundingRate).filter(
+                    and_(
+                        FundingRate.exchange == exchange,
+                        FundingRate.symbol == symbol,
+                        FundingRate.timestamp >= time_range['start'],
+                        FundingRate.timestamp < time_range['end']
+                    )
+                ).count()
+
+                if records_in_range == 0:
+                    continue
+
+                interval_seconds = time_range['interval_minutes'] * 60
+                table_name = FundingRate.__tablename__
+
+                # Downsample using SQL
+                delete_query = text(f"""
+                    DELETE FROM {table_name}
+                    WHERE id IN (
+                        SELECT id FROM {table_name}
+                        WHERE exchange = :exchange
+                          AND symbol = :symbol
+                          AND timestamp >= :start_time
+                          AND timestamp < :end_time
+                          AND id NOT IN (
+                            SELECT MIN(id) FROM {table_name}
+                            WHERE exchange = :exchange
+                              AND symbol = :symbol
+                              AND timestamp >= :start_time
+                              AND timestamp < :end_time
+                            GROUP BY
+                              strftime('%s', timestamp) / :interval_seconds
+                          )
+                    )
+                """)
+
+                result = db.execute(
+                    delete_query,
+                    {
+                        'exchange': exchange,
+                        'symbol': symbol,
+                        'start_time': time_range['start'],
+                        'end_time': time_range['end'],
+                        'interval_seconds': interval_seconds
+                    }
+                )
+
+                db.commit()
+                deleted = result.rowcount if result.rowcount else 0
+                total_deleted += deleted
+
+            if total_deleted > 0:
+                logger.info(f"funding_rates [{exchange} {symbol}]: deleted {total_deleted:,} records (long-term policy)")
+
+            return total_deleted
+
+        except Exception as e:
+            db.rollback()
+            logger.error(f"Error downsampling {exchange} {symbol} funding rate: {e}", exc_info=True)
+            return 0
+
+    async def _downsample_nonimportant_funding_rates(self, db) -> int:
+        """Downsample all non-important funding rates with aggressive policy."""
+        try:
+            from app.models.database import FundingRate
+
+            total_deleted = 0
+            ranges = self._get_aggressive_time_ranges()
+
+            for time_range in ranges:
+                if time_range['keep_all']:
+                    continue
+
+                if time_range['delete_all']:
+                    # Delete all non-important funding rates older than threshold
+                    # Build query to exclude important pairs
+                    query = db.query(FundingRate).filter(
+                        FundingRate.timestamp < time_range['end']
+                    )
+
+                    # Exclude important pairs
+                    for exchange, symbol in self.IMPORTANT_FUNDING_RATES:
+                        query = query.filter(
+                            ~and_(
+                                FundingRate.exchange == exchange,
+                                FundingRate.symbol == symbol
+                            )
+                        )
+
+                    deleted = query.delete(synchronize_session=False)
+                    db.commit()
+                    total_deleted += deleted
+
+                    if deleted > 0:
+                        logger.info(f"funding_rates [non-important, {time_range['name']}]: deleted {deleted:,} old records")
+                else:
+                    # Downsample non-important pairs in this time range
+                    # This is complex with exclusions, so we'll use a different approach
+                    interval_seconds = time_range['interval_minutes'] * 60
+                    table_name = FundingRate.__tablename__
+
+                    # Build exclusion conditions
+                    exclusion_conditions = " AND ".join([
+                        f"NOT (exchange = '{ex}' AND symbol = '{sym}')"
+                        for ex, sym in self.IMPORTANT_FUNDING_RATES
+                    ])
+
+                    delete_query = text(f"""
+                        DELETE FROM {table_name}
+                        WHERE id IN (
+                            SELECT id FROM {table_name}
+                            WHERE timestamp >= :start_time
+                              AND timestamp < :end_time
+                              AND ({exclusion_conditions})
+                              AND id NOT IN (
+                                SELECT MIN(id) FROM {table_name}
+                                WHERE timestamp >= :start_time
+                                  AND timestamp < :end_time
+                                  AND ({exclusion_conditions})
+                                GROUP BY
+                                  exchange,
+                                  symbol,
+                                  strftime('%s', timestamp) / :interval_seconds
+                              )
+                        )
+                    """)
+
+                    result = db.execute(
+                        delete_query,
+                        {
+                            'start_time': time_range['start'],
+                            'end_time': time_range['end'],
+                            'interval_seconds': interval_seconds
+                        }
+                    )
+
+                    db.commit()
+                    deleted = result.rowcount if result.rowcount else 0
+                    total_deleted += deleted
+
+                    if deleted > 0:
+                        logger.info(f"funding_rates [non-important, {time_range['name']}]: deleted {deleted:,} records")
+
+            return total_deleted
+
+        except Exception as e:
+            db.rollback()
+            logger.error(f"Error downsampling non-important funding rates: {e}", exc_info=True)
             return 0
