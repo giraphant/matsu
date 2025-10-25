@@ -68,8 +68,14 @@ class FundingRateMonitor(BaseMonitor):
                     logger.warning(f"[{adapter.exchange_name}] No rates fetched")
                     continue
 
+                # Filter to top 50 by volume/turnover (if volume data available)
+                filtered_rates = self._filter_top_by_volume(rates, limit=50)
+
+                if len(filtered_rates) < len(rates):
+                    logger.info(f"[{adapter.exchange_name}] Filtered {len(rates)} → {len(filtered_rates)} (top 50 by volume)")
+
                 # Store in database
-                stored_count = await self._store_rates(adapter.exchange_name, rates)
+                stored_count = await self._store_rates(adapter.exchange_name, filtered_rates)
                 total_stored += stored_count
 
                 logger.info(f"[{adapter.exchange_name}] Stored {stored_count} rates")
@@ -79,6 +85,50 @@ class FundingRateMonitor(BaseMonitor):
                 # Continue with other exchanges
 
         logger.info(f"Total stored: {total_stored} funding rates across {len(self.adapters)} exchanges")
+
+    def _filter_top_by_volume(self, rates: List[dict], limit: int = 50) -> List[dict]:
+        """
+        Filter funding rates to top N by volume/turnover.
+
+        Args:
+            rates: List of funding rate dicts (may include 'volume_24h' or 'turnover_24h')
+            limit: Maximum number of rates to keep
+
+        Returns:
+            Filtered list (top N by volume, or all if no volume data)
+        """
+        if not rates or len(rates) <= limit:
+            return rates
+
+        # Check if rates have volume/turnover data
+        has_volume = any(r.get('volume_24h') is not None or r.get('turnover_24h') is not None for r in rates)
+
+        if not has_volume:
+            # No volume data, return all
+            return rates
+
+        # Sort by turnover (preferred) or volume, then take top N
+        def get_volume_key(rate):
+            # Prefer turnover_24h (USDT value), fallback to volume_24h
+            turnover = rate.get('turnover_24h')
+            if turnover is not None:
+                try:
+                    return float(turnover)
+                except (ValueError, TypeError):
+                    pass
+
+            volume = rate.get('volume_24h')
+            if volume is not None:
+                try:
+                    return float(volume)
+                except (ValueError, TypeError):
+                    pass
+
+            return 0
+
+        # Sort descending by volume
+        sorted_rates = sorted(rates, key=get_volume_key, reverse=True)
+        return sorted_rates[:limit]
 
     async def _store_rates(self, exchange_name: str, rates: List[dict]) -> int:
         """

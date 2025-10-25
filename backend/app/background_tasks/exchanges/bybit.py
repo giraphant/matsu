@@ -80,12 +80,17 @@ class BybitAdapter(BaseExchangeAdapter):
                     except (ValueError, TypeError):
                         pass
 
+                # Get 24h turnover (for volume filtering)
+                turnover_24h = item.get("turnover24h")
+                turnover_value = float(turnover_24h) if turnover_24h else None
+
                 rates.append({
                     "symbol": base_symbol,
                     "rate": rate_8h,
                     "annualized_rate": annualized_rate,
                     "mark_price": mark_price_value,
-                    "next_funding_time": next_funding_time
+                    "next_funding_time": next_funding_time,
+                    "turnover_24h": turnover_value  # For volume filtering
                 })
 
             self.logger.debug(f"Fetched {len(rates)} funding rates")

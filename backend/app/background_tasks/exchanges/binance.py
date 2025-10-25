@@ -34,7 +34,7 @@ class BinanceAdapter(BaseExchangeAdapter):
 
     async def fetch_funding_rates(self) -> List[Dict[str, Any]]:
         """
-        Fetch funding rates from Binance Futures.
+        Fetch funding rates from Binance Futures with volume data.
 
         Returns:
             List of dicts with keys:
@@ -43,17 +43,38 @@ class BinanceAdapter(BaseExchangeAdapter):
             - annualized_rate: float (APY percentage)
             - mark_price: float
             - next_funding_time: datetime
+            - turnover_24h: float (USDT volume for filtering)
         """
         try:
-            data = await self._http_get(self.FUNDING_API)
+            import asyncio
+
+            # Fetch both funding rates and 24hr tickers in parallel
+            funding_data, ticker_data = await asyncio.gather(
+                self._http_get(self.FUNDING_API),
+                self._http_get("https://fapi.binance.com/fapi/v1/ticker/24hr")
+            )
+
+            # Build volume map from ticker data
+            volume_map = {}
+            for ticker in ticker_data:
+                symbol = ticker.get("symbol", "")
+                quote_volume = ticker.get("quoteVolume")  # USDT volume
+                if symbol and quote_volume:
+                    try:
+                        volume_map[symbol] = float(quote_volume)
+                    except (ValueError, TypeError):
+                        pass
 
             rates = []
-            for item in data:
+            for item in funding_data:
                 symbol_pair = item.get("symbol", "")
 
-                # Only process target symbols
-                if symbol_pair not in self.FUNDING_SYMBOLS:
+                # Only process USDT perpetual contracts
+                if not symbol_pair.endswith("USDT"):
                     continue
+
+                # Extract base symbol (e.g., BTCUSDT -> BTC)
+                base_symbol = symbol_pair[:-4]
 
                 # Extract data
                 funding_rate_str = item.get("lastFundingRate")
@@ -76,15 +97,16 @@ class BinanceAdapter(BaseExchangeAdapter):
                     except (ValueError, TypeError):
                         pass
 
-                # Normalize symbol
-                normalized_symbol = self.FUNDING_SYMBOLS[symbol_pair]
+                # Get volume from ticker map
+                turnover_24h = volume_map.get(symbol_pair)
 
                 rates.append({
-                    "symbol": normalized_symbol,
+                    "symbol": base_symbol,
                     "rate": rate_8h,
                     "annualized_rate": annualized_rate,
                     "mark_price": mark_price,
-                    "next_funding_time": next_funding_time
+                    "next_funding_time": next_funding_time,
+                    "turnover_24h": turnover_24h  # For volume filtering
                 })
 
             self.logger.debug(f"Fetched {len(rates)} funding rates")
