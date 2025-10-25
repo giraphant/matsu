@@ -34,17 +34,22 @@ let checkInterval = null;
 
 // Install event
 self.addEventListener('install', (event) => {
-  console.log('[Service Worker] Installing...');
+  console.log('[Service Worker] Installing...', new Date().toISOString());
   // Skip waiting to activate immediately
   self.skipWaiting();
 });
 
 // Activate event
 self.addEventListener('activate', (event) => {
-  console.log('[Service Worker] Activating...');
+  console.log('[Service Worker] Activating...', new Date().toISOString());
+  // Clear old interval if exists (in case of SW update)
+  if (checkInterval) {
+    clearInterval(checkInterval);
+    checkInterval = null;
+  }
   event.waitUntil(
     clients.claim().then(() => {
-      console.log('[Service Worker] Claimed clients');
+      console.log('[Service Worker] Claimed clients, starting monitoring...', new Date().toISOString());
       // Start alert checking
       startAlertChecking();
     })
@@ -67,19 +72,22 @@ self.addEventListener('message', (event) => {
 // Start periodic alert checking
 function startAlertChecking() {
   if (checkInterval) {
-    console.log('[Service Worker] Alert checking already running');
+    console.log('[Service Worker] Alert checking already running, interval ID:', checkInterval);
     return;
   }
 
-  console.log('[Service Worker] Starting alert monitoring...');
+  console.log('[Service Worker] Starting alert monitoring...', new Date().toISOString());
 
   // Check immediately
   checkAlerts();
 
   // Then check every 10 seconds
   checkInterval = setInterval(() => {
+    console.log('[Service Worker] Interval tick at', new Date().toISOString());
     checkAlerts();
   }, 10000);
+
+  console.log('[Service Worker] Interval started with ID:', checkInterval);
 }
 
 // Stop alert checking
@@ -93,10 +101,12 @@ function stopAlertChecking() {
 
 // Main alert checking function
 async function checkAlerts() {
+  console.log('[Service Worker] checkAlerts() called at', new Date().toISOString());
   try {
     // Check if background alerts are enabled
     const settings = await getSettings();
     if (!settings.backgroundAlertsEnabled) {
+      console.log('[Service Worker] Background alerts disabled, skipping');
       return;
     }
 
