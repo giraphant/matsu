@@ -4,7 +4,7 @@ Handles both funding rates and spot prices from Bybit.
 """
 
 from datetime import datetime
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 
 from .base import BaseExchangeAdapter
 
@@ -95,9 +95,13 @@ class BybitAdapter(BaseExchangeAdapter):
             self.logger.error(f"Error fetching funding rates: {e}")
             return []
 
-    async def fetch_spot_prices(self) -> List[Dict[str, Any]]:
+    async def fetch_spot_prices(self, target_symbols: Optional[List[str]] = None) -> List[Dict[str, Any]]:
         """
         Fetch spot prices from Bybit Spot.
+
+        Args:
+            target_symbols: Optional list of symbols to filter (e.g., ["BTC", "ETH", "SOL"])
+                          If None, returns all USDT pairs.
 
         Returns:
             List of dicts with keys:
@@ -134,6 +138,10 @@ class BybitAdapter(BaseExchangeAdapter):
 
                 # Extract base symbol
                 base_symbol = symbol[:-4]
+
+                # Filter by target symbols if specified
+                if target_symbols and base_symbol not in target_symbols:
+                    continue
 
                 # Get price and volume
                 last_price = item.get("lastPrice")
