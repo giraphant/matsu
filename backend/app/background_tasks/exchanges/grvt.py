@@ -6,7 +6,7 @@ from .base import BaseExchangeAdapter
 
 TARGET_SYMBOLS = ["BTC", "ETH", "SOL"]
 
-class GrvtAdapter(BaseExchangeAdapter):
+class GRVTAdapter(BaseExchangeAdapter):
     INSTRUMENTS_URL = "https://market-data.grvt.io/full/v1/instruments"
     FUNDING_URL = "https://market-data.grvt.io/full/v1/funding"
     
