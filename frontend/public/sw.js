@@ -198,7 +198,14 @@ async function evaluateAlertCondition(monitor, rule) {
 async function triggerAlert(monitor, rule, level) {
   const icon = ALERT_ICONS[level] || '⚠️';
   const title = `${icon} ${rule.name}`;
-  const body = `${monitor.name}: ${monitor.value}${monitor.unit || ''}`;
+
+  // Format value with monitor's decimal_places setting
+  const decimalPlaces = monitor.decimal_places !== undefined ? monitor.decimal_places : 2;
+  const formattedValue = typeof monitor.value === 'number'
+    ? monitor.value.toFixed(decimalPlaces)
+    : monitor.value;
+
+  const body = `${monitor.name}: ${formattedValue}${monitor.unit || ''}`;
 
   console.log(`[Service Worker] Alert triggered: ${title} - ${body}`);
 
