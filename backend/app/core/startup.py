@@ -165,16 +165,12 @@ class StartupManager:
             LighterAccountMonitor, JLPHedgeMonitor, ALPHedgeMonitor,
             DatabaseDownsampler
         )
-        from app.workers.dex_cache_warmer import DexCacheWarmer
-        from app.workers.alert_checker import AlertChecker
+        # DEPRECATED: DexCacheWarmer and AlertChecker removed
+        # - DexCacheWarmer: No longer needed, data read directly from database
+        # - AlertChecker: Replaced by MonitorAlertChecker (uses AlertRule system)
         from app.workers.monitor_alert_checker import MonitorAlertChecker
         from app.workers.monitor_recompute_worker import MonitorRecomputeWorker
         from app.workers.heartbeat_checker import HeartbeatChecker
-
-        # Create monitor instances based on feature flags
-        if settings.ENABLE_DEX_MONITORING:
-            self.monitors.append(DexCacheWarmer(interval=settings.DEX_CACHE_REFRESH_INTERVAL))
-            self.monitors.append(AlertChecker(interval=settings.FUNDING_RATE_CHECK_INTERVAL))
 
         # Funding rate monitors (every 5 minutes)
         self.monitors.append(LighterMonitor())
