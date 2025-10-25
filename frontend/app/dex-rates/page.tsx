@@ -109,7 +109,7 @@ export default function DexRatesPage() {
   }
 
   // Process data into table rows
-  const tableData: SymbolRow[] = (() => {
+  const tableData = (() => {
     const grouped = fundingRates.reduce((acc, rate) => {
       if (!acc[rate.symbol]) {
         acc[rate.symbol] = {};
