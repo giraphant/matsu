@@ -18,100 +18,90 @@ class AsterAdapter(BaseExchangeAdapter):
     - Funding rates
     """
 
-    PREMIUM_URL = "https://api.prod.aster.app/v1/premium-index"
-    FUNDING_URL = "https://api.prod.aster.app/v1/funding-info"
+    # Updated API endpoints (old domain: api.prod.aster.app no longer resolves)
+    PREMIUM_URL = "https://fapi.asterdex.com/fapi/v1/premiumIndex"
+    TICKER_URL = "https://fapi.asterdex.com/fapi/v1/ticker/24hr"
 
     def __init__(self):
         super().__init__("aster")
 
     async def fetch_funding_rates(self) -> List[Dict[str, Any]]:
         """
-        Fetch funding rates from Aster.
+        Fetch funding rates from Aster (new API format).
 
-        Aster requires fetching two endpoints:
-        - Premium index (for rates)
-        - Funding info (for intervals and next funding time)
+        New API uses Binance-like endpoints:
+        - /fapi/v1/premiumIndex for funding rates
+        - /fapi/v1/ticker/24hr for volume data
 
         Returns:
             List of dicts with keys:
             - symbol: str (e.g., "BTC", "ETH", "SOL")
-            - rate: float (8-hour normalized rate)
+            - rate: float (8-hour rate)
             - annualized_rate: float (APY percentage)
             - mark_price: float
             - next_funding_time: datetime
+            - turnover_24h: float (for volume filtering)
         """
         try:
-            # Fetch both endpoints in parallel
-            premium_data, funding_data = await asyncio.gather(
-                self._http_get(self.PREMIUM_URL, headers={
-                    "Accept": "application/json",
-                    "Content-Type": "application/json"
-                }),
-                self._http_get(self.FUNDING_URL, headers={
-                    "Accept": "application/json",
-                    "Content-Type": "application/json"
-                })
+            # Fetch premium index and 24hr ticker in parallel
+            premium_data, ticker_data = await asyncio.gather(
+                self._http_get(self.PREMIUM_URL),
+                self._http_get(self.TICKER_URL)
             )
 
-            # Build interval map from funding info
-            interval_map = {}
-            next_funding_map = {}
-            for entry in funding_data:
-                symbol = entry.get("symbol", "").upper()
-                if symbol:
-                    interval_map[symbol] = entry.get("fundingIntervalHours", 8)
-                    next_time_str = entry.get("nextFundingTime")
-                    if next_time_str:
-                        next_funding_map[symbol] = next_time_str
+            # Build volume map from ticker data
+            volume_map = {}
+            for ticker in ticker_data:
+                symbol = ticker.get("symbol", "")
+                quote_volume = ticker.get("quoteVolume")  # USDT volume
+                if symbol and quote_volume:
+                    try:
+                        volume_map[symbol] = float(quote_volume)
+                    except (ValueError, TypeError):
+                        pass
 
-            # Process premium index data
             rates = []
             for entry in premium_data:
                 symbol = entry.get("symbol", "").upper()
                 if not symbol:
                     continue
 
-                # Normalize symbol (remove USDT/USD suffix if present)
+                # Normalize symbol (remove USD suffix, Aster uses XxxxxUSD format)
                 normalized_symbol = symbol
-                if normalized_symbol.endswith("USDT"):
-                    normalized_symbol = normalized_symbol[:-4]
-                elif normalized_symbol.endswith("USD"):
+                if normalized_symbol.endswith("USD"):
                     normalized_symbol = normalized_symbol[:-3]
 
-                # Get funding rate
-                rate = entry.get("fundingRate")
-                if rate is None:
+                # Get funding rate (lastFundingRate is the current 8h rate)
+                funding_rate = entry.get("lastFundingRate")
+                if funding_rate is None:
                     continue
 
-                rate_value = float(rate)
-
-                # Get funding interval (default to 8 hours)
-                interval_hours = interval_map.get(symbol, 8)
-
-                # Normalize to 8-hour rate
-                rate_8h = rate_value * (8 / interval_hours)
+                rate_8h = float(funding_rate)
                 annualized_rate = self.annualize_8h_rate(rate_8h)
 
                 # Get mark price
                 mark_price = entry.get("markPrice")
                 mark_price_value = float(mark_price) if mark_price else None
 
-                # Get next funding time
+                # Get next funding time (Unix timestamp in milliseconds)
+                next_funding_time_ms = entry.get("nextFundingTime")
                 next_funding_time = None
-                next_time_str = next_funding_map.get(symbol)
-                if next_time_str:
+                if next_funding_time_ms:
                     try:
-                        # Parse ISO format timestamp
-                        next_funding_time = datetime.fromisoformat(next_time_str.replace('Z', '+00:00'))
-                    except (ValueError, AttributeError):
+                        next_funding_time = datetime.fromtimestamp(int(next_funding_time_ms) / 1000)
+                    except (ValueError, TypeError):
                         pass
+
+                # Get volume from ticker map
+                turnover_24h = volume_map.get(symbol)
 
                 rates.append({
                     "symbol": normalized_symbol,
                     "rate": rate_8h,
                     "annualized_rate": annualized_rate,
                     "mark_price": mark_price_value,
-                    "next_funding_time": next_funding_time
+                    "next_funding_time": next_funding_time,
+                    "turnover_24h": turnover_24h  # For volume filtering
                 })
 
             self.logger.debug(f"Fetched {len(rates)} funding rates")
