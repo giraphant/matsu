@@ -132,7 +132,10 @@ export default function MonitorsPage() {
   );
 
   // Fetch monitors and apply saved order
-  const fetchMonitors = async () => {
+  const fetchMonitors = async (preserveScroll = false) => {
+    // Save current scroll position if requested
+    const scrollY = preserveScroll ? window.scrollY : 0;
+
     try {
       const response = await fetch(getApiUrl('/api/monitors'));
       if (!response.ok) throw new Error('Failed to fetch monitors');
@@ -157,6 +160,14 @@ export default function MonitorsPage() {
         }
       } else {
         setMonitors(enabledMonitors);
+      }
+
+      // Restore scroll position if needed
+      if (preserveScroll && scrollY > 0) {
+        // Use requestAnimationFrame to ensure DOM is updated before scrolling
+        requestAnimationFrame(() => {
+          window.scrollTo(0, scrollY);
+        });
       }
     } catch (error) {
       console.error('Error fetching monitors:', error);
@@ -314,7 +325,7 @@ export default function MonitorsPage() {
       if (!response.ok) throw new Error('Failed to save monitor');
 
       toast.success(editingMonitor ? 'Monitor updated' : 'Monitor created');
-      fetchMonitors();
+      fetchMonitors(true); // Preserve scroll position
       setDialogOpen(false);
       resetForm();
     } catch (error) {
@@ -332,7 +343,7 @@ export default function MonitorsPage() {
       if (!response.ok) throw new Error('Failed to delete monitor');
 
       toast.success('Monitor deleted');
-      fetchMonitors();
+      fetchMonitors(true); // Preserve scroll position
     } catch (error) {
       console.error('Error deleting monitor:', error);
       toast.error('Failed to delete monitor');

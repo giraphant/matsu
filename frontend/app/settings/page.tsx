@@ -75,7 +75,10 @@ export default function SettingsPage() {
     fetchAllData();
   }, []);
 
-  async function fetchAllData() {
+  async function fetchAllData(preserveScroll = false) {
+    // Save current scroll position if requested
+    const scrollY = preserveScroll ? window.scrollY : 0;
+
     try {
       setLoading(true);
       setError(null);
@@ -114,6 +117,13 @@ export default function SettingsPage() {
       } catch {
         setBackgroundAlertsEnabled(true);
       }
+
+      // Restore scroll position if needed
+      if (preserveScroll && scrollY > 0) {
+        requestAnimationFrame(() => {
+          window.scrollTo(0, scrollY);
+        });
+      }
     } catch (err) {
       console.error('Failed to fetch data:', err);
       setError('Failed to load settings');
@@ -142,7 +152,7 @@ export default function SettingsPage() {
       setNewPushoverApiToken('');
       setNewPushoverMinLevel('low');
       setSuccessMessage('Pushover configuration created successfully');
-      fetchAllData();
+      fetchAllData(true); // Preserve scroll position
     } catch (err) {
       setError('Failed to create Pushover configuration');
     } finally {
@@ -155,7 +165,7 @@ export default function SettingsPage() {
       await updatePushoverConfig(config.id, {
         enabled: !config.enabled,
       });
-      fetchAllData();
+      fetchAllData(true); // Preserve scroll position
     } catch (err) {
       setError('Failed to update Pushover configuration');
     }
@@ -167,7 +177,7 @@ export default function SettingsPage() {
     try {
       await deletePushoverConfig(id);
       setSuccessMessage('Pushover configuration deleted');
-      fetchAllData();
+      fetchAllData(true); // Preserve scroll position
     } catch (err) {
       setError('Failed to delete Pushover configuration');
     }
@@ -178,7 +188,7 @@ export default function SettingsPage() {
       await updatePushoverConfig(config.id, {
         min_alert_level: newLevel,
       });
-      fetchAllData();
+      fetchAllData(true); // Preserve scroll position
     } catch (err) {
       setError('Failed to update alert level');
     }
@@ -212,7 +222,7 @@ export default function SettingsPage() {
 
       setSuccessMessage('Pushover device updated successfully');
       handleCancelEdit();
-      fetchAllData();
+      fetchAllData(true); // Preserve scroll position
     } catch (err) {
       setError('Failed to update Pushover device');
     } finally {
@@ -261,7 +271,7 @@ export default function SettingsPage() {
       setNewFundingAlertExchanges([]);
       setNewFundingAlertThreshold('0.01');
       setSuccessMessage('Funding rate alert created successfully');
-      fetchAllData();
+      fetchAllData(true); // Preserve scroll position
     } catch (err) {
       setError('Failed to create funding rate alert');
     } finally {
@@ -278,7 +288,7 @@ export default function SettingsPage() {
         threshold: alert.threshold,
         enabled: !alert.enabled,
       });
-      fetchAllData();
+      fetchAllData(true); // Preserve scroll position
     } catch (err) {
       setError('Failed to update funding rate alert');
     }
@@ -290,7 +300,7 @@ export default function SettingsPage() {
     try {
       await deleteFundingRateAlert(id);
       setSuccessMessage('Funding rate alert deleted');
-      fetchAllData();
+      fetchAllData(true); // Preserve scroll position
     } catch (err) {
       setError('Failed to delete funding rate alert');
     }
