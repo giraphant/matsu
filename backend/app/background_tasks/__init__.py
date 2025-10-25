@@ -6,6 +6,8 @@ from .lighter_funding import LighterMonitor
 from .aster_funding import AsterMonitor
 from .grvt_funding import GRVTMonitor
 from .backpack_funding import BackpackMonitor
+from .binance_funding import BinanceMonitor
+from .hyperliquid_funding import HyperliquidMonitor
 # Spot price monitors
 from .binance_spot import BinanceSpotMonitor
 from .okx_spot import OKXSpotMonitor
@@ -27,6 +29,8 @@ __all__ = [
     "AsterMonitor",
     "GRVTMonitor",
     "BackpackMonitor",
+    "BinanceMonitor",
+    "HyperliquidMonitor",
     # Spot prices
     "BinanceSpotMonitor",
     "OKXSpotMonitor",

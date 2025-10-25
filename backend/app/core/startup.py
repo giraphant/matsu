@@ -159,6 +159,7 @@ class StartupManager:
         # Import monitors and workers
         from app.background_tasks import (
             LighterMonitor, AsterMonitor, GRVTMonitor, BackpackMonitor,
+            BinanceMonitor, HyperliquidMonitor,
             BinanceSpotMonitor, OKXSpotMonitor, BybitSpotMonitor,
             JupiterSpotMonitor, PythSpotMonitor,
             LighterAccountMonitor, JLPHedgeMonitor, ALPHedgeMonitor,
@@ -180,6 +181,8 @@ class StartupManager:
         self.monitors.append(AsterMonitor())
         self.monitors.append(GRVTMonitor())
         self.monitors.append(BackpackMonitor())
+        self.monitors.append(BinanceMonitor())
+        self.monitors.append(HyperliquidMonitor())
 
         # Spot price monitors (every 1 minute)
         self.monitors.append(BinanceSpotMonitor())

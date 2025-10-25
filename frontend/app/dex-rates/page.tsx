@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, TrendingUp, TrendingDown } from 'lucide-react';
+import { Badge } from "@/components/ui/badge";
+import { RefreshCw, TrendingUp, TrendingDown, ExternalLink } from 'lucide-react';
 import { getApiUrl } from "@/lib/api-config";
 
 interface FundingRateData {
@@ -25,12 +26,25 @@ interface SpotPriceData {
   timestamp: string;
 }
 
+interface UnifiedRow {
+  symbol: string;
+  rates: Record<string, number>; // exchange -> annualized_rate
+  hasSpot: Record<string, boolean>; // exchange -> has spot price
+  spread: {
+    max: number;
+    min: number;
+    diff: number;
+    maxExchange: string;
+    minExchange: string;
+  } | null;
+}
+
 export default function TradingPage() {
   const [fundingRates, setFundingRates] = useState<FundingRateData[]>([]);
   const [spotPrices, setSpotPrices] = useState<SpotPriceData[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [activeTab, setActiveTab] = useState("funding");
+  const [activeTab, setActiveTab] = useState("unified");
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   useEffect(() => {
@@ -67,49 +81,96 @@ export default function TradingPage() {
     }
   }
 
-  // Group funding rates by symbol
-  const fundingBySymbol = fundingRates.reduce((acc, rate) => {
-    if (!acc[rate.symbol]) acc[rate.symbol] = [];
-    acc[rate.symbol].push(rate);
-    return acc;
-  }, {} as Record<string, FundingRateData[]>);
+  // Build unified table data
+  const buildUnifiedData = (): UnifiedRow[] => {
+    const symbols = ['BTC', 'ETH', 'SOL'];
+    const exchanges = ['lighter', 'aster', 'grvt', 'backpack', 'binance', 'hyperliquid'];
 
-  // Group spot prices by symbol
-  const spotBySymbol = spotPrices.reduce((acc, price) => {
-    if (!acc[price.symbol]) acc[price.symbol] = [];
-    acc[price.symbol].push(price);
-    return acc;
-  }, {} as Record<string, SpotPriceData[]>);
+    return symbols.map(symbol => {
+      const symbolRates = fundingRates.filter(r => r.symbol === symbol);
+      const symbolSpots = spotPrices.filter(p => p.symbol === symbol);
 
-  const symbols = ['BTC', 'ETH', 'SOL'];
+      const rates: Record<string, number> = {};
+      const hasSpot: Record<string, boolean> = {};
 
-  // Calculate price spreads
-  const calculateSpread = (symbol: string) => {
-    const prices = spotBySymbol[symbol] || [];
-    if (prices.length < 2) return null;
+      // Build rates map
+      exchanges.forEach(exchange => {
+        const rate = symbolRates.find(r => r.exchange === exchange);
+        rates[exchange] = rate ? rate.annualized_rate : NaN;
 
-    const priceValues = prices.map(p => p.price);
-    const maxPrice = Math.max(...priceValues);
-    const minPrice = Math.min(...priceValues);
-    const spreadPercent = ((maxPrice - minPrice) / minPrice) * 100;
+        // Check if exchange has spot price
+        const spot = symbolSpots.find(s => s.exchange === exchange);
+        hasSpot[exchange] = !!spot;
+      });
 
-    return {
-      maxPrice,
-      minPrice,
-      spread: maxPrice - minPrice,
-      spreadPercent,
-      maxExchange: prices.find(p => p.price === maxPrice)?.exchange,
-      minExchange: prices.find(p => p.price === minPrice)?.exchange
-    };
+      // Calculate spread
+      const validRates = Object.entries(rates)
+        .filter(([_, value]) => !isNaN(value))
+        .map(([exchange, value]) => ({ exchange, value }));
+
+      let spread = null;
+      if (validRates.length >= 2) {
+        const sorted = validRates.sort((a, b) => b.value - a.value);
+        const max = sorted[0];
+        const min = sorted[sorted.length - 1];
+
+        spread = {
+          max: max.value,
+          min: min.value,
+          diff: max.value - min.value,
+          maxExchange: max.exchange,
+          minExchange: min.exchange
+        };
+      }
+
+      return {
+        symbol,
+        rates,
+        hasSpot,
+        spread
+      };
+    });
   };
+
+  // Calculate top spreads across all symbols
+  const getTopSpreads = () => {
+    const allSpreads: Array<{
+      symbol: string;
+      spread: number;
+      maxExchange: string;
+      minExchange: string;
+      maxRate: number;
+      minRate: number;
+    }> = [];
+
+    const data = buildUnifiedData();
+    data.forEach(row => {
+      if (row.spread) {
+        allSpreads.push({
+          symbol: row.symbol,
+          spread: row.spread.diff,
+          maxExchange: row.spread.maxExchange,
+          minExchange: row.spread.minExchange,
+          maxRate: row.spread.max,
+          minRate: row.spread.min
+        });
+      }
+    });
+
+    return allSpreads.sort((a, b) => b.spread - a.spread);
+  };
+
+  const unifiedData = buildUnifiedData();
+  const topSpreads = getTopSpreads();
+  const exchanges = ['lighter', 'aster', 'grvt', 'backpack', 'binance', 'hyperliquid'];
 
   return (
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Trading Monitor</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Funding Rates</h1>
           <p className="text-muted-foreground">
-            Monitor funding rates and spot price spreads across exchanges
+            Monitor funding rates and arbitrage opportunities across exchanges
           </p>
         </div>
         <div className="flex items-center gap-4">
@@ -131,172 +192,157 @@ export default function TradingPage() {
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full max-w-md grid-cols-2">
-          <TabsTrigger value="funding">Funding Rates</TabsTrigger>
-          <TabsTrigger value="spot">Spot Spreads</TabsTrigger>
+          <TabsTrigger value="unified">Unified View</TabsTrigger>
+          <TabsTrigger value="spreads">Top Spreads</TabsTrigger>
         </TabsList>
 
-        {/* Funding Rates Tab */}
-        <TabsContent value="funding" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-3">
-            {symbols.map(symbol => {
-              const rates = fundingBySymbol[symbol] || [];
-              const avgRate = rates.length > 0
-                ? rates.reduce((sum, r) => sum + r.annualized_rate, 0) / rates.length
-                : 0;
-
-              return (
-                <Card key={symbol}>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-lg">{symbol} Funding Rates</CardTitle>
-                    <CardDescription>Annualized rates across exchanges</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-3xl font-bold mb-4">
-                      {avgRate.toFixed(2)}%
-                    </div>
-                    <div className="space-y-2">
-                      {rates.sort((a, b) => b.annualized_rate - a.annualized_rate).map((rate, idx) => (
-                        <div key={idx} className="flex justify-between items-center text-sm">
-                          <span className="font-medium capitalize">{rate.exchange}</span>
-                          <span className={rate.annualized_rate > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}>
-                            {rate.annualized_rate.toFixed(2)}%
-                          </span>
-                        </div>
+        {/* Unified Table View */}
+        <TabsContent value="unified" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Funding Rates Comparison</CardTitle>
+              <CardDescription>Annualized rates across all exchanges (8-hour normalized)</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="text-left py-3 px-4 font-semibold">Symbol</th>
+                      {exchanges.map(exchange => (
+                        <th key={exchange} className="text-right py-3 px-4 font-semibold capitalize">
+                          {exchange}
+                        </th>
                       ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
+                      <th className="text-right py-3 px-4 font-semibold">Spread</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {unifiedData.map(row => (
+                      <tr key={row.symbol} className="border-b hover:bg-muted/50">
+                        <td className="py-3 px-4 font-bold">{row.symbol}</td>
+                        {exchanges.map(exchange => {
+                          const rate = row.rates[exchange];
+                          const hasSpotMarket = row.hasSpot[exchange];
 
-          {/* Detailed Funding Rates */}
-          {symbols.map(symbol => {
-            const rates = fundingBySymbol[symbol] || [];
-            if (rates.length === 0) return null;
-
-            return (
-              <Card key={symbol}>
-                <CardHeader>
-                  <CardTitle>{symbol} Detailed Rates</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
-                    {rates.sort((a, b) => b.annualized_rate - a.annualized_rate).map((rate, idx) => (
-                      <div key={idx} className="border rounded-lg p-3 space-y-1">
-                        <div className="font-semibold capitalize">{rate.exchange}</div>
-                        <div className="text-2xl font-bold">
-                          {rate.annualized_rate.toFixed(2)}%
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          8h: {(rate.rate * 100).toFixed(4)}%
-                        </div>
-                        {rate.mark_price && (
-                          <div className="text-xs text-muted-foreground">
-                            Mark: ${rate.mark_price.toLocaleString()}
-                          </div>
-                        )}
-                      </div>
+                          return (
+                            <td key={exchange} className="text-right py-3 px-4">
+                              {!isNaN(rate) ? (
+                                <div className="flex flex-col items-end gap-1">
+                                  <span className={`font-mono ${rate > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                                    {rate.toFixed(2)}%
+                                  </span>
+                                  {hasSpotMarket && exchange === 'binance' && (
+                                    <Badge variant="outline" className="text-xs">Spot</Badge>
+                                  )}
+                                </div>
+                              ) : (
+                                <span className="text-muted-foreground">-</span>
+                              )}
+                            </td>
+                          );
+                        })}
+                        <td className="text-right py-3 px-4">
+                          {row.spread ? (
+                            <div className="flex flex-col items-end gap-1">
+                              <span className="font-mono font-bold text-orange-600 dark:text-orange-400">
+                                {row.spread.diff.toFixed(2)}%
+                              </span>
+                              <span className="text-xs text-muted-foreground">
+                                {row.spread.maxExchange} → {row.spread.minExchange}
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground">-</span>
+                          )}
+                        </td>
+                      </tr>
                     ))}
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Legend */}
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex flex-wrap gap-4 text-sm">
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline">Spot</Badge>
+                  <span className="text-muted-foreground">Spot market available on Binance</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-orange-600 dark:text-orange-400 font-bold">Spread</span>
+                  <span className="text-muted-foreground">Arbitrage opportunity (high → low)</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
-        {/* Spot Spreads Tab */}
-        <TabsContent value="spot" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-3">
-            {symbols.map(symbol => {
-              const spread = calculateSpread(symbol);
-              if (!spread) return null;
-
-              return (
-                <Card key={symbol}>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-lg">{symbol} Price Spread</CardTitle>
-                    <CardDescription>Across CEX exchanges</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center gap-2 mb-4">
-                      {spread.spreadPercent > 0 ? (
-                        <TrendingUp className="h-5 w-5 text-green-500" />
-                      ) : (
-                        <TrendingDown className="h-5 w-5 text-red-500" />
-                      )}
-                      <div className="text-3xl font-bold">
-                        {spread.spreadPercent.toFixed(3)}%
+        {/* Top Spreads Tab */}
+        <TabsContent value="spreads" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Top Arbitrage Opportunities</CardTitle>
+              <CardDescription>Ranked by funding rate spread across exchanges</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {topSpreads.map((item, idx) => (
+                  <div
+                    key={`${item.symbol}-${idx}`}
+                    className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className={`text-2xl font-bold ${idx === 0 ? 'text-orange-500' : idx === 1 ? 'text-orange-400' : 'text-orange-300'}`}>
+                        #{idx + 1}
                       </div>
-                    </div>
-                    <div className="space-y-1 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">High:</span>
-                        <span className="font-medium">
-                          ${spread.maxPrice.toLocaleString()} ({spread.maxExchange})
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Low:</span>
-                        <span className="font-medium">
-                          ${spread.minPrice.toLocaleString()} ({spread.minExchange})
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Spread:</span>
-                        <span className="font-medium">${spread.spread.toFixed(2)}</span>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-
-          {/* Detailed Spot Prices */}
-          {symbols.map(symbol => {
-            const prices = spotBySymbol[symbol] || [];
-            if (prices.length === 0) return null;
-
-            return (
-              <Card key={symbol}>
-                <CardHeader>
-                  <CardTitle>{symbol} Spot Prices</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-                    {prices.sort((a, b) => b.price - a.price).map((price, idx) => (
-                      <div key={idx} className="border rounded-lg p-3 space-y-1">
-                        <div className="font-semibold capitalize">{price.exchange}</div>
-                        <div className="text-2xl font-bold">
-                          ${price.price.toLocaleString(undefined, { maximumFractionDigits: 2 })}
-                        </div>
-                        {price.volume_24h && (
-                          <div className="text-xs text-muted-foreground">
-                            Vol: ${(price.volume_24h / 1000000).toFixed(2)}M
-                          </div>
-                        )}
-                        <div className="text-xs text-muted-foreground">
-                          {new Date(price.timestamp).toLocaleTimeString()}
+                      <div>
+                        <div className="font-bold text-lg">{item.symbol}</div>
+                        <div className="text-sm text-muted-foreground">
+                          Long on <span className="font-medium capitalize">{item.minExchange}</span> ({item.minRate.toFixed(2)}%)
+                          {' '}<span className="mx-1">→</span>{' '}
+                          Short on <span className="font-medium capitalize">{item.maxExchange}</span> ({item.maxRate.toFixed(2)}%)
                         </div>
                       </div>
-                    ))}
+                    </div>
+                    <div className="text-right">
+                      <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+                        {item.spread.toFixed(2)}%
+                      </div>
+                      <div className="text-xs text-muted-foreground">APY spread</div>
+                    </div>
                   </div>
-                </CardContent>
-              </Card>
-            );
-          })}
+                ))}
+                {topSpreads.length === 0 && (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No spreads available
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Explanation Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle>How to Use Spreads</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2 text-sm">
+              <p>
+                <strong>Arbitrage Strategy:</strong> Open a long position on the exchange with lower funding rate,
+                and simultaneously open a short position on the exchange with higher funding rate.
+              </p>
+              <p className="text-muted-foreground">
+                The spread represents the annualized profit you could earn from the funding rate differential,
+                assuming the spread remains constant. Always account for transaction fees, slippage, and market risks.
+              </p>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
-
-      {loading && (
-        <div className="flex items-center justify-center py-12">
-          <div className="text-center">
-            <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4" />
-            <p className="text-muted-foreground">Loading trading data...</p>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
