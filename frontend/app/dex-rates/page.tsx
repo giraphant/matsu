@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -167,8 +167,8 @@ export default function DexRatesPage() {
     return rate >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400';
   };
 
-  // Define columns
-  const columns: ColumnDef<SymbolRow>[] = [
+  // Define columns (memoized to prevent unnecessary re-renders)
+  const columns: ColumnDef<SymbolRow>[] = useMemo(() => [
     {
       accessorKey: 'symbol',
       header: ({ column }) => (
@@ -239,7 +239,7 @@ export default function DexRatesPage() {
         );
       },
     },
-  ];
+  ], [enabledExchanges]);
 
   const table = useReactTable({
     data: tableData,
