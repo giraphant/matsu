@@ -108,7 +108,7 @@ async function checkAlerts() {
     ]);
 
     // Check each monitor against its alert rules
-    monitors.forEach(monitor => {
+    for (const monitor of monitors) {
       const rule = alertRules.find(r => {
         try {
           // Check if rule condition mentions this monitor
@@ -118,9 +118,9 @@ async function checkAlerts() {
         }
       });
 
-      if (!rule || !rule.enabled) return;
+      if (!rule || !rule.enabled) continue;
 
-      const isAlert = evaluateAlertCondition(monitor, rule);
+      const isAlert = await evaluateAlertCondition(monitor, rule);
       const state = alertStates.get(monitor.id);
       const level = rule.level || 'medium';
       const alertConfig = ALERT_LEVELS[level];
@@ -147,7 +147,7 @@ async function checkAlerts() {
           isActive: false
         });
       }
-    });
+    }
 
   } catch (error) {
     console.error('[Service Worker] Error checking alerts:', error);
@@ -155,13 +155,33 @@ async function checkAlerts() {
 }
 
 // Evaluate alert condition
-function evaluateAlertCondition(monitor, rule) {
+async function evaluateAlertCondition(monitor, rule) {
   try {
-    // Simple condition evaluation
-    // Expected format: "${monitor:xxx} > 100" or "${monitor:xxx} < 50"
-    const condition = rule.condition.replace(`\${monitor:${monitor.id}}`, monitor.value);
+    // Replace the current monitor's value
+    let condition = rule.condition.replace(`\${monitor:${monitor.id}}`, monitor.value);
 
-    // Basic safety check
+    // Replace other monitor references by fetching their current values
+    const monitorMatches = condition.match(/\$\{monitor:([^}]+)\}/g);
+    if (monitorMatches) {
+      // Fetch all monitors to get their current values
+      const monitors = await fetch(`${API_BASE_URL}/monitors`).then(r => r.json());
+      const monitorMap = {};
+      monitors.forEach(m => monitorMap[m.id] = m.value);
+
+      // Replace each monitor reference
+      monitorMatches.forEach(match => {
+        const monitorId = match.match(/\$\{monitor:([^}]+)\}/)[1];
+        const value = monitorMap[monitorId];
+        if (value !== undefined && value !== null) {
+          condition = condition.replace(match, value);
+        }
+      });
+    }
+
+    // Replace logical operators for JavaScript evaluation
+    condition = condition.replace(/\bor\b/gi, '||').replace(/\band\b/gi, '&&');
+
+    // Basic safety check - allow numbers, operators, spaces, and JavaScript logical operators
     if (!/^[\d\s\.\+\-\*\/\(\)<>=!&|]+$/.test(condition)) {
       console.warn('[Service Worker] Invalid condition format:', condition);
       return false;
