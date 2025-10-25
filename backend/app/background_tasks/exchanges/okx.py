@@ -2,7 +2,7 @@
 from typing import List, Dict, Any
 from .base import BaseExchangeAdapter
 
-class OkxAdapter(BaseExchangeAdapter):
+class OKXAdapter(BaseExchangeAdapter):
     API_URL = "https://www.okx.com/api/v5/market/tickers"
     
     def __init__(self):

@@ -158,12 +158,13 @@ class StartupManager:
         """Start all background monitors and workers."""
         # Import monitors and workers
         from app.background_tasks import (
-            LighterAccountMonitor, JLPHedgeMonitor, ALPHedgeMonitor,
+            JLPHedgeMonitor, ALPHedgeMonitor,
             DatabaseDownsampler
         )
         # NEW: Exchange-centric architecture
         from app.background_tasks.funding_monitor import FundingRateMonitor
         from app.background_tasks.spot_monitor import SpotPriceMonitor
+        from app.background_tasks.account_monitor import AccountMonitor
 
         from app.workers.monitor_alert_checker import MonitorAlertChecker
         from app.workers.monitor_recompute_worker import MonitorRecomputeWorker
@@ -177,9 +178,10 @@ class StartupManager:
         # Fetches from: Binance, Bybit, OKX, Jupiter (Solana), Pyth (Oracle)
         self.monitors.append(SpotPriceMonitor(interval=60))  # Every 1 minute
 
-        # Account monitors (every 30 seconds)
+        # NEW: Unified account coordinator (every 30 seconds)
+        # Fetches account data from all exchanges that support it: Lighter, etc.
         # Note: Accounts are now managed through the database (Settings > DEX Accounts)
-        self.monitors.append(LighterAccountMonitor())
+        self.monitors.append(AccountMonitor(interval=30))
 
         # Position calculators (every 60 seconds)
         # JLP Hedge Monitor reads jlp_amount from database settings
