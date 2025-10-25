@@ -211,7 +211,7 @@ export default function DexRatesPage() {
         cell: ({ row }: any) => {
           const rate = row.getValue(exchange) as number | null;
           return (
-            <div className={`text-right font-mono ${getRateColor(rate)}`}>
+            <div className={`font-mono ${getRateColor(rate)}`}>
               {formatRate(rate)}
             </div>
           );
@@ -231,7 +231,7 @@ export default function DexRatesPage() {
       cell: ({ row }) => {
         const spread = row.getValue('spread') as number | null;
         return (
-          <div className="text-right font-mono font-bold text-orange-600 dark:text-orange-400">
+          <div className="font-mono font-bold text-orange-600 dark:text-orange-400">
             {spread !== null ? `${spread.toFixed(4)}%` : 'N/A'}
           </div>
         );
@@ -383,7 +383,7 @@ export default function DexRatesPage() {
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id} className={header.id !== 'symbol' ? 'text-right' : ''}>
+                  <TableHead key={header.id} className={header.id !== 'symbol' ? 'text-center' : ''}>
                     {header.isPlaceholder
                       ? null
                       : flexRender(
@@ -409,7 +409,7 @@ export default function DexRatesPage() {
                   data-state={row.getIsSelected() && 'selected'}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
+                    <TableCell key={cell.id} className={cell.column.id !== 'symbol' ? 'text-center' : ''}>
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
                   ))}
