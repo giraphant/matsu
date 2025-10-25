@@ -43,13 +43,27 @@ class HyperliquidAdapter(BaseExchangeAdapter):
                 json_data={"type": "metaAndAssetCtxs"}
             )
 
+            # Response format: [meta_data, asset_contexts]
+            # meta_data contains universe with coin names
+            # asset_contexts contains funding rates and prices
+            if not isinstance(data, list) or len(data) < 2:
+                self.logger.error("Unexpected Hyperliquid API response format")
+                return []
+
+            universe = data[0].get("universe", [])
+            asset_contexts = data[1] if len(data) > 1 else []
+
+            if len(universe) != len(asset_contexts):
+                self.logger.warning(f"Mismatch: {len(universe)} symbols but {len(asset_contexts)} contexts")
+
             rates = []
-            for asset_ctx in data[0].get("universe", []):
-                coin_name = asset_ctx.get("name", "")
+            for i, (meta, ctx) in enumerate(zip(universe, asset_contexts)):
+                coin_name = meta.get("name", "")
 
                 # Hyperliquid provides 1-hour rate
-                funding_1h = asset_ctx.get("funding")
-                mark_price = asset_ctx.get("markPx")
+                funding_1h = ctx.get("funding")
+                mark_price = ctx.get("markPx")
+                volume_24h = ctx.get("dayNtlVlm")  # 24h notional volume for filtering
 
                 if funding_1h is None:
                     continue
@@ -59,13 +73,15 @@ class HyperliquidAdapter(BaseExchangeAdapter):
                 rate_8h = rate_1h * 8
                 annualized_rate = self.annualize_1h_rate(rate_1h)
                 mark_price_val = float(mark_price) if mark_price else None
+                volume_val = float(volume_24h) if volume_24h else None
 
                 rates.append({
                     "symbol": coin_name,
                     "rate": rate_8h,  # Store as 8-hour equivalent
                     "annualized_rate": annualized_rate,
                     "mark_price": mark_price_val,
-                    "next_funding_time": None  # Hyperliquid doesn't provide this
+                    "next_funding_time": None,  # Hyperliquid doesn't provide this
+                    "turnover_24h": volume_val  # For volume filtering
                 })
 
             self.logger.debug(f"Fetched {len(rates)} funding rates")
