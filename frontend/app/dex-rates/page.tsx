@@ -126,9 +126,15 @@ export default function DexRatesPage() {
       .map((symbol): SymbolRow | null => {
         const rates = grouped[symbol];
 
-        // Check if at least 2 exchanges have data
-        const validRates = Object.values(rates).filter(r => r !== null && r !== undefined && !isNaN(r));
-        if (validRates.length < 2) return null;
+        // Check if at least 1 enabled exchange has data
+        const hasEnabledExchangeData = exchanges
+          .filter(ex => enabledExchanges.has(ex))
+          .some(ex => {
+            const rate = rates[ex];
+            return rate !== null && rate !== undefined && !isNaN(rate);
+          });
+
+        if (!hasEnabledExchangeData) return null;
 
         // Calculate spread from enabled exchanges only
         const enabledRates = exchanges
