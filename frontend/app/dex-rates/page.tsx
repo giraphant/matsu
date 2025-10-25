@@ -1,10 +1,20 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState } from 'react';
+import {
+  ColumnDef,
+  ColumnFiltersState,
+  SortingState,
+  flexRender,
+  getCoreRowModel,
+  getFilteredRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  useReactTable,
+} from '@tanstack/react-table';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -13,7 +23,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { RefreshCw, ArrowUpDown } from 'lucide-react';
+import { RefreshCw, ArrowUpDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { getApiUrl } from "@/lib/api-config";
 
 interface FundingRateData {
@@ -34,7 +44,20 @@ interface SpotPriceData {
   timestamp: string;
 }
 
-type SortColumn = 'symbol' | 'spread' | 'lighter' | 'aster' | 'grvt' | 'backpack' | 'binance' | 'bybit' | 'hyperliquid';
+interface SymbolRow {
+  symbol: string;
+  lighter: number | null;
+  aster: number | null;
+  grvt: number | null;
+  backpack: number | null;
+  binance: number | null;
+  bybit: number | null;
+  hyperliquid: number | null;
+  spread: number | null;
+  hasBinanceSpot: boolean;
+}
+
+const exchanges = ['lighter', 'aster', 'grvt', 'backpack', 'binance', 'bybit', 'hyperliquid'];
 
 export default function DexRatesPage() {
   const [fundingRates, setFundingRates] = useState<FundingRateData[]>([]);
@@ -43,19 +66,17 @@ export default function DexRatesPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
-  // Filters and sorting
-  const [searchTerm, setSearchTerm] = useState('');
-  const [sortBy, setSortBy] = useState<SortColumn>('spread');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  // Table state
+  const [sorting, setSorting] = useState<SortingState>([{ id: 'spread', desc: true }]);
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [globalFilter, setGlobalFilter] = useState('');
   const [enabledExchanges, setEnabledExchanges] = useState<Set<string>>(
-    new Set(['lighter', 'aster', 'grvt', 'backpack', 'binance', 'bybit', 'hyperliquid'])
+    new Set(exchanges)
   );
-
-  const exchanges = ['lighter', 'aster', 'grvt', 'backpack', 'binance', 'bybit', 'hyperliquid'];
 
   useEffect(() => {
     fetchData();
-    const interval = setInterval(fetchData, 60000); // Refresh every minute
+    const interval = setInterval(fetchData, 60000);
     return () => clearInterval(interval);
   }, []);
 
@@ -87,111 +108,160 @@ export default function DexRatesPage() {
     }
   }
 
-  // Group rates by symbol
-  const groupedRates = useMemo(() => {
-    return fundingRates.reduce((acc, rate) => {
+  // Process data into table rows
+  const tableData: SymbolRow[] = (() => {
+    const grouped = fundingRates.reduce((acc, rate) => {
       if (!acc[rate.symbol]) {
         acc[rate.symbol] = {};
       }
       acc[rate.symbol][rate.exchange] = rate.annualized_rate;
       return acc;
     }, {} as Record<string, Record<string, number>>);
-  }, [fundingRates]);
 
-  // Check which symbols have Binance spot
-  const binanceSpotSymbols = useMemo(() => {
-    const symbols = new Set<string>();
-    spotPrices.forEach(spot => {
-      if (spot.exchange === 'binance') {
-        symbols.add(spot.symbol);
-      }
-    });
-    return symbols;
-  }, [spotPrices]);
+    const binanceSpotSet = new Set(
+      spotPrices.filter(s => s.exchange === 'binance').map(s => s.symbol)
+    );
 
-  // Filter and sort symbols
-  const processedSymbols = useMemo(() => {
-    // Get all symbols
-    let symbols = Object.keys(groupedRates);
+    return Object.keys(grouped)
+      .map(symbol => {
+        const rates = grouped[symbol];
 
-    // Filter by search term
-    if (searchTerm) {
-      symbols = symbols.filter(symbol =>
-        symbol.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
+        // Check if at least 2 exchanges have data
+        const validRates = Object.values(rates).filter(r => r !== null && r !== undefined && !isNaN(r));
+        if (validRates.length < 2) return null;
 
-    // Filter: require at least 2 exchanges with data
-    symbols = symbols.filter(symbol => {
-      const rates = groupedRates[symbol];
-      const validRates = Object.values(rates).filter(r => r !== null && r !== undefined && !isNaN(r));
-      return validRates.length >= 2;
-    });
+        // Calculate spread from enabled exchanges only
+        const enabledRates = exchanges
+          .filter(ex => enabledExchanges.has(ex))
+          .map(ex => rates[ex])
+          .filter(r => r !== null && r !== undefined && !isNaN(r));
 
-    // Calculate spreads and sort
-    const symbolsWithSpreads = symbols.map(symbol => {
-      const rates = groupedRates[symbol];
-      const enabledRates = exchanges
-        .filter(ex => enabledExchanges.has(ex))
-        .map(ex => rates[ex])
-        .filter(r => r !== null && r !== undefined && !isNaN(r));
+        const spread = enabledRates.length >= 2
+          ? Math.max(...enabledRates) - Math.min(...enabledRates)
+          : null;
 
-      const spread = enabledRates.length >= 2
-        ? Math.max(...enabledRates) - Math.min(...enabledRates)
-        : null;
+        return {
+          symbol,
+          lighter: rates.lighter ?? null,
+          aster: rates.aster ?? null,
+          grvt: rates.grvt ?? null,
+          backpack: rates.backpack ?? null,
+          binance: rates.binance ?? null,
+          bybit: rates.bybit ?? null,
+          hyperliquid: rates.hyperliquid ?? null,
+          spread,
+          hasBinanceSpot: binanceSpotSet.has(symbol),
+        };
+      })
+      .filter((row): row is SymbolRow => row !== null);
+  })();
 
-      return { symbol, spread, rates };
-    });
-
-    // Sort
-    symbolsWithSpreads.sort((a, b) => {
-      let compareValue = 0;
-
-      if (sortBy === 'symbol') {
-        compareValue = a.symbol.localeCompare(b.symbol);
-      } else if (sortBy === 'spread') {
-        // Prioritize symbols with all enabled exchanges
-        const aHasAll = exchanges.every(ex =>
-          !enabledExchanges.has(ex) || (a.rates[ex] !== null && a.rates[ex] !== undefined && !isNaN(a.rates[ex]))
-        );
-        const bHasAll = exchanges.every(ex =>
-          !enabledExchanges.has(ex) || (b.rates[ex] !== null && b.rates[ex] !== undefined && !isNaN(b.rates[ex]))
-        );
-
-        if (aHasAll && !bHasAll) return -1;
-        if (!aHasAll && bHasAll) return 1;
-
-        // Sort by spread
-        if (a.spread === null && b.spread === null) return 0;
-        if (a.spread === null) return 1;
-        if (b.spread === null) return -1;
-        compareValue = a.spread - b.spread;
-      } else {
-        // Sort by specific exchange
-        const rateA = a.rates[sortBy];
-        const rateB = b.rates[sortBy];
-
-        if ((rateA === null || rateA === undefined || isNaN(rateA)) &&
-            (rateB === null || rateB === undefined || isNaN(rateB))) return 0;
-        if (rateA === null || rateA === undefined || isNaN(rateA)) return 1;
-        if (rateB === null || rateB === undefined || isNaN(rateB)) return -1;
-        compareValue = rateA - rateB;
-      }
-
-      return sortOrder === 'asc' ? compareValue : -compareValue;
-    });
-
-    return symbolsWithSpreads;
-  }, [groupedRates, searchTerm, sortBy, sortOrder, enabledExchanges, exchanges]);
-
-  const handleSort = (column: SortColumn) => {
-    if (sortBy === column) {
-      setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortBy(column);
-      setSortOrder(column === 'symbol' ? 'asc' : 'desc');
-    }
+  const formatRate = (rate: number | null): string => {
+    if (rate === null || rate === undefined || isNaN(rate)) return 'N/A';
+    const sign = rate >= 0 ? '+' : '';
+    return `${sign}${rate.toFixed(4)}%`;
   };
+
+  const getRateColor = (rate: number | null): string => {
+    if (rate === null || rate === undefined || isNaN(rate)) return 'text-muted-foreground';
+    return rate >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400';
+  };
+
+  // Define columns
+  const columns: ColumnDef<SymbolRow>[] = [
+    {
+      accessorKey: 'symbol',
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          className="-ml-4"
+        >
+          Symbol
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
+      cell: ({ row }) => (
+        <div className="flex items-center gap-2">
+          <span className="font-bold">{row.getValue('symbol')}</span>
+          {row.original.hasBinanceSpot && (
+            <span
+              className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-orange-500 text-white text-[10px] font-bold"
+              title="Has Binance spot trading"
+            >
+              ✓
+            </span>
+          )}
+        </div>
+      ),
+    },
+    ...exchanges
+      .filter(ex => enabledExchanges.has(ex))
+      .map(exchange => ({
+        accessorKey: exchange,
+        header: ({ column }: any) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+            className="-ml-4 capitalize"
+          >
+            {exchange === 'backpack' ? 'BP' : exchange}
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        ),
+        cell: ({ row }: any) => {
+          const rate = row.getValue(exchange) as number | null;
+          return (
+            <div className={`text-right font-mono ${getRateColor(rate)}`}>
+              {formatRate(rate)}
+            </div>
+          );
+        },
+      } as ColumnDef<SymbolRow>)),
+    {
+      accessorKey: 'spread',
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          className="-ml-4"
+        >
+          Spread
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
+      cell: ({ row }) => {
+        const spread = row.getValue('spread') as number | null;
+        return (
+          <div className="text-right font-mono font-bold text-orange-600 dark:text-orange-400">
+            {spread !== null ? `${spread.toFixed(4)}%` : 'N/A'}
+          </div>
+        );
+      },
+    },
+  ];
+
+  const table = useReactTable({
+    data: tableData,
+    columns,
+    onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
+    onGlobalFilterChange: setGlobalFilter,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    state: {
+      sorting,
+      columnFilters,
+      globalFilter,
+    },
+    initialState: {
+      pagination: {
+        pageSize: 20,
+      },
+    },
+  });
 
   const toggleExchange = (exchange: string) => {
     const newEnabled = new Set(enabledExchanges);
@@ -201,17 +271,6 @@ export default function DexRatesPage() {
       newEnabled.add(exchange);
     }
     setEnabledExchanges(newEnabled);
-  };
-
-  const formatRate = (rate: number | null | undefined): string => {
-    if (rate === null || rate === undefined || isNaN(rate)) return 'N/A';
-    const sign = rate >= 0 ? '+' : '';
-    return `${sign}${rate.toFixed(4)}%`;
-  };
-
-  const getRateColor = (rate: number | null | undefined): string => {
-    if (rate === null || rate === undefined || isNaN(rate)) return 'text-muted-foreground';
-    return rate >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400';
   };
 
   return (
@@ -250,8 +309,8 @@ export default function DexRatesPage() {
             <Input
               type="text"
               placeholder="Search symbol..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              value={globalFilter ?? ''}
+              onChange={(e) => setGlobalFilter(e.target.value)}
               className="max-w-sm"
             />
           </div>
@@ -275,101 +334,111 @@ export default function DexRatesPage() {
       </Card>
 
       {/* Table */}
-      <Card>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead
-                  onClick={() => handleSort('symbol')}
-                  className="cursor-pointer hover:bg-muted/50 select-none"
-                >
-                  <div className="flex items-center gap-2">
-                    Symbol
-                    {sortBy === 'symbol' && (
-                      <span>{sortOrder === 'asc' ? '↑' : '↓'}</span>
-                    )}
-                  </div>
-                </TableHead>
-                {exchanges.filter(ex => enabledExchanges.has(ex)).map(exchange => (
-                  <TableHead
-                    key={exchange}
-                    onClick={() => handleSort(exchange as SortColumn)}
-                    className="text-right cursor-pointer hover:bg-muted/50 select-none"
-                  >
-                    <div className="flex items-center justify-end gap-2 capitalize">
-                      {exchange === 'backpack' ? 'BP' : exchange}
-                      {sortBy === exchange && (
-                        <span>{sortOrder === 'asc' ? '↑' : '↓'}</span>
-                      )}
-                    </div>
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <TableHead key={header.id} className={header.id !== 'symbol' ? 'text-right' : ''}>
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
                   </TableHead>
                 ))}
-                <TableHead
-                  onClick={() => handleSort('spread')}
-                  className="text-right cursor-pointer hover:bg-muted/50 select-none"
-                >
-                  <div className="flex items-center justify-end gap-2">
-                    Spread
-                    {sortBy === 'spread' && (
-                      <span>{sortOrder === 'asc' ? '↑' : '↓'}</span>
-                    )}
-                  </div>
-                </TableHead>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loading && processedSymbols.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={exchanges.filter(ex => enabledExchanges.has(ex)).length + 2} className="text-center py-8 text-muted-foreground">
-                    Loading...
-                  </TableCell>
-                </TableRow>
-              ) : processedSymbols.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={exchanges.filter(ex => enabledExchanges.has(ex)).length + 2} className="text-center py-8 text-muted-foreground">
-                    No symbols found
-                  </TableCell>
-                </TableRow>
-              ) : (
-                processedSymbols.map(({ symbol, spread, rates }) => (
-                  <TableRow key={symbol}>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold">{symbol}</span>
-                        {binanceSpotSymbols.has(symbol) && (
-                          <span
-                            className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-orange-500 text-white text-[10px] font-bold"
-                            title="Has Binance spot trading"
-                          >
-                            ✓
-                          </span>
-                        )}
-                      </div>
+            ))}
+          </TableHeader>
+          <TableBody>
+            {loading && table.getRowModel().rows?.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={columns.length} className="h-24 text-center">
+                  Loading...
+                </TableCell>
+              </TableRow>
+            ) : table.getRowModel().rows?.length ? (
+              table.getRowModel().rows.map((row) => (
+                <TableRow
+                  key={row.id}
+                  data-state={row.getIsSelected() && 'selected'}
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell key={cell.id}>
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
-                    {exchanges.filter(ex => enabledExchanges.has(ex)).map(exchange => (
-                      <TableCell key={exchange} className={`text-right font-mono ${getRateColor(rates[exchange])}`}>
-                        {formatRate(rates[exchange])}
-                      </TableCell>
-                    ))}
-                    <TableCell className="text-right font-mono font-bold text-orange-600 dark:text-orange-400">
-                      {spread !== null ? `${spread.toFixed(4)}%` : 'N/A'}
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+                  ))}
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={columns.length} className="h-24 text-center">
+                  No symbols found
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
 
-      {/* Footer */}
-      <div className="text-sm text-muted-foreground">
-        Showing {processedSymbols.length} symbols •
-        <span className="ml-1">
-          <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-orange-500 text-white text-[10px] font-bold mx-1">✓</span>
-          = Has Binance spot trading
-        </span>
+      {/* Pagination */}
+      <div className="flex items-center justify-between px-2">
+        <div className="text-sm text-muted-foreground">
+          Showing {table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1} to{' '}
+          {Math.min(
+            (table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize,
+            table.getFilteredRowModel().rows.length
+          )}{' '}
+          of {table.getFilteredRowModel().rows.length} symbols •
+          <span className="ml-1">
+            <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-orange-500 text-white text-[10px] font-bold mx-1">✓</span>
+            = Has Binance spot trading
+          </span>
+        </div>
+        <div className="flex items-center space-x-6 lg:space-x-8">
+          <div className="flex items-center space-x-2">
+            <p className="text-sm font-medium">Rows per page</p>
+            <select
+              value={table.getState().pagination.pageSize}
+              onChange={(e) => {
+                table.setPageSize(Number(e.target.value));
+              }}
+              className="h-8 w-[70px] rounded-md border border-input bg-background px-2 py-1 text-sm"
+            >
+              {[10, 20, 30, 50, 100].map((pageSize) => (
+                <option key={pageSize} value={pageSize}>
+                  {pageSize}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="flex w-[100px] items-center justify-center text-sm font-medium">
+            Page {table.getState().pagination.pageIndex + 1} of{' '}
+            {table.getPageCount()}
+          </div>
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage()}
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Previous
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => table.nextPage()}
+              disabled={!table.getCanNextPage()}
+            >
+              Next
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
   );
