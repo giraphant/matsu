@@ -11,6 +11,9 @@ export function useServiceWorker() {
 
   // Register Service Worker
   useEffect(() => {
+    // Only run in browser environment
+    if (typeof window === 'undefined') return;
+
     if ('serviceWorker' in navigator) {
       registerServiceWorker();
     } else {
@@ -86,7 +89,8 @@ export function useServiceWorker() {
   };
 
   const startMonitoring = useCallback(() => {
-    if (navigator.serviceWorker.controller) {
+    if (typeof window === 'undefined') return;
+    if (navigator.serviceWorker?.controller) {
       console.log('[SW] Starting alert monitoring...');
       navigator.serviceWorker.controller.postMessage({
         type: 'START_MONITORING'
@@ -95,7 +99,8 @@ export function useServiceWorker() {
   }, []);
 
   const stopMonitoring = useCallback(() => {
-    if (navigator.serviceWorker.controller) {
+    if (typeof window === 'undefined') return;
+    if (navigator.serviceWorker?.controller) {
       console.log('[SW] Stopping alert monitoring...');
       navigator.serviceWorker.controller.postMessage({
         type: 'STOP_MONITORING'
@@ -104,7 +109,8 @@ export function useServiceWorker() {
   }, []);
 
   const checkNow = useCallback(() => {
-    if (navigator.serviceWorker.controller) {
+    if (typeof window === 'undefined') return;
+    if (navigator.serviceWorker?.controller) {
       navigator.serviceWorker.controller.postMessage({
         type: 'CHECK_NOW'
       });
@@ -112,6 +118,7 @@ export function useServiceWorker() {
   }, []);
 
   const requestNotificationPermission = useCallback(async () => {
+    if (typeof window === 'undefined') return false;
     if (!('Notification' in window)) {
       console.log('[SW] Browser does not support notifications');
       return false;
@@ -134,7 +141,7 @@ export function useServiceWorker() {
     stopMonitoring,
     checkNow,
     requestNotificationPermission,
-    isSupported: 'serviceWorker' in navigator
+    isSupported: typeof window !== 'undefined' && 'serviceWorker' in navigator
   };
 }
 
