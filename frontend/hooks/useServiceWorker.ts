@@ -56,24 +56,28 @@ export function useServiceWorker() {
   };
 
   const handleServiceWorkerMessage = (event: MessageEvent) => {
-    const { type, data } = event.data;
+    const message = event.data;
 
-    switch (type) {
+    if (!message || !message.type) {
+      return;
+    }
+
+    switch (message.type) {
       case 'PLAY_SOUND':
         // Play alert sound in the page context
-        playSound(data.soundFile, data.volume);
+        playSound(message.soundFile, message.volume);
         break;
 
       case 'ALERT_TRIGGERED':
-        console.log('[SW] Alert triggered:', data);
+        console.log('[SW] Alert triggered:', message);
         // You can dispatch custom events here if needed
-        window.dispatchEvent(new CustomEvent('alert-triggered', { detail: data }));
+        window.dispatchEvent(new CustomEvent('alert-triggered', { detail: message }));
         break;
 
       case 'GET_SETTINGS':
         // Service Worker is requesting settings
         const settings = getBackgroundAlertSettings();
-        event.ports[0].postMessage(settings);
+        event.ports[0]?.postMessage(settings);
         break;
     }
   };
