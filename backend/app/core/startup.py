@@ -158,35 +158,24 @@ class StartupManager:
         """Start all background monitors and workers."""
         # Import monitors and workers
         from app.background_tasks import (
-            LighterMonitor, AsterMonitor, GRVTMonitor, BackpackMonitor,
-            BinanceMonitor, BybitMonitor, HyperliquidMonitor,
-            BinanceSpotMonitor, OKXSpotMonitor, BybitSpotMonitor,
-            JupiterSpotMonitor, PythSpotMonitor,
             LighterAccountMonitor, JLPHedgeMonitor, ALPHedgeMonitor,
             DatabaseDownsampler
         )
-        # DEPRECATED: DexCacheWarmer and AlertChecker removed
-        # - DexCacheWarmer: No longer needed, data read directly from database
-        # - AlertChecker: Replaced by MonitorAlertChecker (uses AlertRule system)
+        # NEW: Exchange-centric architecture
+        from app.background_tasks.funding_monitor import FundingRateMonitor
+        from app.background_tasks.spot_monitor import SpotPriceMonitor
+
         from app.workers.monitor_alert_checker import MonitorAlertChecker
         from app.workers.monitor_recompute_worker import MonitorRecomputeWorker
         from app.workers.heartbeat_checker import HeartbeatChecker
 
-        # Funding rate monitors (every 5 minutes)
-        self.monitors.append(LighterMonitor())
-        self.monitors.append(AsterMonitor())
-        self.monitors.append(GRVTMonitor())
-        self.monitors.append(BackpackMonitor())
-        self.monitors.append(BinanceMonitor())
-        self.monitors.append(BybitMonitor())
-        self.monitors.append(HyperliquidMonitor())
+        # NEW: Unified funding rate coordinator (replaces 7 individual monitors)
+        # Fetches from: Binance, Bybit, Hyperliquid, Lighter, Aster, GRVT, Backpack
+        self.monitors.append(FundingRateMonitor(interval=300))  # Every 5 minutes
 
-        # Spot price monitors (every 1 minute)
-        self.monitors.append(BinanceSpotMonitor())
-        self.monitors.append(OKXSpotMonitor())
-        self.monitors.append(BybitSpotMonitor())
-        self.monitors.append(JupiterSpotMonitor())  # Solana on-chain prices
-        self.monitors.append(PythSpotMonitor())     # Oracle prices
+        # NEW: Unified spot price coordinator (replaces 5 individual monitors)
+        # Fetches from: Binance, Bybit, OKX, Jupiter (Solana), Pyth (Oracle)
+        self.monitors.append(SpotPriceMonitor(interval=60))  # Every 1 minute
 
         # Account monitors (every 30 seconds)
         # Note: Accounts are now managed through the database (Settings > DEX Accounts)
