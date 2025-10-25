@@ -241,7 +241,9 @@ async function triggerAlert(monitor, rule, level) {
 
   console.log(`[Service Worker] Alert triggered: ${title} - ${body}`);
 
-  // Show notification
+  // Browser notifications are disabled - using Pushover backend instead
+  // Uncomment below to re-enable browser notifications:
+  /*
   if (Notification.permission === 'granted') {
     const alertConfig = ALERT_LEVELS[level];
 
@@ -258,8 +260,9 @@ async function triggerAlert(monitor, rule, level) {
       }
     });
   }
+  */
 
-  // Play alert sound
+  // Play alert sound (this still works!)
   playAlertSound(level);
 
   // Notify open clients
