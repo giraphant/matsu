@@ -66,9 +66,11 @@ class AsterAdapter(BaseExchangeAdapter):
                 if not symbol:
                     continue
 
-                # Normalize symbol (remove USD suffix, Aster uses XxxxxUSD format)
+                # Normalize symbol (remove USDT/USD suffix, Aster uses XxxxxUSDS/XxxxxUSD format)
                 normalized_symbol = symbol
-                if normalized_symbol.endswith("USD"):
+                if normalized_symbol.endswith("USDT"):
+                    normalized_symbol = normalized_symbol[:-4]
+                elif normalized_symbol.endswith("USD"):
                     normalized_symbol = normalized_symbol[:-3]
 
                 # Get funding rate (lastFundingRate is the current 8h rate)
