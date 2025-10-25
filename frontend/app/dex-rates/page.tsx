@@ -108,8 +108,8 @@ export default function DexRatesPage() {
     }
   }
 
-  // Process data into table rows
-  const tableData = (() => {
+  // Process data into table rows (memoized to prevent recalculation on every render)
+  const tableData = useMemo(() => {
     const grouped = fundingRates.reduce((acc, rate) => {
       if (!acc[rate.symbol]) {
         acc[rate.symbol] = {};
@@ -154,7 +154,7 @@ export default function DexRatesPage() {
         };
       })
       .filter((row): row is SymbolRow => row !== null);
-  })();
+  }, [fundingRates, spotPrices, enabledExchanges]);
 
   const formatRate = (rate: number | null): string => {
     if (rate === null || rate === undefined || isNaN(rate)) return 'N/A';
