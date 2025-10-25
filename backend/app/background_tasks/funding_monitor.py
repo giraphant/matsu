@@ -57,72 +57,78 @@ class FundingRateMonitor(BaseMonitor):
         """Fetch funding rates from all exchanges."""
         logger.debug("Fetching funding rates from all exchanges...")
 
-        # Step 1: Fetch all rates from all exchanges
-        all_rates = {}  # {exchange_name: [rates]}
+        total_stored = 0
 
         for adapter in self.adapters:
             try:
+                # Fetch rates from this exchange
                 rates = await adapter.fetch_funding_rates()
 
                 if not rates:
                     logger.warning(f"[{adapter.exchange_name}] No rates fetched")
                     continue
 
-                all_rates[adapter.exchange_name] = rates
-                logger.info(f"[{adapter.exchange_name}] Fetched {len(rates)} rates")
+                # Filter to top 50 by volume/turnover (if volume data available)
+                filtered_rates = self._filter_top_by_volume(rates, limit=50)
+
+                if len(filtered_rates) < len(rates):
+                    logger.info(f"[{adapter.exchange_name}] Filtered {len(rates)} → {len(filtered_rates)} (top 50 by volume)")
+
+                # Store in database
+                stored_count = await self._store_rates(adapter.exchange_name, filtered_rates)
+                total_stored += stored_count
+
+                logger.info(f"[{adapter.exchange_name}] Stored {stored_count} rates")
 
             except Exception as e:
                 logger.error(f"[{adapter.exchange_name}] Error: {e}", exc_info=True)
                 # Continue with other exchanges
 
-        # Step 2: Group by symbol and find max volume for each symbol across all exchanges
-        symbol_max_volume = {}  # {symbol: max_volume}
+        logger.info(f"Total stored: {total_stored} funding rates across {len(self.adapters)} exchanges")
 
-        for exchange_name, rates in all_rates.items():
-            for rate in rates:
-                symbol = rate.get("symbol")
-                if not symbol:
-                    continue
+    def _filter_top_by_volume(self, rates: List[dict], limit: int = 50) -> List[dict]:
+        """
+        Filter funding rates to top N by volume/turnover.
 
-                # Get volume/turnover
-                volume = rate.get("turnover_24h") or rate.get("volume_24h")
-                if volume is not None:
-                    try:
-                        volume = float(volume)
-                        # Track max volume for this symbol across all exchanges
-                        if symbol not in symbol_max_volume or volume > symbol_max_volume[symbol]:
-                            symbol_max_volume[symbol] = volume
-                    except (ValueError, TypeError):
-                        pass
+        Args:
+            rates: List of funding rate dicts (may include 'volume_24h' or 'turnover_24h')
+            limit: Maximum number of rates to keep
 
-        # Step 3: Get top 50 symbols by volume
-        if symbol_max_volume:
-            top_symbols = sorted(symbol_max_volume.keys(), key=lambda s: symbol_max_volume[s], reverse=True)[:50]
-            top_symbols_set = set(top_symbols)
-            logger.info(f"Selected top 50 symbols by volume: {', '.join(list(top_symbols)[:10])}...")
-        else:
-            # No volume data available, keep all symbols
-            top_symbols_set = None
-            logger.info("No volume data available, storing all symbols")
+        Returns:
+            Filtered list (top N by volume, or all if no volume data)
+        """
+        if not rates or len(rates) <= limit:
+            return rates
 
-        # Step 4: Filter and store rates for each exchange
-        total_stored = 0
+        # Check if rates have volume/turnover data
+        has_volume = any(r.get('volume_24h') is not None or r.get('turnover_24h') is not None for r in rates)
 
-        for exchange_name, rates in all_rates.items():
-            # Filter to top 50 symbols (if we have volume data)
-            if top_symbols_set:
-                filtered_rates = [r for r in rates if r.get("symbol") in top_symbols_set]
-                if len(filtered_rates) < len(rates):
-                    logger.info(f"[{exchange_name}] Filtered {len(rates)} → {len(filtered_rates)} (top 50 symbols)")
-            else:
-                filtered_rates = rates
+        if not has_volume:
+            # No volume data, return all
+            return rates
 
-            # Store in database
-            stored_count = await self._store_rates(exchange_name, filtered_rates)
-            total_stored += stored_count
-            logger.info(f"[{exchange_name}] Stored {stored_count} rates")
+        # Sort by turnover (preferred) or volume, then take top N
+        def get_volume_key(rate):
+            # Prefer turnover_24h (USDT value), fallback to volume_24h
+            turnover = rate.get('turnover_24h')
+            if turnover is not None:
+                try:
+                    return float(turnover)
+                except (ValueError, TypeError):
+                    pass
 
-        logger.info(f"Total stored: {total_stored} funding rates across {len(all_rates)} exchanges")
+            volume = rate.get('volume_24h')
+            if volume is not None:
+                try:
+                    return float(volume)
+                except (ValueError, TypeError):
+                    pass
+
+            return 0
+
+        # Sort descending by volume
+        sorted_rates = sorted(rates, key=get_volume_key, reverse=True)
+        return sorted_rates[:limit]
 
     async def _store_rates(self, exchange_name: str, rates: List[dict]) -> int:
         """
