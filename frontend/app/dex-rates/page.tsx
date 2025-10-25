@@ -5,6 +5,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { RefreshCw, ArrowUpDown } from 'lucide-react';
 import { getApiUrl } from "@/lib/api-config";
 
@@ -269,91 +277,89 @@ export default function DexRatesPage() {
       {/* Table */}
       <Card>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="border-b">
-                <tr>
-                  <th
-                    onClick={() => handleSort('symbol')}
-                    className="text-left py-3 px-4 font-semibold cursor-pointer hover:bg-muted/50 select-none"
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead
+                  onClick={() => handleSort('symbol')}
+                  className="cursor-pointer hover:bg-muted/50 select-none"
+                >
+                  <div className="flex items-center gap-2">
+                    Symbol
+                    {sortBy === 'symbol' && (
+                      <span>{sortOrder === 'asc' ? '↑' : '↓'}</span>
+                    )}
+                  </div>
+                </TableHead>
+                {exchanges.filter(ex => enabledExchanges.has(ex)).map(exchange => (
+                  <TableHead
+                    key={exchange}
+                    onClick={() => handleSort(exchange as SortColumn)}
+                    className="text-right cursor-pointer hover:bg-muted/50 select-none"
                   >
-                    <div className="flex items-center gap-2">
-                      Symbol
-                      {sortBy === 'symbol' && (
+                    <div className="flex items-center justify-end gap-2 capitalize">
+                      {exchange === 'backpack' ? 'BP' : exchange}
+                      {sortBy === exchange && (
                         <span>{sortOrder === 'asc' ? '↑' : '↓'}</span>
                       )}
                     </div>
-                  </th>
-                  {exchanges.filter(ex => enabledExchanges.has(ex)).map(exchange => (
-                    <th
-                      key={exchange}
-                      onClick={() => handleSort(exchange as SortColumn)}
-                      className="text-right py-3 px-4 font-semibold cursor-pointer hover:bg-muted/50 select-none capitalize"
-                    >
-                      <div className="flex items-center justify-end gap-2">
-                        {exchange === 'backpack' ? 'BP' : exchange}
-                        {sortBy === exchange && (
-                          <span>{sortOrder === 'asc' ? '↑' : '↓'}</span>
+                  </TableHead>
+                ))}
+                <TableHead
+                  onClick={() => handleSort('spread')}
+                  className="text-right cursor-pointer hover:bg-muted/50 select-none"
+                >
+                  <div className="flex items-center justify-end gap-2">
+                    Spread
+                    {sortBy === 'spread' && (
+                      <span>{sortOrder === 'asc' ? '↑' : '↓'}</span>
+                    )}
+                  </div>
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {loading && processedSymbols.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={exchanges.filter(ex => enabledExchanges.has(ex)).length + 2} className="text-center py-8 text-muted-foreground">
+                    Loading...
+                  </TableCell>
+                </TableRow>
+              ) : processedSymbols.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={exchanges.filter(ex => enabledExchanges.has(ex)).length + 2} className="text-center py-8 text-muted-foreground">
+                    No symbols found
+                  </TableCell>
+                </TableRow>
+              ) : (
+                processedSymbols.map(({ symbol, spread, rates }) => (
+                  <TableRow key={symbol}>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold">{symbol}</span>
+                        {binanceSpotSymbols.has(symbol) && (
+                          <span
+                            className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-orange-500 text-white text-[10px] font-bold"
+                            title="Has Binance spot trading"
+                          >
+                            ✓
+                          </span>
                         )}
                       </div>
-                    </th>
-                  ))}
-                  <th
-                    onClick={() => handleSort('spread')}
-                    className="text-right py-3 px-4 font-semibold cursor-pointer hover:bg-muted/50 select-none"
-                  >
-                    <div className="flex items-center justify-end gap-2">
-                      Spread
-                      {sortBy === 'spread' && (
-                        <span>{sortOrder === 'asc' ? '↑' : '↓'}</span>
-                      )}
-                    </div>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {loading && processedSymbols.length === 0 ? (
-                  <tr>
-                    <td colSpan={exchanges.filter(ex => enabledExchanges.has(ex)).length + 2} className="text-center py-8 text-muted-foreground">
-                      Loading...
-                    </td>
-                  </tr>
-                ) : processedSymbols.length === 0 ? (
-                  <tr>
-                    <td colSpan={exchanges.filter(ex => enabledExchanges.has(ex)).length + 2} className="text-center py-8 text-muted-foreground">
-                      No symbols found
-                    </td>
-                  </tr>
-                ) : (
-                  processedSymbols.map(({ symbol, spread, rates }) => (
-                    <tr key={symbol} className="border-b hover:bg-muted/30">
-                      <td className="py-3 px-4">
-                        <div className="flex items-center gap-2">
-                          <span className="font-bold">{symbol}</span>
-                          {binanceSpotSymbols.has(symbol) && (
-                            <span
-                              className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-orange-500 text-white text-[10px] font-bold"
-                              title="Has Binance spot trading"
-                            >
-                              ✓
-                            </span>
-                          )}
-                        </div>
-                      </td>
-                      {exchanges.filter(ex => enabledExchanges.has(ex)).map(exchange => (
-                        <td key={exchange} className={`text-right py-3 px-4 font-mono ${getRateColor(rates[exchange])}`}>
-                          {formatRate(rates[exchange])}
-                        </td>
-                      ))}
-                      <td className="text-right py-3 px-4 font-mono font-bold text-orange-600 dark:text-orange-400">
-                        {spread !== null ? `${spread.toFixed(4)}%` : 'N/A'}
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+                    </TableCell>
+                    {exchanges.filter(ex => enabledExchanges.has(ex)).map(exchange => (
+                      <TableCell key={exchange} className={`text-right font-mono ${getRateColor(rates[exchange])}`}>
+                        {formatRate(rates[exchange])}
+                      </TableCell>
+                    ))}
+                    <TableCell className="text-right font-mono font-bold text-orange-600 dark:text-orange-400">
+                      {spread !== null ? `${spread.toFixed(4)}%` : 'N/A'}
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
 
