@@ -26,6 +26,7 @@ import {
 } from '@/lib/api';
 import type { PushoverConfig, FundingRateAlert } from '@/lib/api';
 import DexAccountsManager from '@/components/dex-accounts-manager';
+import { ServiceWorkerDebugPanel } from '@/components/sw-debug-panel';
 
 export default function SettingsPage() {
   // State for different tabs
@@ -399,6 +400,8 @@ export default function SettingsPage() {
               </div>
             </CardContent>
           </Card>
+
+          <ServiceWorkerDebugPanel />
 
           <Card>
             <CardHeader>
