@@ -2,7 +2,6 @@
 from typing import List, Dict, Any
 from .base import BaseExchangeAdapter
 
-TARGET_SYMBOLS = ["BTC", "ETH", "SOL"]
 
 class BackpackAdapter(BaseExchangeAdapter):
     API_URL = "https://api.backpack.exchange/api/v1/markets"
@@ -19,11 +18,9 @@ class BackpackAdapter(BaseExchangeAdapter):
                 symbol = market.get("symbol", "")
                 if not symbol.endswith("_USDC_PERP"):
                     continue
-                
+
                 base_symbol = symbol.replace("_USDC_PERP", "")
-                if base_symbol not in TARGET_SYMBOLS:
-                    continue
-                
+
                 funding_rate = market.get("fundingRate")
                 if funding_rate is None:
                     continue

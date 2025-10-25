@@ -8,9 +8,6 @@ from typing import List, Dict, Any
 from .base import BaseExchangeAdapter
 
 
-TARGET_SYMBOLS = ["BTC", "ETH", "SOL"]
-
-
 class HyperliquidAdapter(BaseExchangeAdapter):
     """
     Hyperliquid exchange adapter.
@@ -49,10 +46,6 @@ class HyperliquidAdapter(BaseExchangeAdapter):
             rates = []
             for asset_ctx in data[0].get("universe", []):
                 coin_name = asset_ctx.get("name", "")
-
-                # Only process target symbols
-                if coin_name not in TARGET_SYMBOLS:
-                    continue
 
                 # Hyperliquid provides 1-hour rate
                 funding_1h = asset_ctx.get("funding")

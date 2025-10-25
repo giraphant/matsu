@@ -4,7 +4,6 @@ from datetime import datetime
 from typing import List, Dict, Any
 from .base import BaseExchangeAdapter
 
-TARGET_SYMBOLS = ["BTC", "ETH", "SOL"]
 
 class GRVTAdapter(BaseExchangeAdapter):
     INSTRUMENTS_URL = "https://market-data.grvt.io/full/v1/instruments"
@@ -42,11 +41,11 @@ class GRVTAdapter(BaseExchangeAdapter):
                 instrument_id = entry.get("instrument")
                 if not instrument_id:
                     continue
-                
+
                 symbol = instrument_map.get(instrument_id)
-                if not symbol or symbol not in TARGET_SYMBOLS:
+                if not symbol:
                     continue
-                
+
                 rate = entry.get("funding_rate")
                 if rate is None:
                     continue

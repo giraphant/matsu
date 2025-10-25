@@ -8,9 +8,6 @@ from typing import List, Dict, Any
 from .base import BaseExchangeAdapter
 
 
-TARGET_SYMBOLS = ["BTC", "ETH", "SOL"]
-
-
 class LighterAdapter(BaseExchangeAdapter):
     """
     Lighter exchange adapter.
@@ -58,10 +55,6 @@ class LighterAdapter(BaseExchangeAdapter):
 
                 # Only process 'lighter' exchange
                 if exchange != "lighter":
-                    continue
-
-                # Only process target symbols
-                if symbol not in TARGET_SYMBOLS:
                     continue
 
                 # Skip if no rate available

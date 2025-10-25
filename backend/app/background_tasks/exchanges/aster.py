@@ -10,9 +10,6 @@ from typing import List, Dict, Any
 from .base import BaseExchangeAdapter
 
 
-TARGET_SYMBOLS = ["BTC", "ETH", "SOL"]
-
-
 class AsterAdapter(BaseExchangeAdapter):
     """
     Aster exchange adapter.
@@ -80,10 +77,6 @@ class AsterAdapter(BaseExchangeAdapter):
                     normalized_symbol = normalized_symbol[:-4]
                 elif normalized_symbol.endswith("USD"):
                     normalized_symbol = normalized_symbol[:-3]
-
-                # Only process target symbols
-                if normalized_symbol not in TARGET_SYMBOLS:
-                    continue
 
                 # Get funding rate
                 rate = entry.get("fundingRate")
