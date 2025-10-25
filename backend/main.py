@@ -13,7 +13,8 @@ from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.core import settings, startup_manager, get_logger
+from app.core import settings, get_logger
+from app.core.startup import startup_manager
 from app.core.middleware import ErrorHandlerMiddleware
 from app.api.webhook import router as webhook_router
 from app.api.data import router as data_router

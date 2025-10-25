@@ -8,6 +8,7 @@ from typing import List, Type
 
 from app.core.logger import get_logger
 from app.models.database import FundingRate, get_db_session
+# Direct import to avoid circular dependency from __init__.py
 from app.background_tasks.base import BaseMonitor
 from app.background_tasks.exchanges.base import BaseExchangeAdapter
 from app.background_tasks.exchanges import (
