@@ -39,7 +39,14 @@ class DatabaseDownsampler(BaseMonitor):
         {"name": "30+ days", "days_ago": 30, "days_until": None, "interval_minutes": 15},
     ]
 
-    # Aggressive policy for spot prices and most funding rates
+    # Policy for spot prices (less aggressive, keep for 48 hours)
+    SPOT_PRICE_POLICY = [
+        {"name": "Last 1 hour", "hours_ago": 0, "hours_until": 1, "keep_all": True},
+        {"name": "1-48 hours", "hours_ago": 1, "hours_until": 48, "interval_minutes": 5},
+        {"name": "48+ hours", "hours_ago": 48, "hours_until": None, "delete_all": True},
+    ]
+
+    # Aggressive policy for non-important funding rates
     AGGRESSIVE_POLICY = [
         {"name": "Last 1 hour", "hours_ago": 0, "hours_until": 1, "keep_all": True},
         {"name": "1-8 hours", "hours_ago": 1, "hours_until": 8, "interval_minutes": 5},
@@ -217,8 +224,58 @@ class DatabaseDownsampler(BaseMonitor):
 
         return ranges
 
+    def _get_spot_price_time_ranges(self):
+        """Calculate time ranges for spot price retention policy (48 hours)."""
+        now = datetime.utcnow()
+        ranges = []
+
+        for policy in self.SPOT_PRICE_POLICY:
+            if policy.get('keep_all'):
+                # Keep all in this hour range
+                hours = policy['hours_until']
+                start = now - timedelta(hours=hours)
+                end = now
+                ranges.append({
+                    'name': policy['name'],
+                    'start': start,
+                    'end': end,
+                    'keep_all': True,
+                    'delete_all': False,
+                    'interval_minutes': 0
+                })
+            elif policy.get('delete_all'):
+                # Delete everything older than this
+                hours = policy['hours_ago']
+                end = now - timedelta(hours=hours)
+                ranges.append({
+                    'name': policy['name'],
+                    'start': datetime.min,
+                    'end': end,
+                    'keep_all': False,
+                    'delete_all': True,
+                    'interval_minutes': 0
+                })
+            else:
+                # Downsample in this range
+                hours_start = policy['hours_ago']
+                hours_end = policy.get('hours_until')
+
+                start = now - timedelta(hours=hours_start)
+                end = now - timedelta(hours=hours_end) if hours_end else datetime.min
+
+                ranges.append({
+                    'name': policy['name'],
+                    'start': end,
+                    'end': start,
+                    'keep_all': False,
+                    'delete_all': False,
+                    'interval_minutes': policy['interval_minutes']
+                })
+
+        return ranges
+
     def _get_aggressive_time_ranges(self):
-        """Calculate time ranges for aggressive retention policy (spot prices, non-important funding rates)."""
+        """Calculate time ranges for aggressive retention policy (non-important funding rates)."""
         now = datetime.utcnow()
         ranges = []
 
@@ -368,7 +425,7 @@ class DatabaseDownsampler(BaseMonitor):
             return 0
 
     async def _downsample_spot_prices(self, db):
-        """Downsample spot prices with aggressive policy."""
+        """Downsample spot prices (keep for 48 hours)."""
         try:
             from app.models.database import SpotPrice
 
@@ -382,7 +439,7 @@ class DatabaseDownsampler(BaseMonitor):
             logger.info(f"spot_prices: {initial_count:,} records")
 
             total_deleted = 0
-            ranges = self._get_aggressive_time_ranges()
+            ranges = self._get_spot_price_time_ranges()
 
             for time_range in ranges:
                 if time_range['keep_all']:
