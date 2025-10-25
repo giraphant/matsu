@@ -17,9 +17,12 @@ router = APIRouter()
 
 
 @router.get("/funding-rates")
-async def get_funding_rates() -> List[Dict[str, Any]]:
+async def get_funding_rates(exchange: str = None) -> List[Dict[str, Any]]:
     """
-    Get latest funding rates from all exchanges.
+    Get latest funding rates from all exchanges (or a specific exchange).
+
+    Args:
+        exchange: Optional exchange filter (e.g., "binance", "aster", "grvt")
 
     Returns a list of funding rates with the most recent rate for each exchange-symbol pair.
     """
@@ -28,11 +31,17 @@ async def get_funding_rates() -> List[Dict[str, Any]]:
     try:
         # Get all unique exchange-symbol combinations
         from sqlalchemy import func
-        pairs = db.query(
+        query = db.query(
             FundingRate.exchange,
             FundingRate.symbol,
             func.max(FundingRate.timestamp).label('latest_timestamp')
-        ).group_by(
+        )
+
+        # Filter by exchange if specified
+        if exchange:
+            query = query.filter(FundingRate.exchange == exchange.lower())
+
+        pairs = query.group_by(
             FundingRate.exchange,
             FundingRate.symbol
         ).all()
@@ -67,9 +76,12 @@ async def get_funding_rates() -> List[Dict[str, Any]]:
 
 
 @router.get("/spot-prices")
-async def get_spot_prices() -> List[Dict[str, Any]]:
+async def get_spot_prices(exchange: str = None) -> List[Dict[str, Any]]:
     """
-    Get latest spot prices from all exchanges.
+    Get latest spot prices from all exchanges (or a specific exchange).
+
+    Args:
+        exchange: Optional exchange filter (e.g., "binance", "jupiter", "pyth")
 
     Returns a list of spot prices with the most recent price for each exchange-symbol pair.
     """
@@ -78,11 +90,17 @@ async def get_spot_prices() -> List[Dict[str, Any]]:
     try:
         # Get all unique exchange-symbol combinations
         from sqlalchemy import func
-        pairs = db.query(
+        query = db.query(
             SpotPrice.exchange,
             SpotPrice.symbol,
             func.max(SpotPrice.timestamp).label('latest_timestamp')
-        ).group_by(
+        )
+
+        # Filter by exchange if specified
+        if exchange:
+            query = query.filter(SpotPrice.exchange == exchange.lower())
+
+        pairs = query.group_by(
             SpotPrice.exchange,
             SpotPrice.symbol
         ).all()
